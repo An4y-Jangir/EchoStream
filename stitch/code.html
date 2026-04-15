@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#121212",
+                        "accent": "#6366f1",
+                        "background-light": "#f7f7f7",
+                        "background-dark": "#0a0a0a",
+                    },
+                    fontFamily: {
+                        "display": ["Inter"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.5rem", 
+                        "lg": "1rem", 
+                        "xl": "1.5rem", 
+                        "2xl": "2rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.04);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        
+        .glass-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .glass-card:hover {
+            background: rgba(255, 255, 255, 0.07);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transform: translateY(-4px);
+        }
+
+        .dynamic-bg {
+            background: radial-gradient(circle at 0% 0%, #1e1b4b 0%, transparent 40%),
+                        radial-gradient(circle at 100% 0%, #312e81 0%, transparent 40%),
+                        radial-gradient(circle at 50% 100%, #1e1b4b 0%, transparent 50%);
+        }
+        
+        .nav-item {
+            transition: all 0.2s ease;
+        }
+        
+        .nav-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+            padding-left: 1.25rem;
+        }
+
+        .active-nav {
+            background: linear-gradient(90deg, rgba(99, 102, 241, 0.15) 0%, transparent 100%);
+            border-left: 3px solid #6366f1;
+        }
+    </style>
+</head>
+<body class="bg-background-dark text-slate-100 font-display selection:bg-accent/30 selection:text-white">
+<div class="flex h-screen overflow-hidden dynamic-bg relative">
+<!-- Sidebar -->
+<aside class="w-72 flex-shrink-0 flex flex-col p-6 gap-8 z-20 border-r border-white/5">
+<div class="px-2 flex items-center gap-3">
+<div class="size-10 bg-accent rounded-xl flex items-center justify-center shadow-lg shadow-accent/20">
+<span class="material-symbols-outlined text-white text-2xl fill-[1]">auto_awesome</span>
+</div>
+<div>
+<h1 class="text-xl font-bold tracking-tight text-white leading-none">EchoStream</h1>
+<p class="text-[10px] text-accent font-bold tracking-[0.2em] mt-1">PREMIUM</p>
+</div>
+</div>
+<nav class="flex flex-col gap-2">
+<p class="px-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Menu</p>
+<a class="nav-item flex items-center gap-4 px-4 py-3 rounded-xl text-white active-nav" href="#">
+<span class="material-symbols-outlined text-xl">grid_view</span>
+<span class="text-sm font-medium">Discover</span>
+</a>
+<a class="nav-item flex items-center gap-4 px-4 py-3 rounded-xl text-slate-400 hover:text-white" href="#">
+<span class="material-symbols-outlined text-xl">explore</span>
+<span class="text-sm font-medium">Browse</span>
+</a>
+<a class="nav-item flex items-center gap-4 px-4 py-3 rounded-xl text-slate-400 hover:text-white" href="#">
+<span class="material-symbols-outlined text-xl">podcasts</span>
+<span class="text-sm font-medium">Radio</span>
+</a>
+</nav>
+<div class="flex flex-col gap-2">
+<p class="px-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Library</p>
+<a class="nav-item flex items-center gap-4 px-4 py-3 rounded-xl text-slate-400 hover:text-white" href="#">
+<span class="material-symbols-outlined text-xl">history</span>
+<span class="text-sm font-medium">Recent</span>
+</a>
+<a class="nav-item flex items-center gap-4 px-4 py-3 rounded-xl text-slate-400 hover:text-white" href="#">
+<span class="material-symbols-outlined text-xl">favorite</span>
+<span class="text-sm font-medium">Favorites</span>
+</a>
+<a class="nav-item flex items-center gap-4 px-4 py-3 rounded-xl text-slate-400 hover:text-white" href="#">
+<span class="material-symbols-outlined text-xl">album</span>
+<span class="text-sm font-medium">Albums</span>
+</a>
+</div>
+<div class="mt-auto pt-6 border-t border-white/5">
+<div class="px-4 py-4 flex items-center gap-3 glass-panel rounded-2xl cursor-pointer hover:bg-white/10 transition-colors">
+<img alt="Alex Rivera" class="size-10 rounded-xl border border-white/10 object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDuS4AeQPOY77JkrPKNNHoRYKAOe7JkkIBpjBcwI2ZnpCQYnKKvRbHp-kjEVKFZudPolxk9m-yEy5PSXTXKOilMsNda5d9N3ZacHQuoms-B8XFGQ4c0STRlDCHVl5YYz7xXM5tbz7TPuu2jBjGB1QMrEYZ0lGNYbt6_n52P30z22UoyiqXFBLPRNjSfZ4GYXJQYPeYNzen4xDaUBho2eH6EaId9gLTZvBHurc_7ONpyqVyJhnGijDrEky1myah93nbSA4NEMTLkzZSw"/>
+<div class="flex-1 overflow-hidden">
+<p class="text-sm font-semibold truncate">Alex Rivera</p>
+<p class="text-[10px] text-slate-500 font-bold uppercase">Pro Tier</p>
+</div>
+<span class="material-symbols-outlined text-slate-400">settings</span>
+</div>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="flex-1 flex flex-col overflow-y-auto no-scrollbar relative z-10">
+<!-- Header -->
+<header class="sticky top-0 z-30 flex items-center justify-between px-10 py-6 bg-background-dark/40 backdrop-blur-xl">
+<div class="flex items-center gap-8 flex-1">
+<div class="flex gap-3">
+<button class="size-10 rounded-xl glass-panel flex items-center justify-center text-slate-300 hover:bg-white/10 transition-all">
+<span class="material-symbols-outlined">west</span>
+</button>
+<button class="size-10 rounded-xl glass-panel flex items-center justify-center text-slate-300 hover:bg-white/10 transition-all">
+<span class="material-symbols-outlined">east</span>
+</button>
+</div>
+<div class="relative w-full max-w-lg">
+<span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 text-xl">search</span>
+<input class="w-full bg-white/5 border border-white/5 rounded-2xl py-3 pl-12 pr-4 text-sm focus:ring-2 focus:ring-accent/50 focus:border-accent/50 focus:bg-white/10 outline-none transition-all text-white placeholder-slate-500" placeholder="Search for tracks, artists or podcasts..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<button class="size-12 rounded-xl glass-panel flex items-center justify-center text-slate-300 relative hover:text-white transition-colors">
+<span class="material-symbols-outlined">notifications</span>
+<span class="absolute top-3 right-3 size-2 bg-accent rounded-full border-2 border-background-dark"></span>
+</button>
+<button class="bg-accent text-white px-6 py-3 rounded-xl text-sm font-bold shadow-lg shadow-accent/20 hover:scale-105 active:scale-95 transition-all">
+                    Upgrade to Pro
+                </button>
+</div>
+</header>
+<div class="px-10 py-6 pb-40 space-y-12">
+<!-- Featured Section -->
+<section>
+<div class="flex items-center justify-between mb-8">
+<div>
+<h2 class="text-3xl font-bold tracking-tight text-white">Made For You</h2>
+<p class="text-slate-400 text-sm mt-1">Hand-picked selections based on your taste</p>
+</div>
+<button class="text-sm font-bold text-accent hover:underline flex items-center gap-1">
+                        View all <span class="material-symbols-outlined text-sm">arrow_forward</span>
+</button>
+</div>
+<div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
+<!-- Modern Card 1 -->
+<div class="glass-card p-4 rounded-[2rem] group cursor-pointer">
+<div class="relative mb-4 aspect-square rounded-[1.5rem] overflow-hidden shadow-2xl">
+<img alt="Mix 1" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAiBNUxlfR4L47C_o5rXlU-So2nkjXIn4LW_tXIdqVKJNFV0IwuHk0oJ1pPNzJpj7QXOGR4DmzqCIGmpIBMzZyDQdcvSUen5HjrzP0BD6gGTJi15oYdetHeOAnNfbeyUmDQlDqKbbaW7YImSpjD7FaJGqw-4xaFP7zW-UtIB8MqoSEBd4C8xhPu1guLz_SHXTxCeLXuTDD_kE6mjawhLIy1eSMSB7A9CBAnvPiBl_eXYhfyiUQxak953SpmsA9QkEAx4-KjnLrg_fV7"/>
+<div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+<button class="size-16 bg-white text-black rounded-full flex items-center justify-center shadow-xl transform scale-90 group-hover:scale-100 transition-transform duration-300">
+<span class="material-symbols-outlined text-4xl fill-[1]">play_arrow</span>
+</button>
+</div>
+</div>
+<div class="px-2">
+<h3 class="font-bold text-white mb-1 truncate text-lg">Daily Mix 1</h3>
+<p class="text-xs text-slate-500 font-medium">The Weeknd, Post Malone...</p>
+</div>
+</div>
+<!-- Modern Card 2 -->
+<div class="glass-card p-4 rounded-[2rem] group cursor-pointer">
+<div class="relative mb-4 aspect-square rounded-[1.5rem] overflow-hidden shadow-2xl">
+<img alt="Discover Weekly" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCM8TshLYwVG0cnIpwJI4ggE2kBXEQy-wi4kAVba2GuKSzFA59SP3k0tyMO0gjox_wl0TQokaUZbjFDIkjoEe0wdVP4CBXi2ZatywZwSAQKQVCMSydHsWLflbRufKgWOsrEoJgplRDYt4dPZ0GfOeeO0IK1aw3QN_NfLFejVeyKc4B1PqmOm9mi4FyGSbKgoVHc41rUMhLt_IeSnkKN5gJLOZfGFPx-YiX1FCt_R6FvrVhK8Z0-96Oh6DCxUzM5VZyqwE8SJB8z_Syw"/>
+<div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+<button class="size-16 bg-white text-black rounded-full flex items-center justify-center shadow-xl transform scale-90 group-hover:scale-100 transition-transform duration-300">
+<span class="material-symbols-outlined text-4xl fill-[1]">play_arrow</span>
+</button>
+</div>
+</div>
+<div class="px-2">
+<h3 class="font-bold text-white mb-1 truncate text-lg">Discovery Weekly</h3>
+<p class="text-xs text-slate-500 font-medium">Your fresh mixtape.</p>
+</div>
+</div>
+<!-- Modern Card 3 -->
+<div class="glass-card p-4 rounded-[2rem] group cursor-pointer">
+<div class="relative mb-4 aspect-square rounded-[1.5rem] overflow-hidden shadow-2xl">
+<img alt="Release Radar" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAsGxbHNEeywMlb823S4WP3YWK7OH9rull8kU6zQTdw4lSFw0sEEUKTqMKN9REseo1-TZnOwGEtf9CoVk1e9H2X8yqX3VsL5x-CiVRF4t2-XwJ4C198pC7dX5qIoQyJZDswYKp9VlBc4kS8E372HmvCF4sZ_kKmpTu1CvCeWWurNUrXzg2_5NThq94Nfv0n5-ynRTqRukO4C0oyMghNBH4evivPQCNLFKNEO-5tjg66zVIjfk6CqWSSaiOxix0kD-6Mjxt-E8dR1wZB"/>
+<div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+<button class="size-16 bg-white text-black rounded-full flex items-center justify-center shadow-xl transform scale-90 group-hover:scale-100 transition-transform duration-300">
+<span class="material-symbols-outlined text-4xl fill-[1]">play_arrow</span>
+</button>
+</div>
+</div>
+<div class="px-2">
+<h3 class="font-bold text-white mb-1 truncate text-lg">Release Radar</h3>
+<p class="text-xs text-slate-500 font-medium">Newest releases today.</p>
+</div>
+</div>
+<!-- Modern Card 4 -->
+<div class="glass-card p-4 rounded-[2rem] group cursor-pointer">
+<div class="relative mb-4 aspect-square rounded-[1.5rem] overflow-hidden shadow-2xl">
+<img alt="Chill Mix" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" src="https://lh3.googleusercontent.com/aida-public/AB6AXuApYn4XnXo4bKbyHNiwobl0xIKMyDO7FZk58W1YirccwAC3_keqMLbHXF9oO_HEPy2cMcR5e1gmXnb8N2LajY19Rms_dzdMHe0C8-4ntWhlI-TXEdP3k1ygMZ9RTrPYMXWbjiQVNTzRV2Tx2YwSI5t34-8fbIDJ7wx3t_w2acW5hHd4s3YZmVgszMwK4K1VVz0k3ZF2HUe1m_FXUsmykL0ELigatys1Hiwj2XJS3iWttv9UXmNxrnxAIBpzNy5BSpvjUjTF42rvTkm8"/>
+<div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+<button class="size-16 bg-white text-black rounded-full flex items-center justify-center shadow-xl transform scale-90 group-hover:scale-100 transition-transform duration-300">
+<span class="material-symbols-outlined text-4xl fill-[1]">play_arrow</span>
+</button>
+</div>
+</div>
+<div class="px-2">
+<h3 class="font-bold text-white mb-1 truncate text-lg">Chill Mix</h3>
+<p class="text-xs text-slate-500 font-medium">Mellow night sounds.</p>
+</div>
+</div>
+<!-- Modern Card 5 -->
+<div class="glass-card p-4 rounded-[2rem] group cursor-pointer">
+<div class="relative mb-4 aspect-square rounded-[1.5rem] overflow-hidden shadow-2xl">
+<img alt="Focus Mix" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBNYibf8-lp_a4RytZ2tAkceSlUqywpUKdyIZ_JTxJ2TVufb0uMe6ejPP4yY_HLss8_hJjfp5ED95YHXMASm07iMhTiN0gNzXec7mR0VcIotKR4POXrs77G6Iti4V5AJDgmmLNBvNylTD7_j1sMYQV0jn_Lc6cBhhJnbWr4nsdKkX-Ck1iuRPHwZzkw9nVH1o6hNv49Fhx4bk91iLwikUY12sZDLaq8xkZKuOSHHuUIUs4PMSBlVkEDNuTZ46EcllHngGBNyHkYEMYt"/>
+<div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+<button class="size-16 bg-white text-black rounded-full flex items-center justify-center shadow-xl transform scale-90 group-hover:scale-100 transition-transform duration-300">
+<span class="material-symbols-outlined text-4xl fill-[1]">play_arrow</span>
+</button>
+</div>
+</div>
+<div class="px-2">
+<h3 class="font-bold text-white mb-1 truncate text-lg">Focus Mix</h3>
+<p class="text-xs text-slate-500 font-medium">Beats for deep work.</p>
+</div>
+</div>
+</div>
+</section>
+<!-- Recents Section -->
+<section>
+<div class="flex items-center justify-between mb-8">
+<div>
+<h2 class="text-3xl font-bold tracking-tight text-white">Jump back in</h2>
+<p class="text-slate-400 text-sm mt-1">Continue where you left off</p>
+</div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+<!-- Horizontal Card 1 -->
+<div class="glass-card flex items-center gap-4 p-3 rounded-2xl group cursor-pointer">
+<div class="size-20 flex-shrink-0 rounded-xl overflow-hidden shadow-lg">
+<img alt="Lofi Girl" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCo2wSDZ9Z836MAPvS0qTb9itZx_tcpSE2r2badGAnBUguoc17X_q9mJGbDFbjb7bNiZ8XZcHH1cZhmXFJbjcsBc4YpeFXIaKClPx54iSrlFAybE8aQz_Wse-9VKiEN4uE5U0wcKRSIqO2NOOQ8eBowbBLuB6mB2yabgMBLu2ROVOKYfYHO16yfUKlwNXyqnoWYlE-JFpZAbx-_tx_brIPoCY0SqwWvf_7ftAvswNMdOUarn4rD5GPpZjIx4ngFKdniTvdpsP-zUmnh"/>
+</div>
+<div class="flex-1 overflow-hidden">
+<h3 class="font-bold text-white truncate">Lofi Girl</h3>
+<p class="text-xs text-slate-500 font-medium">Lofi Records</p>
+</div>
+<button class="size-10 bg-accent text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+<span class="material-symbols-outlined fill-[1]">play_arrow</span>
+</button>
+</div>
+<!-- Horizontal Card 2 -->
+<div class="glass-card flex items-center gap-4 p-3 rounded-2xl group cursor-pointer">
+<div class="size-20 flex-shrink-0 rounded-xl overflow-hidden shadow-lg">
+<img alt="Summer Vibes" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC0phQWn0kUNiSWo5BACkshlSK--KEC6ghXtSPDKs5JbQ2m1M1ofz3eBRvMrO2-AjFzCdmSGgYiS1U6mWNjSJniiNR71pyxHmHcrME6jNMcYYQnjgDBwvje4qN4oNh1x9a8-L66_SXfw8pHKublc_KIQ1-elhL0BR0S9sbziy08viBgwHk1S9wF6ui5Omk12yly7-6kK3fP15ut4Nq_MBrad3ovAvzvO0C3DVKpwbdgCoN4XbT3BzB-nnlZriL5-rTp7-MgmSiNtpJk"/>
+</div>
+<div class="flex-1 overflow-hidden">
+<h3 class="font-bold text-white truncate">Summer Vibes</h3>
+<p class="text-xs text-slate-500 font-medium">EchoStream Mix</p>
+</div>
+<button class="size-10 bg-accent text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+<span class="material-symbols-outlined fill-[1]">play_arrow</span>
+</button>
+</div>
+<!-- Horizontal Card 3 -->
+<div class="glass-card flex items-center gap-4 p-3 rounded-2xl group cursor-pointer">
+<div class="size-20 flex-shrink-0 rounded-xl overflow-hidden shadow-lg">
+<img alt="Classic Piano" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCuNVvwKc8Fi90Uyka-eeV56i_hiXlqNEdgzr6Em8oKueoxkGI_z8uC_CCI_UQ-gNK-mO8pNxloPalH1XJxMzLyPnahJQh9nm9IE3oRCfmt4kJWXQigBmLzjGIXUXCR1hDa3glqVDmHfgnr2Tk25umD8EuoHKNO83Hucz110vExGvZG_cYuxOKP6np5eHuIqjLZwGPtjs6RRfv6zhiVF59YIlZv0Fqfkklu3aTo1U6xaq48TMwTsLxUGN_ZahaFU55GoptmxYxro80r"/>
+</div>
+<div class="flex-1 overflow-hidden">
+<h3 class="font-bold text-white truncate">Classic Piano</h3>
+<p class="text-xs text-slate-500 font-medium">Frédéric Chopin</p>
+</div>
+<button class="size-10 bg-accent text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+<span class="material-symbols-outlined fill-[1]">play_arrow</span>
+</button>
+</div>
+<!-- Horizontal Card 4 -->
+<div class="glass-card flex items-center gap-4 p-3 rounded-2xl group cursor-pointer">
+<div class="size-20 flex-shrink-0 rounded-xl overflow-hidden shadow-lg">
+<img alt="Pop Rising" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAv1H2k-FsKmL93nDiS8hwQpzGSfZOMuBrD5zyCyDNcOmXQubZqMejSbV2uqERMU7iKP1rBWDa8j08CjHo521QTFk3obHJpMU3glI5AofxvOrZKTumiGSOeGYiAtA2Q-1JhauDWvtZ64pqB3GMrTYltn5QluljWpPu_iA6tHEtRE9bVv_hVdSyCUIdIJz9R6gS80Q9LbEK9NZrr91vU60dsSjzlfVE8_hPJHhosKCTz6QBmHp3q8t2CaV6wUCo1FVgS_LlWPOcF06Pk"/>
+</div>
+<div class="flex-1 overflow-hidden">
+<h3 class="font-bold text-white truncate">Pop Rising</h3>
+<p class="text-xs text-slate-500 font-medium">EchoStream Hits</p>
+</div>
+<button class="size-10 bg-accent text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+<span class="material-symbols-outlined fill-[1]">play_arrow</span>
+</button>
+</div>
+</div>
+</section>
+</div>
+</main>
+<!-- Player Bar (Floating/Integrated Design) -->
+<div class="fixed bottom-8 left-1/2 -translate-x-1/2 w-[95%] max-w-7xl z-50">
+<footer class="glass-panel rounded-3xl p-4 px-8 flex items-center justify-between shadow-2xl shadow-black/60 ring-1 ring-white/10">
+<!-- Now Playing -->
+<div class="flex items-center gap-4 w-1/4">
+<div class="size-16 flex-shrink-0 rounded-2xl overflow-hidden shadow-2xl shadow-accent/20">
+<img alt="Blinding Lights" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAcYyBcFStaSZAZ2XuKwV5e8c5Q-nrsXjZrIEZQkA9D8e0qLBq5pkZZ8H_Jr8g_qWlf1fr6g-O9cefXvWb0iFVyhLkyeTWpDcAELocDc_PR1a8BXQGfDWhJKaKMbj7DRuQvo0yxVGm7P6UKueOUxJr8t0FDL0KoYICNWaGL1xPnQed9qo-EERzN_AHn0YaAfKN8G1LMQHAp9E12YUikF1w7Xd4ErtGf9nR12tx231Utg-TeYg7GDevNv1uyTl4QuKOk3H0KrkVfy6qV"/>
+</div>
+<div class="flex flex-col overflow-hidden">
+<a class="text-base font-bold text-white hover:text-accent truncate transition-colors" href="#">Blinding Lights</a>
+<a class="text-xs text-slate-400 font-medium hover:text-white truncate transition-colors" href="#">The Weeknd</a>
+</div>
+<button class="text-accent hover:scale-110 active:scale-95 transition-all ml-2">
+<span class="material-symbols-outlined fill-[1] text-2xl">favorite</span>
+</button>
+</div>
+<!-- Playback Controls -->
+<div class="flex flex-col items-center gap-3 flex-1 max-w-xl">
+<div class="flex items-center gap-8">
+<button class="text-slate-400 hover:text-white transition-colors">
+<span class="material-symbols-outlined text-2xl">shuffle</span>
+</button>
+<button class="text-white hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-4xl">skip_previous</span>
+</button>
+<button class="size-14 bg-white text-black rounded-full flex items-center justify-center hover:scale-105 active:scale-95 transition-all shadow-xl">
+<span class="material-symbols-outlined fill-[1] text-4xl">play_arrow</span>
+</button>
+<button class="text-white hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-4xl">skip_next</span>
+</button>
+<button class="text-slate-400 hover:text-white transition-colors">
+<span class="material-symbols-outlined text-2xl">repeat</span>
+</button>
+</div>
+<div class="flex items-center gap-3 w-full">
+<span class="text-[10px] text-slate-500 font-bold tabular-nums w-8 text-right">1:24</span>
+<div class="h-1.5 flex-1 bg-white/5 rounded-full relative group cursor-pointer overflow-hidden">
+<div class="absolute inset-y-0 left-0 w-1/3 bg-accent rounded-full"></div>
+<div class="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+</div>
+<span class="text-[10px] text-slate-500 font-bold tabular-nums w-8">3:20</span>
+</div>
+</div>
+<!-- Volume & Tools -->
+<div class="flex items-center justify-end gap-5 w-1/4">
+<button class="text-slate-400 hover:text-accent transition-colors">
+<span class="material-symbols-outlined text-2xl">lyrics</span>
+</button>
+<button class="text-slate-400 hover:text-accent transition-colors">
+<span class="material-symbols-outlined text-2xl">queue_music</span>
+</button>
+<div class="flex items-center gap-3 w-32 ml-2">
+<span class="material-symbols-outlined text-slate-400 text-xl">volume_up</span>
+<div class="h-1.5 flex-1 bg-white/5 rounded-full relative group cursor-pointer overflow-hidden">
+<div class="absolute inset-y-0 left-0 w-2/3 bg-white/60 group-hover:bg-accent rounded-full transition-colors"></div>
+</div>
+</div>
+<button class="text-slate-400 hover:text-white transition-colors">
+<span class="material-symbols-outlined text-2xl">fullscreen</span>
+</button>
+</div>
+</footer>
+</div>
+</div>
+</body></html>

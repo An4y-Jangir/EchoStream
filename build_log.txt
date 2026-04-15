@@ -1,0 +1,503 @@
+﻿  Γû▓ Next.js 14.2.3
+
+   Creating an optimized production build ...
+node.exe : Failed to 
+compile.
+At line:1 char:1
++ & "C:\Program 
+Files\nodejs/node.exe" 
+"C:\Program 
+Files\nodejs/node_mo 
+...
++ ~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~
+~~
+    + CategoryInfo     
+         : NotSpecifi  
+  ed: (Failed to com   
+ pile.:String) [],     
+RemoteException
+    + FullyQualifiedEr 
+   rorId : NativeComm  
+  andError
+ 
+
+./app/globals.css.webpa
+ck[javascript/auto]!=!.
+/node_modules/next/dist
+/build/webpack/loaders/
+css-loader/src/index.js
+??ruleSet[1].rules[13].
+oneOf[12].use[2]!./node
+_modules/next/dist/buil
+d/webpack/loaders/postc
+ss-loader/src/index.js?
+?ruleSet[1].rules[13].o
+neOf[12].use[3]!./app/g
+lobals.css
+Error: Cannot find 
+module 'autoprefixer'
+Require stack:
+- D:\Anay\CODES\Music 
+player just like i want
+\node_modules\next\dist
+\build\webpack\config\b
+locks\css\plugins.js
+- D:\Anay\CODES\Music 
+player just like i want
+\node_modules\next\dist
+\build\webpack\config\b
+locks\css\index.js
+- D:\Anay\CODES\Music 
+player just like i want
+\node_modules\next\dist
+\build\webpack\config\i
+ndex.js
+- D:\Anay\CODES\Music 
+player just like i want
+\node_modules\next\dist
+\build\webpack-config.j
+s
+- D:\Anay\CODES\Music 
+player just like i want
+\node_modules\next\dist
+\build\webpack-build\im
+pl.js
+- D:\Anay\CODES\Music 
+player just like i want
+\node_modules\next\dist
+\compiled\jest-worker\p
+rocessChild.js
+    at 
+Module.<anonymous> (nod
+e:internal/modules/cjs/
+loader:1456:15)
+    at 
+D:\Anay\CODES\Music 
+player just like i want
+\node_modules\next\dist
+\server\require-hook.js
+:55:36
+    at require.resolve 
+(node:internal/modules/
+helpers:163:19)
+    at loadPlugin 
+(D:\Anay\CODES\Music 
+player just like i want
+\node_modules\next\dist
+\build\webpack\config\b
+locks\css\plugins.js:49
+:32)
+    at 
+D:\Anay\CODES\Music 
+player just like i want
+\node_modules\next\dist
+\build\webpack\config\b
+locks\css\plugins.js:15
+7:56
+    at Array.map 
+(<anonymous>)
+    at 
+getPostCssPlugins 
+(D:\Anay\CODES\Music 
+player just like i want
+\node_modules\next\dist
+\build\webpack\config\b
+locks\css\plugins.js:15
+7:47)
+    at async 
+D:\Anay\CODES\Music 
+player just like i want
+\node_modules\next\dist
+\build\webpack\config\b
+locks\css\index.js:124:
+36
+    at async 
+D:\Anay\CODES\Music 
+player just like i want
+\node_modules\next\dist
+\build\webpack\loaders\
+postcss-loader\src\inde
+x.js:51:40
+    at async 
+Span.traceAsyncFn 
+(D:\Anay\CODES\Music 
+player just like i want
+\node_modules\next\dist
+\trace\trace.js:154:20)
+
+Import trace for 
+requested module:
+./app/globals.css.webpa
+ck[javascript/auto]!=!.
+/node_modules/next/dist
+/build/webpack/loaders/
+css-loader/src/index.js
+??ruleSet[1].rules[13].
+oneOf[12].use[2]!./node
+_modules/next/dist/buil
+d/webpack/loaders/postc
+ss-loader/src/index.js?
+?ruleSet[1].rules[13].o
+neOf[12].use[3]!./app/g
+lobals.css
+./app/globals.css
+
+./app/globals.css
+Error: Cannot find 
+module 'autoprefixer'
+Require stack:
+- D:\Anay\CODES\Music 
+player just like i want
+\node_modules\next\dist
+\build\webpack\config\b
+locks\css\plugins.js
+- D:\Anay\CODES\Music 
+player just like i want
+\node_modules\next\dist
+\build\webpack\config\b
+locks\css\index.js
+- D:\Anay\CODES\Music 
+player just like i want
+\node_modules\next\dist
+\build\webpack\config\i
+ndex.js
+- D:\Anay\CODES\Music 
+player just like i want
+\node_modules\next\dist
+\build\webpack-config.j
+s
+- D:\Anay\CODES\Music 
+player just like i want
+\node_modules\next\dist
+\build\webpack-build\im
+pl.js
+- D:\Anay\CODES\Music 
+player just like i want
+\node_modules\next\dist
+\compiled\jest-worker\p
+rocessChild.js
+    at 
+Module.<anonymous> (nod
+e:internal/modules/cjs/
+loader:1456:15)
+    at 
+D:\Anay\CODES\Music 
+player just like i want
+\node_modules\next\dist
+\server\require-hook.js
+:55:36
+    at require.resolve 
+(node:internal/modules/
+helpers:163:19)
+    at loadPlugin 
+(D:\Anay\CODES\Music 
+player just like i want
+\node_modules\next\dist
+\build\webpack\config\b
+locks\css\plugins.js:49
+:32)
+    at 
+D:\Anay\CODES\Music 
+player just like i want
+\node_modules\next\dist
+\build\webpack\config\b
+locks\css\plugins.js:15
+7:56
+    at Array.map 
+(<anonymous>)
+    at 
+getPostCssPlugins 
+(D:\Anay\CODES\Music 
+player just like i want
+\node_modules\next\dist
+\build\webpack\config\b
+locks\css\plugins.js:15
+7:47)
+    at async 
+D:\Anay\CODES\Music 
+player just like i want
+\node_modules\next\dist
+\build\webpack\config\b
+locks\css\index.js:124:
+36
+    at async 
+D:\Anay\CODES\Music 
+player just like i want
+\node_modules\next\dist
+\build\webpack\loaders\
+postcss-loader\src\inde
+x.js:51:40
+    at async 
+Span.traceAsyncFn 
+(D:\Anay\CODES\Music 
+player just like i want
+\node_modules\next\dist
+\trace\trace.js:154:20)
+    at 
+tryRunOrWebpackError 
+(D:\Anay\CODES\Music 
+player just like i want
+\node_modules\next\dist
+\compiled\webpack\bundl
+e5.js:28:312989)
+    at __webpack_requir
+e_module__ 
+(D:\Anay\CODES\Music 
+player just like i want
+\node_modules\next\dist
+\compiled\webpack\bundl
+e5.js:28:131165)
+    at __nested_webpack
+_require_153728__ 
+(D:\Anay\CODES\Music 
+player just like i want
+\node_modules\next\dist
+\compiled\webpack\bundl
+e5.js:28:130607)
+    at 
+D:\Anay\CODES\Music 
+player just like i want
+\node_modules\next\dist
+\compiled\webpack\bundl
+e5.js:28:131454
+    at symbolIterator 
+(D:\Anay\CODES\Music 
+player just like i want
+\node_modules\next\dist
+\compiled\neo-async\asy
+nc.js:1:14444)
+    at done 
+(D:\Anay\CODES\Music 
+player just like i want
+\node_modules\next\dist
+\compiled\neo-async\asy
+nc.js:1:14824)
+    at Hook.eval [as 
+callAsync] (eval at 
+create 
+(D:\Anay\CODES\Music 
+player just like i want
+\node_modules\next\dist
+\compiled\webpack\bundl
+e5.js:13:28858), 
+<anonymous>:15:1)
+    at Hook.CALL_ASYNC_
+DELEGATE [as 
+_callAsync] 
+(D:\Anay\CODES\Music 
+player just like i want
+\node_modules\next\dist
+\compiled\webpack\bundl
+e5.js:13:26012)
+    at 
+D:\Anay\CODES\Music 
+player just like i want
+\node_modules\next\dist
+\compiled\webpack\bundl
+e5.js:28:130328
+    at symbolIterator 
+(D:\Anay\CODES\Music 
+player just like i want
+\node_modules\next\dist
+\compiled\neo-async\asy
+nc.js:1:14402)
+-- inner error --
+Error: Cannot find 
+module 'autoprefixer'
+Require stack:
+- D:\Anay\CODES\Music 
+player just like i want
+\node_modules\next\dist
+\build\webpack\config\b
+locks\css\plugins.js
+- D:\Anay\CODES\Music 
+player just like i want
+\node_modules\next\dist
+\build\webpack\config\b
+locks\css\index.js
+- D:\Anay\CODES\Music 
+player just like i want
+\node_modules\next\dist
+\build\webpack\config\i
+ndex.js
+- D:\Anay\CODES\Music 
+player just like i want
+\node_modules\next\dist
+\build\webpack-config.j
+s
+- D:\Anay\CODES\Music 
+player just like i want
+\node_modules\next\dist
+\build\webpack-build\im
+pl.js
+- D:\Anay\CODES\Music 
+player just like i want
+\node_modules\next\dist
+\compiled\jest-worker\p
+rocessChild.js
+    at 
+Module.<anonymous> (nod
+e:internal/modules/cjs/
+loader:1456:15)
+    at 
+D:\Anay\CODES\Music 
+player just like i want
+\node_modules\next\dist
+\server\require-hook.js
+:55:36
+    at require.resolve 
+(node:internal/modules/
+helpers:163:19)
+    at loadPlugin 
+(D:\Anay\CODES\Music 
+player just like i want
+\node_modules\next\dist
+\build\webpack\config\b
+locks\css\plugins.js:49
+:32)
+    at 
+D:\Anay\CODES\Music 
+player just like i want
+\node_modules\next\dist
+\build\webpack\config\b
+locks\css\plugins.js:15
+7:56
+    at Array.map 
+(<anonymous>)
+    at 
+getPostCssPlugins 
+(D:\Anay\CODES\Music 
+player just like i want
+\node_modules\next\dist
+\build\webpack\config\b
+locks\css\plugins.js:15
+7:47)
+    at async 
+D:\Anay\CODES\Music 
+player just like i want
+\node_modules\next\dist
+\build\webpack\config\b
+locks\css\index.js:124:
+36
+    at async 
+D:\Anay\CODES\Music 
+player just like i want
+\node_modules\next\dist
+\build\webpack\loaders\
+postcss-loader\src\inde
+x.js:51:40
+    at async 
+Span.traceAsyncFn 
+(D:\Anay\CODES\Music 
+player just like i want
+\node_modules\next\dist
+\trace\trace.js:154:20)
+    at 
+Object.<anonymous> 
+(D:\Anay\CODES\Music 
+player just like i want
+\node_modules\next\dist
+\build\webpack\loaders\
+css-loader\src\index.js
+??ruleSet[1].rules[13].
+oneOf[12].use[2]!D:\Ana
+y\CODES\Music player 
+just like i want\node_m
+odules\next\dist\build\
+webpack\loaders\postcss
+-loader\src\index.js??r
+uleSet[1].rules[13].one
+Of[12].use[3]!D:\Anay\C
+ODES\Music player just 
+like i want\app\globals
+.css:1:7)
+    at 
+D:\Anay\CODES\Music 
+player just like i want
+\node_modules\next\dist
+\compiled\webpack\bundl
+e5.js:28:922493
+    at Hook.eval [as 
+call] (eval at create 
+(D:\Anay\CODES\Music 
+player just like i want
+\node_modules\next\dist
+\compiled\webpack\bundl
+e5.js:13:28636), 
+<anonymous>:7:1)
+    at 
+Hook.CALL_DELEGATE [as 
+_call] 
+(D:\Anay\CODES\Music 
+player just like i want
+\node_modules\next\dist
+\compiled\webpack\bundl
+e5.js:13:25906)
+    at 
+D:\Anay\CODES\Music 
+player just like i want
+\node_modules\next\dist
+\compiled\webpack\bundl
+e5.js:28:131198
+    at 
+tryRunOrWebpackError 
+(D:\Anay\CODES\Music 
+player just like i want
+\node_modules\next\dist
+\compiled\webpack\bundl
+e5.js:28:312943)
+    at __webpack_requir
+e_module__ 
+(D:\Anay\CODES\Music 
+player just like i want
+\node_modules\next\dist
+\compiled\webpack\bundl
+e5.js:28:131165)
+    at __nested_webpack
+_require_153728__ 
+(D:\Anay\CODES\Music 
+player just like i want
+\node_modules\next\dist
+\compiled\webpack\bundl
+e5.js:28:130607)
+    at 
+D:\Anay\CODES\Music 
+player just like i want
+\node_modules\next\dist
+\compiled\webpack\bundl
+e5.js:28:131454
+    at symbolIterator 
+(D:\Anay\CODES\Music 
+player just like i want
+\node_modules\next\dist
+\compiled\neo-async\asy
+nc.js:1:14444)
+
+Generated code for 
+D:\Anay\CODES\Music 
+player just like i want
+\node_modules\next\dist
+\build\webpack\loaders\
+css-loader\src\index.js
+??ruleSet[1].rules[13].
+oneOf[12].use[2]!D:\Ana
+y\CODES\Music player 
+just like i want\node_m
+odules\next\dist\build\
+webpack\loaders\postcss
+-loader\src\index.js??r
+uleSet[1].rules[13].one
+Of[12].use[3]!D:\Anay\C
+ODES\Music player just 
+like i 
+want\app\globals.css
+
+Import trace for 
+requested module:
+./app/globals.css
+
+
+> Build failed because 
+of webpack errors

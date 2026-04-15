@@ -11,7 +11,6 @@ interface PlayerContextType {
   currentTime: number; // in seconds
   duration: number; // in seconds
   isExpanded: boolean;
-  playSong: (song: Song) => void;
   togglePlay: () => void;
   seek: (progress: number) => void;
   toggleExpanded: () => void;

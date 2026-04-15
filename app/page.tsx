@@ -84,7 +84,7 @@ export default function Home() {
     
     setLocalSongs(newLocalSongs);
     if (newLocalSongs.length > 0) {
-      playSong(newLocalSongs[0], newLocalSongs);
+      playSong(newLocalSongs[0]);
     }
     // Reset so same file can be uploaded again if needed
     if (fileInputRef.current) fileInputRef.current.value = '';

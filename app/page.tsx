@@ -246,7 +246,7 @@ export default function Home() {
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 {localSongs.map((song) => (
-                  <div key={song.id} onClick={() => playSong(song, localSongs)} className="glass-card flex items-center gap-4 p-3 rounded-2xl group cursor-pointer">
+                  <div key={song.id} onClick={() => playSong(song)} className="glass-card flex items-center gap-4 p-3 rounded-2xl group cursor-pointer">
                     <div className="size-20 flex-shrink-0 rounded-xl overflow-hidden shadow-lg">
                       <img alt={song.title} className="w-full h-full object-cover" src={song.albumArt}/>
                     </div>
@@ -273,7 +273,7 @@ export default function Home() {
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               {MOCK_SONGS.map((song) => (
-                <div key={song.id} onClick={() => playSong(song, MOCK_SONGS)} className="glass-card flex items-center gap-4 p-3 rounded-2xl group cursor-pointer">
+                <div key={song.id} onClick={() => playSong(song)} className="glass-card flex items-center gap-4 p-3 rounded-2xl group cursor-pointer">
                   <div className="size-20 flex-shrink-0 rounded-xl overflow-hidden shadow-lg">
                     <img alt={song.title} className="w-full h-full object-cover" src={song.albumArt}/>
                   </div>

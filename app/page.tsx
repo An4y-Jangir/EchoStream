@@ -217,7 +217,7 @@ export default function Home() {
             </div>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
               {MOCK_MIXES.map((mix) => (
-                <div key={mix.id} className="glass-card p-4 rounded-[2rem] group cursor-pointer" onClick={() => playSong(MOCK_SONGS[0], MOCK_SONGS)}>
+                <div key={mix.id} className="glass-card p-4 rounded-[2rem] group cursor-pointer" onClick={() => playSong(MOCK_SONGS[0])}>
                   <div className="relative mb-4 aspect-square rounded-[1.5rem] overflow-hidden shadow-2xl">
                     <img alt={mix.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" src={mix.coverArt}/>
                     <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">

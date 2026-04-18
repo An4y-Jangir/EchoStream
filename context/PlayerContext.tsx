@@ -36,7 +36,7 @@ interface PlayerContextType {
   contextQueue: Song[];
   history: Song[];
   playbackSource: PlaybackSource | null;
-  playSong: (song: Song, source?: { id: string; list: Song[] }) => void;
+  playSong: (song: Song, source?: any) => void;
   addToQueue: (song: Song) => void;
   reorderUserQueue: (newQueue: Song[]) => void;
   removeFromUserQueue: (songId: string) => void;

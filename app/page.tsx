@@ -15,6 +15,31 @@ export default function Home() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [localSongs, setLocalSongs] = useState<Song[]>([]);
 
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<Song[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+
+  const handleSearch = async (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key !== 'Enter') return;
+    const query = searchQuery;
+    if (!query.trim()) {
+      setSearchResults([]);
+      return;
+    }
+    setIsSearching(true);
+    try {
+      const res = await fetch('/api/search?q=' + encodeURIComponent(query));
+      if (res.ok) {
+        const data = await res.json();
+        setSearchResults(data.results || []);
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
@@ -189,7 +214,17 @@ export default function Home() {
             </div>
             <div className="relative w-full max-w-lg">
               <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 text-xl">search</span>
-              <input className="w-full bg-white/5 border border-white/5 rounded-2xl py-3 pl-12 pr-4 text-sm focus:ring-2 focus:ring-accent/50 focus:border-accent/50 focus:bg-white/10 outline-none transition-all text-white placeholder-slate-500" placeholder="Search for tracks, artists or podcasts..." type="text"/>
+              <input 
+                className="w-full bg-white/5 border border-white/5 rounded-2xl py-3 pl-12 pr-4 text-sm focus:ring-2 focus:ring-accent/50 focus:border-accent/50 focus:bg-white/10 outline-none transition-all text-white placeholder-slate-500" 
+                placeholder="Search for tracks, artists or podcasts..." 
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyDown={handleSearch}
+              />
+              {isSearching && (
+                <div className="absolute right-4 top-1/2 -translate-y-1/2 size-4 border-2 border-accent border-t-transparent rounded-full animate-spin" />
+              )}
             </div>
           </div>
           <div className="flex items-center gap-4">
@@ -267,13 +302,13 @@ export default function Home() {
           <section>
             <div className="flex items-center justify-between mb-8">
               <div>
-                <h2 className="text-3xl font-bold tracking-tight text-white">Jump back in</h2>
-                <p className="text-slate-400 text-sm mt-1">Continue where you left off</p>
+                <h2 className="text-3xl font-bold tracking-tight text-white">{searchResults.length > 0 ? "Search Results" : "Jump back in"}</h2>
+                <p className="text-slate-400 text-sm mt-1">{searchResults.length > 0 ? "From YouTube Music" : "Continue where you left off"}</p>
               </div>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {MOCK_SONGS.map((song) => (
-                <div key={song.id} onClick={() => playSong(song, MOCK_SONGS)} className="glass-card flex items-center gap-4 p-3 rounded-2xl group cursor-pointer">
+              {(searchResults.length > 0 ? searchResults : MOCK_SONGS).map((song) => (
+                <div key={song.id} onClick={() => playSong(song, searchResults.length > 0 ? searchResults : MOCK_SONGS)} className="glass-card flex items-center gap-4 p-3 rounded-2xl group cursor-pointer">
                   <div className="size-20 flex-shrink-0 rounded-xl overflow-hidden shadow-lg">
                     <img alt={song.title} className="w-full h-full object-cover" src={song.albumArt}/>
                   </div>

@@ -9,14 +9,19 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@distube/ytdl-core": "^4.16.12",
     "clsx": "^2.1.1",
     "framer-motion": "^11.2.10",
     "jsmediatags": "^3.9.7",
     "lucide-react": "^0.395.0",
     "next": "14.2.3",
+    "play-dl": "^1.9.7",
     "react": "^18",
     "react-dom": "^18",
-    "tailwind-merge": "^2.3.0"
+    "react-youtube": "^10.1.0",
+    "tailwind-merge": "^2.3.0",
+    "youtubei.js": "^17.0.1",
+    "ytmusic-api": "^5.3.1"
   },
   "devDependencies": {
     "@types/jsmediatags": "^3.9.6",

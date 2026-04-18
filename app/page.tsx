@@ -183,7 +183,7 @@ export default function Home() {
             <input 
               type="file" 
               accept="audio/*" 
-              webkitdirectory="true" 
+              {...({ webkitdirectory: "true", directory: "" } as any)} 
               multiple
               className="hidden" 
               ref={fileInputRef}

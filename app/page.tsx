@@ -140,7 +140,7 @@ export default function Home() {
             <span className="material-symbols-outlined text-white text-2xl fill-[1]">auto_awesome</span>
           </div>
           <div>
-            <h1 className="text-xl font-bold tracking-tight text-white leading-none">EchoStream</h1>
+            <h1 className="text-2xl font-black tracking-tighter bg-clip-text text-transparent bg-gradient-to-br from-white via-white to-white/40">EchoStream</h1>
             <p className="text-[10px] text-accent font-bold tracking-[0.2em] mt-1">PREMIUM</p>
           </div>
         </div>
@@ -280,7 +280,7 @@ export default function Home() {
               <section>
                 <div className="flex items-center justify-between mb-8">
               <div>
-                <h2 className="text-3xl font-bold tracking-tight text-white">Made For You</h2>
+                <h2 className="text-2xl font-bold tracking-tight text-white">Made For You</h2>
                 <p className="text-slate-400 text-sm mt-1">Hand-picked selections based on your taste</p>
               </div>
               <button className="text-sm font-bold text-accent hover:underline flex items-center gap-1">
@@ -311,7 +311,7 @@ export default function Home() {
           <section>
             <div className="flex items-center justify-between mb-8">
               <div>
-                <h2 className="text-3xl font-bold tracking-tight text-white">{searchResults.length > 0 ? "Search Results" : "Jump back in"}</h2>
+                <h2 className="text-2xl font-bold tracking-tight text-white">{searchResults.length > 0 ? "Search Results" : "Jump back in"}</h2>
                 <p className="text-slate-400 text-sm mt-1">{searchResults.length > 0 ? "From YouTube Music" : "Continue where you left off"}</p>
               </div>
             </div>
@@ -354,7 +354,7 @@ export default function Home() {
             <section>
               <div className="flex items-center justify-between mb-8">
                 <div>
-                  <h2 className="text-3xl font-bold tracking-tight text-white">Local Library</h2>
+                  <h2 className="text-2xl font-black text-white px-2">Local Music</h2>
                   <p className="text-slate-400 text-sm mt-1">{localSongs.length} tracks found on your device</p>
                 </div>
               </div>

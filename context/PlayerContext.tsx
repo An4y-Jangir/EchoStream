@@ -521,6 +521,10 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
       if (e.key.toLowerCase() === 'f') {
         setIsExpanded(prev => !prev);
       }
+
+      if (e.key.toLowerCase() === 'q') {
+        setIsQueueVisible(prev => !prev);
+      }
     };
 
     window.addEventListener('keydown', handleKeyDown);

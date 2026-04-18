@@ -174,7 +174,7 @@ export function ExpandedPlayer() {
                  className="absolute left-0 top-0 bottom-0 w-80 bg-black/60 backdrop-blur-3xl z-40 p-6 pt-24 overflow-y-auto no-scrollbar shadow-[20px_0_40px_-10px_rgba(0,0,0,0.5)] border-r border-white/5 flex flex-col"
               >
                 <div className="flex items-center justify-between mb-8">
-                  <h3 className="text-2xl font-bold text-white">Up Next</h3>
+                  <h3 className="text-xl font-bold text-white">Up Next</h3>
                   <button onClick={toggleQueue} className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors">
                     <span className="material-symbols-outlined text-sm">close</span>
                   </button>

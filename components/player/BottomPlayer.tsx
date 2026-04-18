@@ -97,7 +97,7 @@ export function BottomPlayer() {
                  className="absolute bottom-[100%] right-10 mb-2 w-[400px] max-h-[60vh] bg-black/70 backdrop-blur-3xl z-[100] rounded-3xl p-6 overflow-y-auto no-scrollbar shadow-[0_-10px_40px_-5px_rgba(0,0,0,0.5)] border border-white/10 pointer-events-auto flex flex-col"
               >
                 <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-xl font-bold text-white">Up Next</h3>
+                  <h3 className="text-lg font-bold text-white">Up Next</h3>
                   <button onClick={toggleQueue} className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors">
                     <span className="material-symbols-outlined text-sm">close</span>
                   </button>

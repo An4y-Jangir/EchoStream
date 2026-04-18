@@ -12,7 +12,7 @@ interface LiveLyricsProps {
 
 export function LiveLyrics({ lyrics, currentTime }: LiveLyricsProps) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const { seek, duration } = usePlayer();
+  const { seek, duration, lyricsMode } = usePlayer();
   
   const activeIndex = lyrics.findIndex((line, index) => {
     const nextLine = lyrics[index + 1];
@@ -90,7 +90,11 @@ export function LiveLyrics({ lyrics, currentTime }: LiveLyricsProps) {
                const wordTimeWindow = lineDuration / Math.max(1, words.length);
                
                // A word is active if the line is past, OR if the line is currently active and the time has reached this word
-               const isWordActive = isPast || (isActive && activeProgress >= (wIndex * wordTimeWindow * 0.8)); // 0.8 modifier makes it light up slightly ahead of pacing
+               let isWordActive = isPast || (isActive && activeProgress >= (wIndex * wordTimeWindow * 0.8)); // 0.8 modifier makes it light up slightly ahead of pacing
+
+               if (lyricsMode === 'line') {
+                  isWordActive = isPast || isActive;
+               }
 
                return (
                   <motion.span

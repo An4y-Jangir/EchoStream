@@ -6,14 +6,17 @@ import { BottomPlayer } from "@/components/player/BottomPlayer";
 import { ExpandedPlayer } from "@/components/player/ExpandedPlayer";
 import { useRef, useState } from "react";
 import { Song } from "@/types/music";
+import { motion } from "framer-motion";
 
 // @ts-ignore
 const jsmediatags = typeof window !== "undefined" ? require("jsmediatags/dist/jsmediatags.min.js") : null;
 
 export default function Home() {
-  const { playSong, currentSong } = usePlayer();
+  const { playSong, currentSong, history, likedSongs, addToQueue } = usePlayer();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [localSongs, setLocalSongs] = useState<Song[]>([]);
+  
+  const [activeTab, setActiveTab] = useState<'discover'|'recent'|'favorites'|'local'>('discover');
 
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<Song[]>([]);
@@ -27,6 +30,7 @@ export default function Home() {
       return;
     }
     setIsSearching(true);
+    setActiveTab('discover');
     try {
       const res = await fetch('/api/search?q=' + encodeURIComponent(query));
       if (res.ok) {
@@ -108,10 +112,7 @@ export default function Home() {
     }));
     
     setLocalSongs(newLocalSongs);
-    if (newLocalSongs.length > 0) {
-      playSong(newLocalSongs[0], newLocalSongs);
-    }
-    // Reset so same file can be uploaded again if needed
+    // Auto-play removed per user request
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
@@ -145,7 +146,7 @@ export default function Home() {
         </div>
         <nav className="flex flex-col gap-2">
           <p className="px-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Menu</p>
-          <a className="nav-item flex items-center gap-4 px-4 py-3 rounded-xl text-white active-nav" href="#">
+          <a onClick={() => setActiveTab('discover')} className={`nav-item flex items-center gap-4 px-4 py-3 rounded-xl cursor-pointer ${activeTab === 'discover' ? 'text-white active-nav bg-white/10' : 'text-slate-400 hover:text-white'}`}>
             <span className="material-symbols-outlined text-xl">grid_view</span>
             <span className="text-sm font-medium">Discover</span>
           </a>
@@ -160,13 +161,17 @@ export default function Home() {
         </nav>
         <div className="flex flex-col gap-2">
           <p className="px-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Library</p>
-          <a className="nav-item flex items-center gap-4 px-4 py-3 rounded-xl text-slate-400 hover:text-white" href="#">
+          <a onClick={() => setActiveTab('recent')} className={`nav-item flex items-center gap-4 px-4 py-3 rounded-xl cursor-pointer ${activeTab === 'recent' ? 'text-white active-nav bg-white/10' : 'text-slate-400 hover:text-white'}`}>
             <span className="material-symbols-outlined text-xl">history</span>
             <span className="text-sm font-medium">Recent</span>
           </a>
-          <a className="nav-item flex items-center gap-4 px-4 py-3 rounded-xl text-slate-400 hover:text-white" href="#">
+          <a onClick={() => setActiveTab('favorites')} className={`nav-item flex items-center gap-4 px-4 py-3 rounded-xl cursor-pointer ${activeTab === 'favorites' ? 'text-white active-nav bg-white/10' : 'text-slate-400 hover:text-white'}`}>
             <span className="material-symbols-outlined text-xl">favorite</span>
             <span className="text-sm font-medium">Favorites</span>
+          </a>
+          <a onClick={() => setActiveTab('local')} className={`nav-item flex items-center gap-4 px-4 py-3 rounded-xl cursor-pointer ${activeTab === 'local' ? 'text-white active-nav bg-white/10' : 'text-slate-400 hover:text-white'}`}>
+            <span className="material-symbols-outlined text-xl">folder</span>
+            <span className="text-sm font-medium">Local Music</span>
           </a>
           <a className="nav-item flex items-center gap-4 px-4 py-3 rounded-xl text-slate-400 hover:text-white" href="#">
             <span className="material-symbols-outlined text-xl">album</span>
@@ -174,13 +179,11 @@ export default function Home() {
           </a>
           <div onClick={() => fileInputRef.current?.click()} className="nav-item flex items-center gap-4 px-4 py-3 rounded-xl text-slate-400 hover:text-white cursor-pointer mt-2 border border-white/10 bg-white/5 transition-all hover:bg-white/10">
             <span className="material-symbols-outlined text-xl text-accent">upload_file</span>
-            <span className="text-sm font-medium text-white">Local Music</span>
+            <span className="text-sm font-medium text-white">Import Files</span>
             <input 
               type="file" 
               accept="audio/*" 
-              // @ts-ignore
               webkitdirectory="true" 
-              directory="" 
               multiple
               className="hidden" 
               ref={fileInputRef}
@@ -223,7 +226,39 @@ export default function Home() {
                 onKeyDown={handleSearch}
               />
               {isSearching && (
-                <div className="absolute right-4 top-1/2 -translate-y-1/2 size-4 border-2 border-accent border-t-transparent rounded-full animate-spin" />
+                <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center pointer-events-none">
+                  <svg viewBox="0 0 100 50" className="w-10 h-5 overflow-visible">
+                    <defs>
+                      <linearGradient id="infinityGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                        <stop offset="0%" stopColor="#3b82f6" />
+                        <stop offset="50%" stopColor="#8b5cf6" />
+                        <stop offset="100%" stopColor="#ec4899" />
+                      </linearGradient>
+                      <filter id="glow-infinity">
+                        <feGaussianBlur stdDeviation="3" result="coloredBlur" />
+                        <feMerge>
+                          <feMergeNode in="coloredBlur" />
+                          <feMergeNode in="SourceGraphic" />
+                        </feMerge>
+                      </filter>
+                    </defs>
+                    <motion.path
+                      d="M 50,25 C 35,50 10,40 10,25 C 10,10 35,0 50,25 C 65,50 90,40 90,25 C 90,10 65,0 50,25"
+                      fill="none"
+                      stroke="url(#infinityGrad)"
+                      strokeWidth="6"
+                      strokeLinecap="round"
+                      filter="url(#glow-infinity)"
+                      initial={{ pathLength: 0.35, pathOffset: 0 }}
+                      animate={{ pathOffset: [0, 1] }}
+                      transition={{
+                        duration: 1.5,
+                        repeat: Infinity,
+                        ease: "linear",
+                      }}
+                    />
+                  </svg>
+                </div>
               )}
             </div>
           </div>
@@ -239,9 +274,11 @@ export default function Home() {
         </header>
 
         <div className="px-10 py-6 pb-40 space-y-12">
-          {/* Featured Section */}
-          <section>
-            <div className="flex items-center justify-between mb-8">
+          {activeTab === 'discover' && (
+            <>
+              {/* Featured Section */}
+              <section>
+                <div className="flex items-center justify-between mb-8">
               <div>
                 <h2 className="text-3xl font-bold tracking-tight text-white">Made For You</h2>
                 <p className="text-slate-400 text-sm mt-1">Hand-picked selections based on your taste</p>
@@ -270,35 +307,7 @@ export default function Home() {
             </div>
           </section>
 
-          {/* Local Songs Section */}
-          {localSongs.length > 0 && (
-            <section>
-              <div className="flex items-center justify-between mb-8">
-                <div>
-                  <h2 className="text-3xl font-bold tracking-tight text-white">Local Library</h2>
-                  <p className="text-slate-400 text-sm mt-1">{localSongs.length} tracks found on your device</p>
-                </div>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                {localSongs.map((song) => (
-                  <div key={song.id} onClick={() => playSong(song, localSongs)} className="glass-card flex items-center gap-4 p-3 rounded-2xl group cursor-pointer">
-                    <div className="size-20 flex-shrink-0 rounded-xl overflow-hidden shadow-lg">
-                      <img alt={song.title} className="w-full h-full object-cover" src={song.albumArt}/>
-                    </div>
-                    <div className="flex-1 overflow-hidden">
-                      <h3 className="font-bold text-white truncate">{song.title}</h3>
-                      <p className="text-xs text-slate-500 font-medium truncate">{song.artist}</p>
-                    </div>
-                    <button className="size-10 bg-accent text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                      <span className="material-symbols-outlined fill-[1]">play_arrow</span>
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </section>
-          )}
-
-          {/* Recents Section */}
+          {/* Recents Section on Discover */}
           <section>
             <div className="flex items-center justify-between mb-8">
               <div>
@@ -307,8 +316,17 @@ export default function Home() {
               </div>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {(searchResults.length > 0 ? searchResults : MOCK_SONGS).map((song) => (
-                <div key={song.id} onClick={() => playSong(song, searchResults.length > 0 ? searchResults : MOCK_SONGS)} className="glass-card flex items-center gap-4 p-3 rounded-2xl group cursor-pointer">
+              {(searchResults.length > 0
+                  ? searchResults
+                  : (history.length > 0 ? Array.from(new Set(history.map(s => s.id))).map(id => history.find(s => s.id === id)!).reverse() : MOCK_SONGS)
+                ).slice(0, 8).map((song, i) => {
+                  const fullList = searchResults.length > 0
+                    ? searchResults
+                    : (history.length > 0
+                        ? Array.from(new Set(history.map(s => s.id))).map(id => history.find(s => s.id === id)!).reverse()
+                        : MOCK_SONGS);
+                  return (
+                <div key={`recents-discover-${song.id}-${i}`} onClick={() => playSong(song, fullList)} className="glass-card flex items-center gap-4 p-3 rounded-2xl group cursor-pointer">
                   <div className="size-20 flex-shrink-0 rounded-xl overflow-hidden shadow-lg">
                     <img alt={song.title} className="w-full h-full object-cover" src={song.albumArt}/>
                   </div>
@@ -316,13 +334,129 @@ export default function Home() {
                     <h3 className="font-bold text-white truncate">{song.title}</h3>
                     <p className="text-xs text-slate-500 font-medium truncate">{song.artist}</p>
                   </div>
-                  <button className="size-10 bg-accent text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                    <span className="material-symbols-outlined fill-[1]">play_arrow</span>
-                  </button>
+                  <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button onClick={(e) => { e.stopPropagation(); addToQueue(song); }} className="size-10 bg-white/10 hover:bg-white/20 text-white rounded-full flex items-center justify-center transition-colors" title="Add to Queue">
+                      <span className="material-symbols-outlined fill-[1] text-[20px]">queue_music</span>
+                    </button>
+                    <button className="size-10 bg-accent text-white rounded-full flex items-center justify-center shadow-lg pointer-events-none">
+                      <span className="material-symbols-outlined fill-[1]">play_arrow</span>
+                    </button>
+                  </div>
                 </div>
-              ))}
+                  );
+                })}
             </div>
           </section>
+            </>
+          )}
+
+          {activeTab === 'local' && (
+            <section>
+              <div className="flex items-center justify-between mb-8">
+                <div>
+                  <h2 className="text-3xl font-bold tracking-tight text-white">Local Library</h2>
+                  <p className="text-slate-400 text-sm mt-1">{localSongs.length} tracks found on your device</p>
+                </div>
+              </div>
+              {localSongs.length === 0 ? (
+                <div className="text-slate-500">You haven't imported any local files yet. Click 'Import Files' to begin!</div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                  {localSongs.map((song) => (
+                    <div key={song.id} onClick={() => playSong(song, localSongs)} className="glass-card flex items-center gap-4 p-3 rounded-2xl group cursor-pointer">
+                      <div className="size-20 flex-shrink-0 rounded-xl overflow-hidden shadow-lg">
+                        <img alt={song.title} className="w-full h-full object-cover" src={song.albumArt}/>
+                      </div>
+                      <div className="flex-1 overflow-hidden">
+                        <h3 className="font-bold text-white truncate">{song.title}</h3>
+                        <p className="text-xs text-slate-500 font-medium truncate">{song.artist}</p>
+                      </div>
+                      <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button onClick={(e) => { e.stopPropagation(); addToQueue(song); }} className="size-10 bg-white/10 hover:bg-white/20 text-white rounded-full flex items-center justify-center transition-colors" title="Add to Queue">
+                          <span className="material-symbols-outlined fill-[1] text-[20px]">queue_music</span>
+                        </button>
+                        <button className="size-10 bg-accent text-white rounded-full flex items-center justify-center shadow-lg pointer-events-none">
+                          <span className="material-symbols-outlined fill-[1]">play_arrow</span>
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </section>
+          )}
+
+          {activeTab === 'favorites' && (
+            <section>
+              <div className="flex items-center justify-between mb-8">
+                <div>
+                  <h2 className="text-3xl font-bold tracking-tight text-white">Your Favorite Songs</h2>
+                  <p className="text-slate-400 text-sm mt-1">{likedSongs.length} tracks</p>
+                </div>
+              </div>
+              {likedSongs.length === 0 ? (
+                <div className="text-slate-500">You haven't liked any songs yet. Play a song and click the heart icon!</div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                  {likedSongs.map((song, i) => (
+                    <div key={`favpage-${song.id}-${i}`} onClick={() => playSong(song, likedSongs)} className="glass-card flex items-center gap-4 p-3 rounded-2xl group cursor-pointer">
+                      <div className="size-20 flex-shrink-0 rounded-xl overflow-hidden shadow-lg">
+                        <img alt={song.title} className="w-full h-full object-cover" src={song.albumArt}/>
+                      </div>
+                      <div className="flex-1 overflow-hidden">
+                        <h3 className="font-bold text-white truncate">{song.title}</h3>
+                        <p className="text-xs text-slate-500 font-medium truncate">{song.artist}</p>
+                      </div>
+                      <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button onClick={(e) => { e.stopPropagation(); addToQueue(song); }} className="size-10 bg-white/10 hover:bg-white/20 text-white rounded-full flex items-center justify-center transition-colors" title="Add to Queue">
+                          <span className="material-symbols-outlined fill-[1] text-[20px]">queue_music</span>
+                        </button>
+                        <button className="size-10 bg-accent text-white rounded-full flex items-center justify-center shadow-lg pointer-events-none">
+                          <span className="material-symbols-outlined fill-[1]">play_arrow</span>
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </section>
+          )}
+
+          {activeTab === 'recent' && (
+            <section>
+              <div className="flex items-center justify-between mb-8">
+                <div>
+                  <h2 className="text-3xl font-bold tracking-tight text-white">Recently Played</h2>
+                  <p className="text-slate-400 text-sm mt-1">Your detailed listening history</p>
+                </div>
+              </div>
+              {history.length === 0 ? (
+                <div className="text-slate-500">Your play history is empty. Go discover some music!</div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                  {Array.from(new Set(history.map(s => s.id))).map(id => history.find(s => s.id === id)!).reverse().map((song, i) => (
+                    <div key={`recpage-${song.id}-${i}`} onClick={() => playSong(song, undefined)} className="glass-card flex items-center gap-4 p-3 rounded-2xl group cursor-pointer">
+                      <div className="size-20 flex-shrink-0 rounded-xl overflow-hidden shadow-lg">
+                        <img alt={song.title} className="w-full h-full object-cover" src={song.albumArt}/>
+                      </div>
+                      <div className="flex-1 overflow-hidden">
+                        <h3 className="font-bold text-white truncate">{song.title}</h3>
+                        <p className="text-xs text-slate-500 font-medium truncate">{song.artist}</p>
+                      </div>
+                      <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button onClick={(e) => { e.stopPropagation(); addToQueue(song); }} className="size-10 bg-white/10 hover:bg-white/20 text-white rounded-full flex items-center justify-center transition-colors" title="Add to Queue">
+                          <span className="material-symbols-outlined fill-[1] text-[20px]">queue_music</span>
+                        </button>
+                        <button className="size-10 bg-accent text-white rounded-full flex items-center justify-center shadow-lg pointer-events-none">
+                          <span className="material-symbols-outlined fill-[1]">play_arrow</span>
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </section>
+          )}
         </div>
       </main>
 

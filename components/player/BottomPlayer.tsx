@@ -1,11 +1,10 @@
 "use client";
 
+import { useState, useRef } from "react";
 import { usePlayer } from "@/context/PlayerContext";
 import { motion, AnimatePresence, Reorder } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { VolumeSlider } from "./VolumeSlider";
-import { TearAnimation } from "./QueueItem";
-import { useState, useRef } from "react";
 import { Song } from "@/types/music";
 
 export function BottomPlayer() {
@@ -94,7 +93,7 @@ export function BottomPlayer() {
                  animate={{ x: 0, y: 0, scale: 1, opacity: 1 }}
                  exit={{ x: 20, y: 20, scale: 0.9, opacity: 0 }}
                  transition={{ type: 'spring', bounce: 0.4, duration: 0.5 }}
-                 className="absolute bottom-[100%] right-10 mb-2 w-[400px] max-h-[60vh] bg-black/70 backdrop-blur-3xl z-[100] rounded-3xl p-6 overflow-y-auto no-scrollbar shadow-[0_-10px_40px_-5px_rgba(0,0,0,0.5)] border border-white/10 pointer-events-auto flex flex-col"
+                 className="absolute bottom-[110%] right-10 mb-2 w-[380px] max-h-[60vh] glass-panel bg-black/40 backdrop-blur-xl z-[100] rounded-[2.5rem] p-6 overflow-y-auto no-scrollbar pointer-events-auto flex flex-col"
               >
                 <div className="flex items-center justify-between mb-6">
                   <h3 className="text-lg font-bold text-white">Up Next</h3>
@@ -169,7 +168,7 @@ export function BottomPlayer() {
             )}
           </AnimatePresence>
 
-          <footer className="w-full max-w-7xl glass-panel bg-black/40 backdrop-blur-2xl border border-white/10 rounded-3xl p-4 px-8 shadow-xl flex items-center justify-between pointer-events-auto">
+          <footer className="w-full max-w-7xl glass-panel bg-black/10 backdrop-blur-xl rounded-[2.5rem] p-3 px-8 shadow-2xl flex items-center justify-between pointer-events-auto transition-all">
             {/* Now Playing */}
             <div className="flex items-center gap-4 w-1/4">
               <div 
@@ -180,12 +179,12 @@ export function BottomPlayer() {
               </div>
               <div className="flex flex-col overflow-hidden">
                 <a 
-                  className="text-base font-bold text-white hover:text-accent truncate transition-colors cursor-pointer" 
+                  className="text-sm font-bold text-white hover:text-accent truncate transition-colors cursor-pointer" 
                   onClick={(e) => { e.preventDefault(); toggleExpanded(); }}
                 >
                   {currentSong.title}
                 </a>
-                <a className="text-xs text-slate-400 font-medium hover:text-white truncate transition-colors cursor-pointer">{currentSong.artist}</a>
+                <a className="text-[10px] text-slate-500 font-bold uppercase tracking-wider hover:text-white truncate transition-colors cursor-pointer">{currentSong.artist}</a>
               </div>
               <button 
                 onClick={(e) => { e.stopPropagation(); toggleLike(currentSong); }}
@@ -204,19 +203,19 @@ export function BottomPlayer() {
                 >
                   <span className="material-symbols-outlined text-2xl">shuffle</span>
                 </button>
-                <button onClick={playPrevious} className="text-white hover:scale-110 transition-transform">
-                  <span className="material-symbols-outlined text-4xl">skip_previous</span>
+                <button onClick={playPrevious} className="text-white/80 hover:text-white hover:scale-110 transition-all">
+                  <span className="material-symbols-outlined text-3xl">skip_previous</span>
                 </button>
                 <button 
                   onClick={togglePlay}
-                  className="size-14 bg-white text-black rounded-full flex items-center justify-center hover:scale-105 active:scale-95 transition-all shadow-xl"
+                  className="size-12 bg-white text-black rounded-full flex items-center justify-center hover:scale-105 active:scale-95 transition-all shadow-xl"
                 >
-                  <span className="material-symbols-outlined fill-[1] text-4xl">
+                  <span className="material-symbols-outlined fill-[1] text-3xl">
                     {isPlaying ? 'pause' : 'play_arrow'}
                   </span>
                 </button>
-                <button onClick={playNext} className="text-white hover:scale-110 transition-transform">
-                  <span className="material-symbols-outlined text-4xl">skip_next</span>
+                <button onClick={playNext} className="text-white/80 hover:text-white hover:scale-110 transition-all">
+                  <span className="material-symbols-outlined text-3xl">skip_next</span>
                 </button>
                 <button 
                   onClick={toggleRepeat} 
@@ -233,14 +232,14 @@ export function BottomPlayer() {
                   {formatTime(displayCurrentTime)}
                 </span>
                 <div 
-                  className="h-1.5 flex-1 bg-white/5 rounded-full relative group cursor-pointer overflow-hidden" 
+                  className="h-1 flex-1 bg-white/5 rounded-full relative group cursor-pointer overflow-hidden" 
                   onClick={handleSeek}
                 >
                   <div 
-                    className="absolute inset-y-0 left-0 bg-accent rounded-full pointer-events-none" 
+                    className="absolute inset-y-0 left-0 bg-accent rounded-full pointer-events-none shadow-[0_0_10px_rgba(99,102,241,0.5)]" 
                     style={{ width: `${progress * 100}%` }}
                   ></div>
-                  <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"></div>
+                  <div className="absolute inset-0 bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"></div>
                 </div>
                 <span className="text-[10px] text-slate-500 font-bold tabular-nums w-8">
                   {formatTime(displayDuration)}

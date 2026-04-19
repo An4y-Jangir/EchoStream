@@ -171,7 +171,7 @@ export function ExpandedPlayer() {
                  animate={{ x: 0, borderTopRightRadius: '0%', borderBottomRightRadius: '0%' }}
                  exit={{ x: '-100%', borderTopRightRadius: '100%', borderBottomRightRadius: '100%' }}
                  transition={{ type: 'spring', bounce: 0.35, duration: 0.6 }}
-                 className="absolute left-0 top-0 bottom-0 w-80 bg-black/60 backdrop-blur-3xl z-40 p-6 pt-24 overflow-y-auto no-scrollbar shadow-[20px_0_40px_-10px_rgba(0,0,0,0.5)] border-r border-white/5 flex flex-col"
+                 className="absolute left-0 top-0 bottom-0 w-80 bg-black/40 backdrop-blur-xl z-40 p-6 pt-24 overflow-y-auto no-scrollbar shadow-[20px_0_40px_-10px_rgba(0,0,0,0.5)] border-r border-white/5 flex flex-col"
               >
                 <div className="flex items-center justify-between mb-8">
                   <h3 className="text-xl font-bold text-white">Up Next</h3>

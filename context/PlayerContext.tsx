@@ -44,9 +44,13 @@ interface PlayerContextType {
   playPrevious: () => void;
   likedSongs: Song[];
   toggleLike: (song: Song) => void;
+  playlists: Playlist[];
+  createPlaylist: (title: string) => void;
+  deletePlaylist: (id: string) => void;
+  addSongToPlaylist: (playlistId: string, song: Song) => void;
+  removeSongFromPlaylist: (playlistId: string, songId: string) => void;
   lyricsMode: 'word' | 'line' | 'hidden';
   isLyricsVisible: boolean;
-  toggleLyrics: () => void;
   isQueueVisible: boolean;
   toggleQueue: () => void;
 }
@@ -86,6 +90,7 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
 
   // UI States for toggles
   const [likedSongs, setLikedSongs] = useState<Song[]>([]);
+  const [playlists, setPlaylists] = useState<Playlist[]>([]);
   const [lyricsMode, setLyricsMode] = useState<'word' | 'line' | 'hidden'>('word');
   const [isQueueVisible, setIsQueueVisible] = useState(false);
 
@@ -103,6 +108,44 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
       return 'word';
     });
   };
+  const createPlaylist = (title: string) => {
+    const newPlaylist: Playlist = {
+      id: `pl-${Date.now()}`,
+      title,
+      description: "Custom playlist",
+      coverArt: "https://images.unsplash.com/photo-1493225457124-a1a2a5f5f4a7?q=80&w=500&auto=format&fit=crop",
+      songs: []
+    };
+    setPlaylists(prev => [...prev, newPlaylist]);
+  };
+
+  const deletePlaylist = (id: string) => {
+    setPlaylists(prev => prev.filter(p => p.id !== id));
+  };
+
+  const addSongToPlaylist = (playlistId: string, song: Song) => {
+    setPlaylists(prev => prev.map(p => {
+      if (p.id === playlistId) {
+        // Avoid duplicates
+        if (p.songs.some(s => s.id === song.id)) return p;
+        const newSongs = [...p.songs, song];
+        // Dynamic cover art from first song
+        const coverArt = p.songs.length === 0 ? song.albumArt : p.coverArt;
+        return { ...p, songs: newSongs, coverArt };
+      }
+      return p;
+    }));
+  };
+
+  const removeSongFromPlaylist = (playlistId: string, songId: string) => {
+    setPlaylists(prev => prev.map(p => {
+      if (p.id === playlistId) {
+        return { ...p, songs: p.songs.filter(s => s.id !== songId) };
+      }
+      return p;
+    }));
+  };
+
   const toggleQueue = () => {
     setIsQueueVisible(prev => !prev);
   };
@@ -196,6 +239,24 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
       audio.src = "";
     };
   }, []);
+
+  // Persistence: Load from localStorage
+  useEffect(() => {
+    const savedLiked = localStorage.getItem('echo-likedSongs');
+    if (savedLiked) setLikedSongs(JSON.parse(savedLiked));
+
+    const savedPlaylists = localStorage.getItem('echo-playlists');
+    if (savedPlaylists) setPlaylists(JSON.parse(savedPlaylists));
+  }, []);
+
+  // Persistence: Save to localStorage
+  useEffect(() => {
+    localStorage.setItem('echo-likedSongs', JSON.stringify(likedSongs));
+  }, [likedSongs]);
+
+  useEffect(() => {
+    localStorage.setItem('echo-playlists', JSON.stringify(playlists));
+  }, [playlists]);
 
   // Sync volume state to audio element
   useEffect(() => {
@@ -561,6 +622,11 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
         playPrevious,
         likedSongs,
         toggleLike,
+        playlists,
+        createPlaylist,
+        deletePlaylist,
+        addSongToPlaylist,
+        removeSongFromPlaylist,
         lyricsMode,
         isLyricsVisible,
         toggleLyrics,

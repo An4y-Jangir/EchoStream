@@ -898,7 +898,7 @@ export default function Home() {
                 <div className="text-slate-500">This playlist is empty. Add some songs to get started!</div>
               ) : (
                 <div className="space-y-2">
-                  {currentPlaylist.songs.map((song, i) => (
+                  {currentPlaylist.songs.map((song: Song, i: number) => (
                     <div key={`plsong-${song.id}-${i}`} onClick={() => playSong(song, currentPlaylist.songs)} className="glass-card flex items-center gap-4 p-3 rounded-2xl group cursor-pointer hover:bg-white/5 border-transparent">
                       <div className="w-8 text-center text-slate-600 font-bold group-hover:text-accent transition-colors tabular-nums">{i + 1}</div>
                       <div className="size-12 flex-shrink-0 rounded-lg overflow-hidden shadow-lg">

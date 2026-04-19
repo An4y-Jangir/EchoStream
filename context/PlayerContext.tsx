@@ -51,6 +51,7 @@ interface PlayerContextType {
   removeSongFromPlaylist: (playlistId: string, songId: string) => void;
   lyricsMode: 'word' | 'line' | 'hidden';
   isLyricsVisible: boolean;
+  toggleLyrics: () => void;
   isQueueVisible: boolean;
   toggleQueue: () => void;
 }

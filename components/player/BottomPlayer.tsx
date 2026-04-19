@@ -5,6 +5,7 @@ import { usePlayer } from "@/context/PlayerContext";
 import { motion, AnimatePresence, Reorder } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { VolumeSlider } from "./VolumeSlider";
+import { TearAnimation } from "./QueueItem";
 import { Song } from "@/types/music";
 
 export function BottomPlayer() {

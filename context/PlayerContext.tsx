@@ -1,7 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, useRef, useEffect } from "react";
-import { Song } from "@/types/music";
+import { Song, Playlist } from "@/types/music";
 import { parseLrc } from "@/lib/lrcParser";
 import YouTube from 'react-youtube';
 

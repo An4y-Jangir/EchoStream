@@ -295,7 +295,7 @@ export function ExpandedPlayer() {
                   </button>
                   <button 
                     onClick={togglePlay}
-                    className="size-[52px] bg-white text-black rounded-full flex items-center justify-center hover:scale-105 active:scale-95 transition-all shadow-xl"
+                    className="size-12 bg-white text-black rounded-full flex items-center justify-center hover:scale-105 active:scale-95 transition-all shadow-xl"
                   >
                     <span className="material-symbols-outlined fill-[1] text-3xl">{isPlaying ? 'pause' : 'play_arrow'}</span>
                   </button>

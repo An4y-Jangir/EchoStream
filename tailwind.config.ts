@@ -17,7 +17,12 @@ const config: Config = {
         "background-dark": "#0a0a0a",
       },
       fontFamily: {
-        "display": ["Inter"]
+        "sans": ["'Munich Sans'", "sans-serif"],
+        "display": ["'Munich Sans'", "sans-serif"],
+        "space-grotesk": ["'Space Grotesk'", "sans-serif"],
+        "righteous": ["Righteous", "sans-serif"],
+        "stomic": ["Stomic", "'Hobeaux Semibold'", "Hobeaux", "sans-serif"],
+        "hobeaux": ["'Hobeaux Semibold'", "Hobeaux", "sans-serif"]
       },
     },
   },

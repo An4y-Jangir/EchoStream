@@ -94,7 +94,7 @@ export function BottomPlayer() {
                  animate={{ x: 0, y: 0, scale: 1, opacity: 1 }}
                  exit={{ x: 20, y: 20, scale: 0.9, opacity: 0 }}
                  transition={{ type: 'spring', bounce: 0.4, duration: 0.5 }}
-                 className="absolute bottom-[110%] right-10 mb-2 w-[380px] max-h-[60vh] glass-panel bg-black/40 backdrop-blur-xl z-[100] rounded-[2.5rem] p-6 overflow-y-auto no-scrollbar pointer-events-auto flex flex-col"
+                 className="absolute bottom-[110%] right-10 mb-2 w-96 max-h-[60vh] glass-panel bg-black/40 backdrop-blur-xl z-[100] rounded-[2.5rem] p-6 overflow-y-auto no-scrollbar pointer-events-auto flex flex-col"
               >
                 <div className="flex items-center justify-between mb-6">
                   <h3 className="text-lg font-bold text-white">Up Next</h3>

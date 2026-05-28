@@ -10,6 +10,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { AddToPlaylistModal } from "@/components/modals/AddToPlaylistModal";
 import { GlowWrapper } from "@/components/ui/GlowWrapper";
 import { FlightAnimation } from "@/components/animations/FlightAnimation";
+import { TrashDeleteAnimation } from "@/components/animations/TrashDeleteAnimation";
 
 const jsmediatags = typeof window !== "undefined" ? require("jsmediatags/dist/jsmediatags.min.js") : null;
 
@@ -30,8 +31,18 @@ export default function Home() {
   const { playlists, addSongToPlaylist, createPlaylist, removeSongFromPlaylist } = usePlayer();
   const [addingSong, setAddingSong] = useState<Song | null>(null);
   const [flightData, setFlightData] = useState<{ start: DOMRect, end: DOMRect } | null>(null);
+  const [deletingSongData, setDeletingSongData] = useState<{ song: Song, playlistId: string, startRect: DOMRect } | null>(null);
+  const [animatingDeleteIds, setAnimatingDeleteIds] = useState<string[]>([]);
   const playlistHeaderRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
+
+  const [logoStyle, setLogoStyle] = useState<'default' | 'ripple' | 'infinity' | 'equalizer'>('default');
+  const [isLogoHovered, setIsLogoHovered] = useState(false);
+  const cycleLogo = () => {
+    const styles: ('default' | 'ripple' | 'infinity' | 'equalizer')[] = ['default', 'ripple', 'infinity', 'equalizer'];
+    const nextIdx = (styles.indexOf(logoStyle) + 1) % styles.length;
+    setLogoStyle(styles[nextIdx]);
+  };
 
   const hasHistory = (history || []).length > 0;
   const hasPersonal = (likedSongs || []).length > 0 || (playlists || []).length > 0;
@@ -234,13 +245,191 @@ export default function Home() {
 
       {/* Sidebar */}
       <aside className="w-64 flex-shrink-0 flex flex-col p-6 gap-6 z-20 relative bg-black/10 backdrop-blur-md">
-        <div className="px-2 flex items-center gap-3 mb-2">
-          <div className="size-9 bg-accent rounded-xl flex items-center justify-center shadow-lg shadow-accent/20">
-            <span className="material-symbols-outlined text-white text-xl fill-[1]">auto_awesome</span>
+        <div 
+          onClick={cycleLogo}
+          onMouseEnter={() => setIsLogoHovered(true)}
+          onMouseLeave={() => setIsLogoHovered(false)}
+          className="px-2 flex items-center gap-3.5 mb-2 group cursor-pointer select-none"
+          title="Click to cycle logo style!"
+        >
+          <div className="size-10 bg-white/[0.03] border border-white/10 rounded-xl flex items-center justify-center shadow-lg group-hover:border-accent/40 transition-all duration-300 relative overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-br from-accent/10 to-pink-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+            
+            {logoStyle === 'default' && (
+              <svg viewBox="0 0 24 24" className="size-5 overflow-visible" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                  <linearGradient id="logo-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stopColor="#6366f1" />
+                    <stop offset="50%" stopColor="#a855f7" />
+                    <stop offset="100%" stopColor="#ec4899" />
+                  </linearGradient>
+                  <filter id="logo-glow">
+                    <feGaussianBlur stdDeviation="1.5" result="coloredBlur"/>
+                    <feMerge>
+                      <feMergeNode in="coloredBlur"/>
+                      <feMergeNode in="SourceGraphic"/>
+                    </feMerge>
+                  </filter>
+                </defs>
+                <motion.path 
+                  d="M 8,6 L 16,6 C 19,6 19,12 16,12 L 8,12 C 5,12 5,18 8,18 L 16,18" 
+                  stroke="url(#logo-grad)" 
+                  strokeWidth="3" 
+                  strokeLinecap="round"
+                  filter="url(#logo-glow)"
+                  animate={isLogoHovered ? {
+                    pathLength: [0, 1],
+                    stroke: ["#6366f1", "#ec4899", "#6366f1"]
+                  } : {
+                    pathLength: [0.9, 1, 0.9],
+                    stroke: "#6366f1"
+                  }}
+                  transition={isLogoHovered ? {
+                    pathLength: { duration: 0.8, ease: "easeOut" },
+                    stroke: { duration: 1.5, repeat: Infinity, ease: "linear" }
+                  } : {
+                    repeat: Infinity,
+                    duration: 3,
+                    ease: "easeInOut"
+                  }}
+                />
+                <motion.path 
+                  d="M 8,6 L 8,18" 
+                  stroke="url(#logo-grad)" 
+                  strokeWidth="3" 
+                  strokeLinecap="round"
+                  filter="url(#logo-glow)"
+                  animate={isLogoHovered ? {
+                    scaleY: [1, 1.2, 1],
+                    opacity: 1
+                  } : {
+                    opacity: [0.8, 1, 0.8]
+                  }}
+                  transition={isLogoHovered ? {
+                    scaleY: { repeat: Infinity, duration: 0.5, ease: "easeInOut" }
+                  } : {
+                    repeat: Infinity,
+                    duration: 3,
+                    ease: "easeInOut"
+                  }}
+                />
+              </svg>
+            )}
+
+            {logoStyle === 'ripple' && (
+              <svg viewBox="0 0 24 24" className="size-5 overflow-visible" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                  <linearGradient id="ripple-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stopColor="#6366f1" />
+                    <stop offset="50%" stopColor="#a855f7" />
+                    <stop offset="100%" stopColor="#ec4899" />
+                  </linearGradient>
+                </defs>
+                <motion.circle 
+                  cx="12" cy="12" 
+                  r="3" 
+                  fill="url(#ripple-grad)" 
+                  animate={isLogoHovered ? { scale: [1, 1.5, 1] } : { scale: 1 }}
+                  transition={isLogoHovered ? { repeat: Infinity, duration: 0.8, ease: "easeInOut" } : {}}
+                />
+                <motion.circle 
+                  cx="12" cy="12" r="5" 
+                  stroke="url(#ripple-grad)" strokeWidth="1.5"
+                  animate={isLogoHovered ? {
+                    scale: [1, 1.7, 1],
+                    opacity: [0.9, 0.2, 0.9]
+                  } : {
+                    scale: [1, 1.25, 1],
+                    opacity: [0.5, 0.9, 0.5]
+                  }}
+                  transition={{ repeat: Infinity, duration: isLogoHovered ? 0.8 : 2.5, ease: "easeInOut" }}
+                />
+                <motion.circle 
+                  cx="12" cy="12" r="8" 
+                  stroke="url(#ripple-grad)" strokeWidth="1" strokeDasharray="2 2"
+                  animate={isLogoHovered ? {
+                    scale: [1, 2.0, 1],
+                    opacity: [0.7, 0, 0.7]
+                  } : {
+                    scale: [1, 1.35, 1],
+                    opacity: [0.3, 0.7, 0.3]
+                  }}
+                  transition={{ repeat: Infinity, duration: isLogoHovered ? 0.8 : 2.5, ease: "easeInOut", delay: isLogoHovered ? 0.1 : 0.5 }}
+                />
+              </svg>
+            )}
+
+            {logoStyle === 'infinity' && (
+              <svg viewBox="0 0 24 24" className="size-6 overflow-visible" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                  <linearGradient id="infinity-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stopColor="#6366f1" />
+                    <stop offset="100%" stopColor="#ec4899" />
+                  </linearGradient>
+                </defs>
+                <motion.path 
+                  d="M 6,12 C 6,8.5 10,8.5 12,12 C 14,15.5 18,15.5 18,12 C 18,8.5 14,8.5 12,12 C 10,15.5 6,15.5 6,12 Z" 
+                  stroke="url(#infinity-grad)" 
+                  strokeWidth={isLogoHovered ? 3.0 : 2.2} 
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  animate={isLogoHovered ? {
+                    rotate: 360,
+                    scale: 1.15
+                  } : {
+                    pathLength: [0.9, 1, 0.9]
+                  }}
+                  transition={isLogoHovered ? {
+                    rotate: { repeat: Infinity, duration: 1.2, ease: "linear" },
+                    scale: { duration: 0.3 }
+                  } : {
+                    repeat: Infinity,
+                    duration: 2.5,
+                    ease: "easeInOut"
+                  }}
+                />
+              </svg>
+            )}
+
+            {logoStyle === 'equalizer' && (
+              <div className="flex items-end gap-1 h-4 overflow-visible">
+                <motion.div 
+                  className="w-1 bg-gradient-to-t from-accent to-purple-500 rounded-full" 
+                  animate={isLogoHovered ? { height: ["20%", "100%", "20%"] } : { height: ["40%", "100%", "40%"] }} 
+                  transition={{ repeat: Infinity, duration: isLogoHovered ? 0.4 : 1.0, ease: "easeInOut" }}
+                  style={{ minHeight: '4px' }}
+                />
+                <motion.div 
+                  className="w-1 bg-gradient-to-t from-purple-500 to-pink-500 rounded-full" 
+                  animate={isLogoHovered ? { height: ["90%", "10%", "90%"] } : { height: ["70%", "20%", "90%", "70%"] }} 
+                  transition={{ repeat: Infinity, duration: isLogoHovered ? 0.5 : 1.3, ease: "easeInOut" }}
+                  style={{ minHeight: '4px' }}
+                />
+                <motion.div 
+                  className="w-1 bg-gradient-to-t from-pink-500 to-accent rounded-full" 
+                  animate={isLogoHovered ? { height: ["10%", "100%", "10%"] } : { height: ["30%", "85%", "30%"] }} 
+                  transition={{ repeat: Infinity, duration: isLogoHovered ? 0.3 : 0.8, ease: "easeInOut" }}
+                  style={{ minHeight: '4px' }}
+                />
+                <motion.div 
+                  className="w-1 bg-gradient-to-t from-accent to-purple-500 rounded-full" 
+                  animate={isLogoHovered ? { height: ["100%", "20%", "100%"] } : { height: ["80%", "30%", "80%"] }} 
+                  transition={{ repeat: Infinity, duration: isLogoHovered ? 0.45 : 1.2, ease: "easeInOut" }}
+                  style={{ minHeight: '4px' }}
+                />
+              </div>
+            )}
           </div>
           <div>
-            <h1 className="text-xl font-black tracking-tighter text-white">EchoStream</h1>
-            <p className="text-[8px] text-accent/80 font-bold tracking-[0.3em] uppercase">Premium</p>
+            <h1 className="text-xl font-bold tracking-tight text-white flex items-center font-space-grotesk">
+              Echo<span className="text-transparent bg-clip-text bg-gradient-to-r from-accent via-purple-500 to-pink-500 font-stomic">Stream</span>
+            </h1>
+            <p className="text-[7.5px] text-slate-500 font-extrabold tracking-[0.35em] uppercase mt-0.5 group-hover:text-accent transition-colors">
+              {logoStyle === 'default' && "Premium System"}
+              {logoStyle === 'ripple' && "Ripple System"}
+              {logoStyle === 'infinity' && "Infinity Flow"}
+              {logoStyle === 'equalizer' && "Visual System"}
+            </p>
           </div>
         </div>
         <nav className="flex flex-col gap-1">
@@ -899,7 +1088,13 @@ export default function Home() {
               ) : (
                 <div className="space-y-2">
                   {currentPlaylist.songs.map((song: Song, i: number) => (
-                    <div key={`plsong-${song.id}-${i}`} onClick={() => playSong(song, currentPlaylist.songs)} className="glass-card flex items-center gap-4 p-3 rounded-2xl group cursor-pointer hover:bg-white/5 border-transparent">
+                    <div 
+                      key={`plsong-${song.id}-${i}`} 
+                      onClick={() => playSong(song, currentPlaylist.songs)} 
+                      className={`glass-card flex items-center gap-4 p-3 rounded-2xl group cursor-pointer hover:bg-white/5 border-transparent transition-all duration-500 ${
+                        animatingDeleteIds.includes(song.id) ? 'opacity-10 scale-95 pointer-events-none translate-x-2' : ''
+                      }`}
+                    >
                       <div className="w-8 text-center text-slate-600 font-bold group-hover:text-accent transition-colors tabular-nums">{i + 1}</div>
                       <div className="size-12 flex-shrink-0 rounded-lg overflow-hidden shadow-lg">
                         <img alt={song.title} className="w-full h-full object-cover" src={song.albumArt}/>
@@ -920,7 +1115,17 @@ export default function Home() {
                           <span className="material-symbols-outlined fill-[1] text-[20px]">queue_music</span>
                         </button>
                         <button 
-                          onClick={(e) => { e.stopPropagation(); removeSongFromPlaylist(currentPlaylist.id, song.id); }} 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            const row = e.currentTarget.closest('.glass-card');
+                            const rect = row ? row.getBoundingClientRect() : e.currentTarget.getBoundingClientRect();
+                            setAnimatingDeleteIds(prev => [...prev, song.id]);
+                            setDeletingSongData({
+                              song,
+                              playlistId: currentPlaylist.id,
+                              startRect: rect
+                            });
+                          }} 
                           className="size-10 bg-white/5 hover:bg-red-500/20 text-slate-400 hover:text-red-500 rounded-full flex items-center justify-center transition-all" 
                           title="Remove from Playlist"
                         >
@@ -964,6 +1169,20 @@ export default function Home() {
             endRect={flightData.end} 
             imageUrl={flightImageUrl}
             onComplete={() => setFlightData(null)} 
+          />
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {deletingSongData && (
+          <TrashDeleteAnimation 
+            song={deletingSongData.song}
+            startRect={deletingSongData.startRect}
+            onComplete={() => {
+              removeSongFromPlaylist(deletingSongData.playlistId, deletingSongData.song.id);
+              setAnimatingDeleteIds(prev => prev.filter(id => id !== deletingSongData.song.id));
+              setDeletingSongData(null);
+            }}
           />
         )}
       </AnimatePresence>

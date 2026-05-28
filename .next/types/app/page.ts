@@ -1,4 +1,4 @@
-// File: D:\Anay\CODES\Music player just like i want\app\page.tsx
+// File: D:\Anay\CODES\EchoStream\app\page.tsx
 import * as entry from '../../../app/page.js'
 import type { ResolvingMetadata, ResolvingViewport } from 'next/dist/lib/metadata/types/metadata-interface.js'
 

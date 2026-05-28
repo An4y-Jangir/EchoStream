@@ -2,6 +2,99 @@
 @tailwind components;
 @tailwind utilities;
 
+
+@font-face {
+  font-family: 'Stomic';
+  src: url('/fonts/Stomic-Regular.woff2') format('woff2'),
+    url('/fonts/Stomic-Regular.woff') format('woff'),
+    local('Stomic'), local('Stomic Regular'), local('Stomic-Regular');
+  font-weight: 400 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Hobeaux Semibold';
+  src: local('Hobeaux Semibold'), local('Hobeaux-Semibold');
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Hobeaux';
+  src: local('Hobeaux Semibold'), local('Hobeaux-Semibold'), local('Hobeaux Regular'), local('Hobeaux-Regular');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+.font-space-grotesk {
+  font-family: 'Space Grotesk', sans-serif;
+  word-spacing: normal;
+  letter-spacing: -0.02em !important;
+}
+
+.font-stomic {
+  font-family: 'Stomic', sans-serif !important;
+  word-spacing: normal;
+  letter-spacing: -0.02em !important;
+  font-size: 1.15em;
+}
+
+.font-hobeaux {
+  font-family: 'Hobeaux Semibold', 'Hobeaux', sans-serif !important;
+  word-spacing: normal;
+  letter-spacing: -0.02em !important;
+}
+
+.font-righteous {
+  font-family: 'Righteous', sans-serif !important;
+  word-spacing: normal;
+  letter-spacing: -0.02em !important;
+}
+
+/* Adjust heading sizes to compensate for smaller base UI and make them pop */
+h1.text-xl,
+h2.text-xl,
+h3.text-xl {
+  font-size: 1.7rem !important;
+}
+
+h2.text-2xl,
+h3.text-2xl {
+  font-size: 2.2rem !important;
+}
+
+h2.text-3xl,
+h3.text-3xl {
+  font-size: 2.8rem !important;
+}
+
+h3.text-4xl,
+h4.text-3xl {
+  font-size: 3.8rem !important;
+}
+
+h2.text-5xl {
+  font-size: 4.8rem !important;
+}
+
+h4.text-lg {
+  font-size: 1.55rem !important;
+}
+
+h4.text-sm,
+h3.text-sm {
+  font-size: 1.2rem !important;
+}
+
 :root {
   --background: #000000;
   --foreground: #ffffff;
@@ -10,7 +103,7 @@
 body {
   color: var(--foreground);
   background: var(--background);
-  font-family: ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+  font-family: 'Munich Sans', ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
 }
 
 @layer utilities {
@@ -21,6 +114,13 @@ body {
 
 html {
   scroll-behavior: smooth;
+  font-size: 15px;
+}
+
+@media (min-width: 1024px) {
+  html {
+    font-size: 14px;
+  }
 }
 
 /* Minimalistic Custom Scrollbar */
@@ -47,57 +147,63 @@ html {
   background-clip: padding-box;
 }
 
-.no-scrollbar::-webkit-scrollbar { display: none; }
-.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
 
 .glass-panel {
-    background: rgba(255, 255, 255, 0.02);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.05);
-    box-shadow: 
-        10px 10px 20px rgba(0, 0, 0, 0.4),
-        -5px -5px 15px rgba(255, 255, 255, 0.02),
-        inset 1px 1px 1px rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.02);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow:
+    10px 10px 20px rgba(0, 0, 0, 0.4),
+    -5px -5px 15px rgba(255, 255, 255, 0.02),
+    inset 1px 1px 1px rgba(255, 255, 255, 0.1);
 }
 
 .glass-card {
-    background: rgba(255, 255, 255, 0.015);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border: 1px solid rgba(255, 255, 255, 0.03);
-    box-shadow: 
-        8px 8px 16px rgba(0, 0, 0, 0.8),
-        -3px -3px 8px rgba(255, 255, 255, 0.05);
-    transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+  background: rgba(255, 255, 255, 0.015);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.03);
+  box-shadow:
+    8px 8px 16px rgba(0, 0, 0, 0.8),
+    -3px -3px 8px rgba(255, 255, 255, 0.05);
+  transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
 }
 
 .glass-card:hover {
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.06);
-    transform: translateY(-4px);
-    box-shadow: 
-        12px 12px 24px rgba(0, 0, 0, 0.9),
-        -4px -4px 12px rgba(255, 255, 255, 0.08),
-        inset 1px 1px 2px rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  transform: translateY(-4px);
+  box-shadow:
+    12px 12px 24px rgba(0, 0, 0, 0.9),
+    -4px -4px 12px rgba(255, 255, 255, 0.08),
+    inset 1px 1px 2px rgba(255, 255, 255, 0.1);
 }
 
 .dynamic-bg {
-    background: radial-gradient(circle at 0% 0%, #1e1b4b 0%, transparent 40%),
-                radial-gradient(circle at 100% 0%, #312e81 0%, transparent 40%),
-                radial-gradient(circle at 50% 100%, #1e1b4b 0%, transparent 50%);
+  background: radial-gradient(circle at 0% 0%, #1e1b4b 0%, transparent 40%),
+    radial-gradient(circle at 100% 0%, #312e81 0%, transparent 40%),
+    radial-gradient(circle at 50% 100%, #1e1b4b 0%, transparent 50%);
 }
 
 .nav-item {
-    transition: all 0.2s ease;
+  transition: all 0.2s ease;
 }
 
 .nav-item:hover {
-    background: rgba(255, 255, 255, 0.05);
-    padding-left: 1.25rem;
+  background: rgba(255, 255, 255, 0.05);
+  padding-left: 1.25rem;
 }
 
 .active-nav {
-    background: linear-gradient(90deg, rgba(99, 102, 241, 0.15) 0%, transparent 100%);
-    border-left: 3px solid #6366f1;
+  background: linear-gradient(90deg, rgba(99, 102, 241, 0.15) 0%, transparent 100%);
+  border-left: 3px solid #6366f1;
 }

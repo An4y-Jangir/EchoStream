@@ -54,6 +54,8 @@ interface PlayerContextType {
   toggleLyrics: () => void;
   isQueueVisible: boolean;
   toggleQueue: () => void;
+  crossfadeDuration: number;
+  setCrossfadeDuration: (duration: number) => void;
 }
 
 const PlayerContext = createContext<PlayerContextType | undefined>(undefined);
@@ -94,6 +96,7 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
   const [playlists, setPlaylists] = useState<Playlist[]>([]);
   const [lyricsMode, setLyricsMode] = useState<'word' | 'line' | 'hidden'>('word');
   const [isQueueVisible, setIsQueueVisible] = useState(false);
+  const [crossfadeDuration, setCrossfadeDurationState] = useState(3);
 
   const isLyricsVisible = lyricsMode !== 'hidden';
 
@@ -248,7 +251,15 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
 
     const savedPlaylists = localStorage.getItem('echo-playlists');
     if (savedPlaylists) setPlaylists(JSON.parse(savedPlaylists));
+
+    const savedCrossfade = localStorage.getItem('echo-crossfade');
+    if (savedCrossfade) setCrossfadeDurationState(parseInt(savedCrossfade, 10));
   }, []);
+
+  const setCrossfadeDuration = (d: number) => {
+    setCrossfadeDurationState(d);
+    localStorage.setItem('echo-crossfade', String(d));
+  };
 
   // Persistence: Save to localStorage
   useEffect(() => {
@@ -633,6 +644,8 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
         toggleLyrics,
         isQueueVisible,
         toggleQueue,
+        crossfadeDuration,
+        setCrossfadeDuration,
       }}
     >
       <div className="hidden">

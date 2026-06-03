@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import YTMusic from 'ytmusic-api';
 
+export const dynamic = 'force-dynamic';
+
 const ytmusic = new YTMusic();
 let initialized = false;
 
@@ -26,7 +28,8 @@ export async function GET(request: Request) {
       title: item.name,
       artist: item.artist?.name || 'Unknown Artist',
       album: item.album?.name || 'Unknown Album',
-      albumArt: item.thumbnails[1]?.url || item.thumbnails[0]?.url || "https://images.unsplash.com/photo-1470225620780-dba8ba36b745",
+      albumId: item.album?.albumId || undefined,
+      albumArt: item.thumbnails?.[1]?.url || item.thumbnails?.[0]?.url || "https://images.unsplash.com/photo-1470225620780-dba8ba36b745",
       audioUrl: `youtube:${item.videoId}`,
       lyrics: [],
       genre: "Internet",

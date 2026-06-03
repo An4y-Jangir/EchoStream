@@ -8,6 +8,7 @@ export interface Song {
   title: string;
   artist: string;
   album: string;
+  albumId?: string;
   albumArt: string;
   audioUrl: string; // Mock URL or path for real audio
   lyrics: LyricLine[];

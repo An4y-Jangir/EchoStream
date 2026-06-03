@@ -4,37 +4,96 @@ import { MOCK_MIXES, MOCK_SONGS } from "@/lib/mockData";
 import { usePlayer } from "@/context/PlayerContext";
 import { BottomPlayer } from "@/components/player/BottomPlayer";
 import { ExpandedPlayer } from "@/components/player/ExpandedPlayer";
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
+import { cn } from "@/lib/utils";
 import { Song } from "@/types/music";
 import { motion, AnimatePresence } from "framer-motion";
 import { AddToPlaylistModal } from "@/components/modals/AddToPlaylistModal";
 import { GlowWrapper } from "@/components/ui/GlowWrapper";
 import { FlightAnimation } from "@/components/animations/FlightAnimation";
 import { TrashDeleteAnimation } from "@/components/animations/TrashDeleteAnimation";
+import { CanvasParticles } from "@/components/ui/CanvasParticles";
 
 const jsmediatags = typeof window !== "undefined" ? require("jsmediatags/dist/jsmediatags.min.js") : null;
 
 export default function Home() {
-  const { playSong, currentSong, history, likedSongs, addToQueue } = usePlayer();
+  const { 
+    playSong, 
+    currentSong, 
+    history, 
+    likedSongs, 
+    addToQueue, 
+    viewingAlbumName, 
+    viewingAlbumId,
+    setViewingAlbumName,
+    playlists,
+    addSongToPlaylist,
+    createPlaylist,
+    removeSongFromPlaylist,
+    localSongs,
+    setLocalSongs,
+    searchResults,
+    setSearchResults,
+    userQueue,
+    contextQueue
+  } = usePlayer();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [localSongs, setLocalSongs] = useState<Song[]>([]);
   
-  const [activeTab, setActiveTab] = useState<'discover'|'recent'|'favorites'|'local'|'playlist'|'radio'|'browse'>('discover');
+  const [activeTab, setActiveTab] = useState<'discover'|'recent'|'favorites'|'local'|'playlist'|'radio'|'browse'|'album'>('discover');
   const [selectedPlaylistId, setSelectedPlaylistId] = useState<string | null>(null);
   const [landingPlaylistId, setLandingPlaylistId] = useState<string | null>(null);
 
   const [searchQuery, setSearchQuery] = useState("");
-  const [searchResults, setSearchResults] = useState<Song[]>([]);
   const [isSearching, setIsSearching] = useState(false);
 
   // Playlist states
-  const { playlists, addSongToPlaylist, createPlaylist, removeSongFromPlaylist } = usePlayer();
   const [addingSong, setAddingSong] = useState<Song | null>(null);
   const [flightData, setFlightData] = useState<{ start: DOMRect, end: DOMRect } | null>(null);
   const [deletingSongData, setDeletingSongData] = useState<{ song: Song, playlistId: string, startRect: DOMRect } | null>(null);
   const [animatingDeleteIds, setAnimatingDeleteIds] = useState<string[]>([]);
   const playlistHeaderRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
+
+  // Synchronize activeTab with viewingAlbumName context state
+  useEffect(() => {
+    if (viewingAlbumName) {
+      setActiveTab('album');
+    }
+  }, [viewingAlbumName]);
+
+  useEffect(() => {
+    if (activeTab !== 'album') {
+      setViewingAlbumName(null);
+    }
+  }, [activeTab, setViewingAlbumName]);
+
+  const [albumLoading, setAlbumLoading] = useState(false);
+
+  useEffect(() => {
+    if (viewingAlbumName && viewingAlbumId) {
+      const fetchAlbumSongs = async () => {
+        setAlbumLoading(true);
+        try {
+          const res = await fetch(`/api/album?id=${viewingAlbumId}`);
+          if (res.ok) {
+            const data = await res.json();
+            const songs = data.results || [];
+            // Merge new album songs into searchResults
+            setSearchResults(prev => {
+              const existingIds = new Set(prev.map(s => s.id));
+              const newSongs = songs.filter((s: Song) => !existingIds.has(s.id));
+              return [...prev, ...newSongs];
+            });
+          }
+        } catch (e) {
+          console.error("Failed to fetch album tracks:", e);
+        } finally {
+          setAlbumLoading(false);
+        }
+      };
+      fetchAlbumSongs();
+    }
+  }, [viewingAlbumName, viewingAlbumId, setSearchResults]);
 
   const [logoStyle, setLogoStyle] = useState<'default' | 'ripple' | 'infinity' | 'equalizer'>('default');
   const [isLogoHovered, setIsLogoHovered] = useState(false);
@@ -241,6 +300,7 @@ export default function Home() {
           ) : (
             <div className="absolute inset-0 dynamic-bg" />
           )}
+          <CanvasParticles />
         </div>
 
       {/* Sidebar */}
@@ -510,7 +570,7 @@ export default function Home() {
         </div>
         <div className="mt-auto pt-6">
           <div className="px-3 py-3 flex items-center gap-3 rounded-xl cursor-pointer hover:bg-white/5 transition-colors group">
-            <img alt="Alex Rivera" className="size-8 rounded-lg border border-white/10 object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDuS4AeQPOY77JkrPKNNHoRYKAOe7JkkIBpjBcwI2ZnpCQYnKKvRbHp-kjEVKFZudPolxk9m-yEy5PSXTXKOilMsNda5d9N3ZacHQuoms-B8XFGQ4c0STRlDCHVl5YYz7xXM5tbz7TPuu2jBjGB1QMrEYZ0lGNYbt6_n52P30z22UoyiqXFBLPRNjSfZ4GYXJQYPeYNzen4xDaUBho2eH6EaId9gLTZvBHurc_7ONpyqVyJhnGijDrEky1myah93nbSA4NEMTLkzZSw"/>
+            <img alt="Alex Rivera" className="size-8 rounded-lg border border-white/10 object-cover" src="/alex_pfp.png"/>
             <div className="flex-1 overflow-hidden">
               <p className="text-xs font-semibold truncate">Alex Rivera</p>
               <p className="text-[9px] text-slate-600 font-bold uppercase">Pro Tier</p>
@@ -940,7 +1000,7 @@ export default function Home() {
                 </div>
               </div>
               {localSongs.length === 0 ? (
-                <div className="text-slate-500">You haven't imported any local files yet. Click 'Import Files' to begin!</div>
+                <div className="text-slate-500">{"You haven't imported any local files yet. Click 'Import Files' to begin!"}</div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                   {localSongs.map((song) => (
@@ -986,7 +1046,7 @@ export default function Home() {
                 </div>
               </div>
               {likedSongs.length === 0 ? (
-                <div className="text-slate-500">You haven't liked any songs yet. Play a song and click the heart icon!</div>
+                <div className="text-slate-500">{"You haven't liked any songs yet. Play a song and click the heart icon!"}</div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                   {likedSongs.map((song, i) => (
@@ -1035,27 +1095,30 @@ export default function Home() {
                 <div className="text-slate-500">Your play history is empty. Go discover some music!</div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                  {Array.from(new Set(history.map(s => s.id))).map(id => history.find(s => s.id === id)!).reverse().map((song, i) => (
-                    <GlowWrapper key={`recpage-${song.id}-${i}`} className="rounded-2xl">
-                      <div onClick={() => playSong(song, undefined)} className="glass-card flex items-center gap-4 p-3 group cursor-pointer">
-                        <div className="size-20 flex-shrink-0 rounded-xl overflow-hidden shadow-lg">
-                          <img alt={song.title} className="w-full h-full object-cover" src={song.albumArt}/>
+                  {(() => {
+                    const recentSongs = Array.from(new Map(history.filter(Boolean).map(s => [s.id, s])).values()).reverse();
+                    return recentSongs.map((song, i) => (
+                      <GlowWrapper key={`recpage-${song.id}-${i}`} className="rounded-2xl">
+                        <div onClick={() => playSong(song, recentSongs)} className="glass-card flex items-center gap-4 p-3 group cursor-pointer">
+                          <div className="size-20 flex-shrink-0 rounded-xl overflow-hidden shadow-lg">
+                            <img alt={song.title} className="w-full h-full object-cover" src={song.albumArt}/>
+                          </div>
+                          <div className="flex-1 overflow-hidden">
+                            <h3 className="font-bold text-white truncate">{song.title}</h3>
+                            <p className="text-xs text-slate-500 font-medium truncate">{song.artist}</p>
+                          </div>
+                          <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <button onClick={(e) => { e.stopPropagation(); addToQueue(song); }} className="size-10 bg-white/10 hover:bg-white/20 text-white rounded-full flex items-center justify-center transition-colors" title="Add to Queue">
+                              <span className="material-symbols-outlined fill-[1] text-[20px]">queue_music</span>
+                            </button>
+                            <button className="size-10 bg-accent text-white rounded-full flex items-center justify-center shadow-lg pointer-events-none">
+                              <span className="material-symbols-outlined fill-[1]">play_arrow</span>
+                            </button>
+                          </div>
                         </div>
-                        <div className="flex-1 overflow-hidden">
-                          <h3 className="font-bold text-white truncate">{song.title}</h3>
-                          <p className="text-xs text-slate-500 font-medium truncate">{song.artist}</p>
-                        </div>
-                        <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <button onClick={(e) => { e.stopPropagation(); addToQueue(song); }} className="size-10 bg-white/10 hover:bg-white/20 text-white rounded-full flex items-center justify-center transition-colors" title="Add to Queue">
-                            <span className="material-symbols-outlined fill-[1] text-[20px]">queue_music</span>
-                          </button>
-                          <button className="size-10 bg-accent text-white rounded-full flex items-center justify-center shadow-lg pointer-events-none">
-                            <span className="material-symbols-outlined fill-[1]">play_arrow</span>
-                          </button>
-                        </div>
-                      </div>
-                    </GlowWrapper>
-                  ))}
+                      </GlowWrapper>
+                    ));
+                  })()}
                 </div>
               )}
             </section>
@@ -1136,6 +1199,145 @@ export default function Home() {
                   ))}
                 </div>
               )}
+            </section>
+          )}
+
+          {activeTab === 'album' && viewingAlbumName && (
+            <section>
+              {/* Back Navigation */}
+              <button 
+                onClick={() => {
+                  setViewingAlbumName(null);
+                  setActiveTab('discover');
+                }} 
+                className="flex items-center gap-2 text-slate-400 hover:text-white mb-8 text-xs font-bold uppercase tracking-widest transition-colors"
+              >
+                <span className="material-symbols-outlined text-sm">west</span>
+                Back
+              </button>
+
+              {(() => {
+                const allAvailableSongs = [
+                  ...MOCK_SONGS,
+                  ...localSongs,
+                  ...likedSongs,
+                  ...playlists.flatMap(p => p.songs),
+                  ...searchResults,
+                  ...userQueue,
+                  ...contextQueue,
+                  ...history,
+                  ...(currentSong ? [currentSong] : [])
+                ];
+                const uniqueAllSongs = Array.from(new Map(allAvailableSongs.filter(Boolean).map(s => [s.id, s])).values());
+                const albumSongs = uniqueAllSongs.filter(s => 
+                  s && 
+                  s.album &&
+                  viewingAlbumName &&
+                  s.album.toLowerCase() === viewingAlbumName.toLowerCase()
+                );
+                const uniqueAlbumSongs = Array.from(new Map(albumSongs.map(s => [s.id, s])).values());
+                const albumCover = uniqueAlbumSongs[0]?.albumArt || "https://images.unsplash.com/photo-1470225620780-dba8ba36b745";
+                const albumArtist = uniqueAlbumSongs[0]?.artist || "Unknown Artist";
+
+                if (albumLoading) {
+                  return (
+                    <div className="flex flex-col items-center justify-center py-20">
+                      <span className="material-symbols-outlined text-4xl text-accent animate-spin mb-4">sync</span>
+                      <p className="text-slate-500 italic font-medium">Fetching tracks from YouTube Music...</p>
+                    </div>
+                  );
+                }
+
+                if (uniqueAlbumSongs.length === 0) {
+                  return (
+                    <div className="text-slate-500 py-10">
+                      No songs found for this album.
+                    </div>
+                  );
+                }
+
+                return (
+                  <>
+                    <div className="flex flex-col md:flex-row items-center gap-8 mb-12">
+                      <div className="size-48 rounded-[2.5rem] overflow-hidden glass-panel shadow-2xl relative group flex-shrink-0">
+                        <img 
+                          alt={viewingAlbumName} 
+                          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" 
+                          src={albumCover}
+                        />
+                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                          <button 
+                            onClick={() => playSong(uniqueAlbumSongs[0], uniqueAlbumSongs)}
+                            className="size-16 bg-white text-black rounded-full flex items-center justify-center shadow-xl transform scale-90 group-hover:scale-100 transition-transform duration-300"
+                          >
+                            <span className="material-symbols-outlined text-4xl fill-[1]">play_arrow</span>
+                          </button>
+                        </div>
+                      </div>
+                      <div className="flex-1 text-center md:text-left">
+                        <p className="text-[10px] font-bold text-accent uppercase tracking-[0.3em] mb-2">Album</p>
+                        <h2 className="text-5xl font-black text-white mb-4 tracking-tighter leading-none">{viewingAlbumName}</h2>
+                        <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 text-slate-500 text-sm font-medium">
+                          <span className="text-white font-semibold">{albumArtist}</span>
+                          <span className="size-1 bg-slate-700 rounded-full"></span>
+                          <span>{uniqueAlbumSongs.length} tracks</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      {uniqueAlbumSongs.map((song: Song, i: number) => {
+                        const isCurrent = currentSong?.id === song.id;
+                        return (
+                          <div 
+                            key={`albumsong-${song.id}-${i}`} 
+                            onClick={() => playSong(song, uniqueAlbumSongs)} 
+                            className={cn(
+                              "glass-card flex items-center gap-4 p-3 rounded-2xl group cursor-pointer hover:bg-white/5 border-transparent transition-all duration-500",
+                              isCurrent ? "bg-white/5 border-accent/20" : ""
+                            )}
+                          >
+                            <div className={cn(
+                              "w-8 text-center font-bold transition-colors tabular-nums",
+                              isCurrent ? "text-accent animate-pulse" : "text-slate-600 group-hover:text-accent"
+                            )}>{i + 1}</div>
+                            <div className="size-12 flex-shrink-0 rounded-lg overflow-hidden shadow-lg">
+                              <img alt={song.title} className="w-full h-full object-cover" src={song.albumArt}/>
+                            </div>
+                            <div className="flex-1 overflow-hidden">
+                              <h3 className={cn(
+                                "font-semibold truncate text-sm",
+                                isCurrent ? "text-accent" : "text-white/90"
+                              )}>{song.title}</h3>
+                              <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider truncate">{song.artist}</p>
+                            </div>
+                            <div className="flex items-center gap-4 px-4 text-slate-500 text-xs font-bold w-32 truncate">
+                              {song.genre}
+                            </div>
+                            <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                              <button 
+                                id={`add-btn-${song.id}-album`}
+                                onClick={(e) => { e.stopPropagation(); setAddingSong(song); }} 
+                                className="size-10 bg-white/5 hover:bg-white/20 text-white rounded-full flex items-center justify-center transition-colors" 
+                                title="Add to Playlist"
+                              >
+                                <span className="material-symbols-outlined text-sm">playlist_add</span>
+                              </button>
+                              <button 
+                                onClick={(e) => { e.stopPropagation(); addToQueue(song); }} 
+                                className="size-10 bg-white/5 hover:bg-white/20 text-white rounded-full flex items-center justify-center transition-colors" 
+                                title="Add to Queue"
+                              >
+                                <span className="material-symbols-outlined fill-[1] text-[20px]">queue_music</span>
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </>
+                );
+              })()}
             </section>
           )}
         </div>

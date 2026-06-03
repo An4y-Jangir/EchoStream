@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 import { VolumeSlider } from "./VolumeSlider";
 import { TearAnimation } from "./QueueItem";
 import { Song } from "@/types/music";
+import { MOCK_SONGS } from "@/lib/mockData";
 
 export function ExpandedPlayer() {
   const { 
@@ -36,9 +37,16 @@ export function ExpandedPlayer() {
     toggleQueue,
     userQueue,
     contextQueue,
+    history,
     reorderUserQueue,
     removeFromUserQueue,
-    playSong
+    playSong,
+    isAlbumVisible,
+    toggleAlbum,
+    setViewingAlbumName,
+    localSongs,
+    searchResults,
+    playlists
   } = usePlayer();
 
   const handleSeek = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -93,6 +101,45 @@ export function ExpandedPlayer() {
 
   const displayCurrentTime = isNaN(currentTime) ? 0 : currentTime;
   const displayDuration = isNaN(duration) || duration === 0 ? 0 : duration;
+
+  // Aggregate all unique songs across all known sources
+  const allAvailableSongs = [
+    ...MOCK_SONGS, 
+    ...localSongs,
+    ...likedSongs, 
+    ...playlists.flatMap(p => p.songs),
+    ...searchResults,
+    ...userQueue, 
+    ...contextQueue, 
+    ...history,
+    ...(currentSong ? [currentSong] : [])
+  ];
+  
+  // Unique songs by ID, filter out any undefined elements
+  const uniqueSongs = Array.from(new Map(allAvailableSongs.filter(Boolean).map(s => [s.id, s])).values());
+
+  // Filter songs in active album (matching album name case-insensitively)
+  const currentAlbumSongs = uniqueSongs.filter(s => s && s.album && currentSong.album && s.album.toLowerCase() === currentSong.album.toLowerCase());
+
+  // Group unique songs to form suggested albums
+  const albumsMap = new Map<string, { name: string; artist: string; coverArt: string; albumId?: string; songs: Song[] }>();
+  uniqueSongs.forEach(s => {
+    if (!s || !s.album || s.album === "Unknown Album" || s.album === "Local Folder" || s.album === "Local Device") return;
+    const albumKey = s.album.toLowerCase();
+    if (!albumsMap.has(albumKey)) {
+      albumsMap.set(albumKey, {
+        name: s.album,
+        artist: s.artist,
+        coverArt: s.albumArt,
+        albumId: s.albumId,
+        songs: []
+      });
+    }
+    albumsMap.get(albumKey)!.songs.push(s);
+  });
+  
+  const allAlbums = Array.from(albumsMap.values());
+  const similarAlbums = allAlbums.filter(a => a && a.name.toLowerCase() !== currentSong.album.toLowerCase());
 
   return (
     <AnimatePresence>
@@ -245,6 +292,108 @@ export function ExpandedPlayer() {
             )}
           </AnimatePresence>
 
+          {/* Right: Album Details & Suggested Albums Panel */}
+          <AnimatePresence>
+            {isAlbumVisible && (
+              <motion.div
+                 initial={{ x: '100%', borderTopLeftRadius: '100%', borderBottomLeftRadius: '100%' }}
+                 animate={{ x: 0, borderTopLeftRadius: '0%', borderBottomLeftRadius: '0%' }}
+                 exit={{ x: '100%', borderTopLeftRadius: '100%', borderBottomLeftRadius: '100%' }}
+                 transition={{ type: 'spring', bounce: 0.35, duration: 0.6 }}
+                 className="absolute right-0 top-0 bottom-0 w-80 bg-black/40 backdrop-blur-xl z-40 p-6 pt-24 overflow-y-auto no-scrollbar shadow-[-20px_0_40px_-10px_rgba(0,0,0,0.5)] border-l border-white/5 flex flex-col"
+              >
+                <div className="flex items-center justify-between mb-6">
+                  <h3 className="text-xl font-bold text-white">Album Info</h3>
+                  <button onClick={toggleAlbum} className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors">
+                    <span className="material-symbols-outlined text-sm">close</span>
+                  </button>
+                </div>
+
+                {/* Current Album Square Tile */}
+                <div 
+                  onClick={() => {
+                    setViewingAlbumName(currentSong.album, currentSong.albumId);
+                    if (isAlbumVisible) toggleAlbum();
+                    if (isExpanded) toggleExpanded();
+                  }}
+                  className="relative w-full aspect-square rounded-[1.8rem] overflow-hidden border border-white/10 cursor-pointer group shadow-2xl mb-6 flex-shrink-0"
+                >
+                  <img 
+                    src={currentSong.albumArt} 
+                    alt={currentSong.album} 
+                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" 
+                  />
+                  {/* Glass overlay with album name only */}
+                  <div className="absolute inset-x-3 bottom-3 bg-black/40 backdrop-blur-md border border-white/10 p-3 rounded-2xl flex flex-col justify-center text-left transition-all group-hover:bg-black/60">
+                    <h4 className="font-bold text-white text-sm truncate leading-snug group-hover:text-accent transition-colors">
+                      {currentSong.album}
+                    </h4>
+                  </div>
+                </div>
+
+                {/* Current Album Songs list */}
+                <div className="flex flex-col gap-2 mb-8">
+                  <span className="text-[10px] uppercase font-bold tracking-widest text-accent mb-2">Album Tracks</span>
+                  <div className="flex flex-col gap-1">
+                    {currentAlbumSongs.map((s, i) => (
+                      <div 
+                        key={`curalbum-${s.id}-${i}`} 
+                        onClick={() => playSong(s, currentAlbumSongs)}
+                        className={cn(
+                          "p-2 rounded-xl flex items-center gap-3 cursor-pointer transition-all border border-transparent",
+                          s.id === currentSong.id 
+                            ? "bg-accent/15 border-accent/20 text-accent font-bold" 
+                            : "bg-white/5 hover:bg-white/10 opacity-70 hover:opacity-100"
+                        )}
+                      >
+                        <span className="tabular-nums text-xs w-4 text-center">{i + 1}</span>
+                        <div className="flex-1 min-w-0">
+                          <p className="truncate text-xs">{s.title}</p>
+                        </div>
+                        {s.id === currentSong.id && isPlaying && (
+                          <span className="material-symbols-outlined text-xs animate-spin">sync</span>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Suggested Albums list */}
+                {similarAlbums.length > 0 && (
+                  <div className="flex flex-col gap-3">
+                    <span className="text-[10px] uppercase font-bold tracking-widest text-white/40 mb-1 flex items-center gap-2">
+                      Suggested Albums <span className="h-px bg-white/10 flex-1"></span>
+                    </span>
+                    <div className="flex flex-col gap-2.5 pb-20">
+                      {similarAlbums.map((album, i) => (
+                        <div 
+                          key={`sim-album-${album.name}-${i}`} 
+                          onClick={() => {
+                            setViewingAlbumName(album.name, album.albumId);
+                            if (isAlbumVisible) toggleAlbum();
+                            if (isExpanded) toggleExpanded();
+                          }}
+                          className="p-2 bg-white/5 hover:bg-white/10 cursor-pointer rounded-xl flex items-center gap-3 transition-all border border-white/5 hover:border-white/10 group"
+                        >
+                          <img 
+                            src={album.coverArt} 
+                            alt={album.name} 
+                            className="w-10 h-10 rounded-md object-cover flex-shrink-0" 
+                          />
+                          <div className="flex flex-col flex-1 min-w-0">
+                            <span className="font-bold text-white truncate text-xs group-hover:text-accent transition-colors">{album.name}</span>
+                            <span className="text-[10px] text-white/50 truncate">{album.artist} • {album.songs.length} Tracks</span>
+                          </div>
+                          <span className="material-symbols-outlined text-white/30 group-hover:text-white transition-colors text-base">arrow_forward</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </motion.div>
+            )}
+          </AnimatePresence>
+
           {/* Bottom Player Bar */}
           <div className="fixed bottom-8 left-1/2 -translate-x-1/2 w-[95%] max-w-7xl z-[60] flex flex-col">
             <div className="glass-panel bg-black/40 backdrop-blur-2xl border border-white/10 rounded-3xl p-6 shadow-2xl flex flex-col gap-4">
@@ -309,11 +458,11 @@ export function ExpandedPlayer() {
 
                 {/* Right: Tools & Volume */}
                 <div className="flex items-center justify-end gap-5 w-1/4">
-                  <button onClick={toggleLyrics} className={`transition-colors ${isLyricsVisible ? "text-accent" : "text-white/50 hover:text-white"}`}>
-                    <span className="material-symbols-outlined text-xl">lyrics</span>
-                  </button>
                   <button onClick={toggleQueue} className={`transition-colors ${isQueueVisible ? "text-accent" : "text-white/50 hover:text-white"}`}>
                     <span className="material-symbols-outlined text-xl">queue_music</span>
+                  </button>
+                  <button onClick={toggleAlbum} className={`transition-colors ${isAlbumVisible ? "text-accent" : "text-white/50 hover:text-white"}`} title="Album info & suggestions">
+                    <span className="material-symbols-outlined text-xl">album</span>
                   </button>
                   <VolumeSlider volume={volume} setVolume={setVolume} className="w-36 ml-2" />
                 </div>

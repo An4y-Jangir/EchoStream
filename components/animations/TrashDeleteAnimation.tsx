@@ -35,12 +35,12 @@ export function TrashDeleteAnimation({ song, startRect, onComplete }: TrashDelet
     // 4. Lid shut impact finished, exit trash can
     const tExit = setTimeout(() => {
       setPhase('exit');
-    }, 1350);
+    }, 1450);
 
     // 5. Exit finishes, complete deletion
     const tComplete = setTimeout(() => {
       onComplete();
-    }, 1650);
+    }, 1800);
 
     return () => {
       clearTimeout(tOpen);
@@ -105,7 +105,7 @@ export function TrashDeleteAnimation({ song, startRect, onComplete }: TrashDelet
           </motion.div>
         )}
       </AnimatePresence>
-
+ 
       {/* 2. Cyber-Trash Can HUD Overlay */}
       <div className="absolute bottom-0 left-1/2 -translate-x-1/2 flex flex-col items-center">
         <motion.div
@@ -142,19 +142,23 @@ export function TrashDeleteAnimation({ song, startRect, onComplete }: TrashDelet
               <path d="M 6,12 L 58,12" stroke="#ffffff" strokeWidth="4.5" strokeLinecap="round" />
             </svg>
           </motion.div>
-
+ 
           {/* White Trash Body */}
           <motion.div
-            animate={
-              phase === 'close'
-                ? { 
-                    y: [0, 6, -3, 2, 0],
-                    rotate: [0, 2, -1, 0.5, 0],
-                    scaleX: [1, 1.05, 0.98, 1.01, 1] 
-                  }
-                : {}
-            }
-            transition={{ duration: 0.35, ease: "easeOut" }}
+            variants={{
+              idle: { y: 0, rotate: 0, scaleX: 1 },
+              enter: { y: 0, rotate: 0, scaleX: 1 },
+              open: { y: 0, rotate: 0, scaleX: 1 },
+              flight: { y: 0, rotate: 0, scaleX: 1 },
+              close: { 
+                y: [0, 6, -3, 2, 0],
+                rotate: [0, 2, -1, 0.5, 0],
+                scaleX: [1, 1.05, 0.98, 1.01, 1],
+                transition: { duration: 0.35, ease: "easeOut" }
+              },
+              exit: { y: 0, rotate: 0, scaleX: 1 }
+            }}
+            animate={phase}
             className="w-16 h-20 glass-panel border border-white/20 rounded-b-2xl relative flex items-center justify-center filter drop-shadow-[0_0_10px_rgba(255,255,255,0.2)] overflow-hidden"
             style={{
               background: "rgba(20, 20, 20, 0.85)",

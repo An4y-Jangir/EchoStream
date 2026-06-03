@@ -40,7 +40,7 @@ interface PlayerContextType {
   addToQueue: (song: Song) => void;
   reorderUserQueue: (newQueue: Song[]) => void;
   removeFromUserQueue: (songId: string) => void;
-  playNext: () => void;
+  playNext: (isAutoEnd?: boolean | any) => void;
   playPrevious: () => void;
   likedSongs: Song[];
   toggleLike: (song: Song) => void;
@@ -54,6 +54,15 @@ interface PlayerContextType {
   toggleLyrics: () => void;
   isQueueVisible: boolean;
   toggleQueue: () => void;
+  isAlbumVisible: boolean;
+  toggleAlbum: () => void;
+  viewingAlbumName: string | null;
+  viewingAlbumId: string | null;
+  setViewingAlbumName: (albumName: string | null, albumId?: string | null) => void;
+  localSongs: Song[];
+  setLocalSongs: React.Dispatch<React.SetStateAction<Song[]>>;
+  searchResults: Song[];
+  setSearchResults: React.Dispatch<React.SetStateAction<Song[]>>;
   crossfadeDuration: number;
   setCrossfadeDuration: (duration: number) => void;
 }
@@ -96,6 +105,16 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
   const [playlists, setPlaylists] = useState<Playlist[]>([]);
   const [lyricsMode, setLyricsMode] = useState<'word' | 'line' | 'hidden'>('word');
   const [isQueueVisible, setIsQueueVisible] = useState(false);
+  const [isAlbumVisible, setIsAlbumVisible] = useState(false);
+  const [viewingAlbumName, setViewingAlbumNameState] = useState<string | null>(null);
+  const [viewingAlbumId, setViewingAlbumId] = useState<string | null>(null);
+
+  const setViewingAlbumName = (albumName: string | null, albumId?: string | null) => {
+    setViewingAlbumNameState(albumName);
+    setViewingAlbumId(albumId || null);
+  };
+  const [localSongs, setLocalSongs] = useState<Song[]>([]);
+  const [searchResults, setSearchResults] = useState<Song[]>([]);
   const [crossfadeDuration, setCrossfadeDurationState] = useState(3);
 
   const isLyricsVisible = lyricsMode !== 'hidden';
@@ -154,6 +173,10 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
     setIsQueueVisible(prev => !prev);
   };
 
+  const toggleAlbum = () => {
+    setIsAlbumVisible(prev => !prev);
+  };
+
   const toggleExpanded = () => setIsExpanded(!isExpanded);
   const setVolume = (v: number) => setVolumeState(v);
   const toggleShuffle = () => setIsShuffle(!isShuffle);
@@ -163,7 +186,7 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
   const isYoutubeModeRef = useRef(false);
 
   // Use Refs to avoid stale closures in event listeners
-  const playNextRef = useRef<() => void>(() => { });
+  const playNextRef = useRef<(isAutoEnd?: boolean | any) => void>(() => { });
   useEffect(() => {
     playNextRef.current = playNext;
   });
@@ -221,8 +244,8 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
 
     const handleEnded = () => {
       setProgress(1);
-      // Advance to next song automatically
-      playNextRef.current();
+      // Advance to next song automatically, respecting repeat mode
+      playNextRef.current(true);
     };
 
     const handleError = () => {
@@ -291,7 +314,7 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
     } else if (event.data === 0) {
       setProgress(1);
       // Advance to next song when current one ends, respecting isRepeat in playNext
-      playNextRef.current();
+      playNextRef.current(true);
     }
   };
 
@@ -440,7 +463,13 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
     setUserQueue(newQueue);
   };
 
-  const playNext = () => {
+  const playNext = (isAutoEnd: boolean | any = false) => {
+    // 0. Repeat Mode (Auto-end only)
+    if (isAutoEnd === true && isRepeatRef.current && currentSongRef.current) {
+      playSongInstance(currentSongRef.current);
+      return;
+    }
+
     // 1. Prioritize User Queue (Manual)
     if (userQueueRef.current.length > 0) {
       if (currentSongRef.current) {
@@ -470,15 +499,36 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
             nextIdx = Math.floor(Math.random() * arr.length);
           }
         } else {
-          nextIdx = 0;
+          // If only 1 song and shuffle is on, stop playing on next
+          setIsPlaying(false);
+          if (audioRef.current) {
+            audioRef.current.pause();
+            audioRef.current.currentTime = 0;
+          }
+          if (isYoutubeModeRef.current && ytPlayer) {
+            try { ytPlayer.pauseVideo(); } catch (e) {}
+          }
+          setProgress(0);
+          setCurrentTime(0);
+          return;
         }
       } else {
         // Sequential - If we can't find the current song, start from 0
         nextIdx = curIdx === -1 ? 0 : curIdx + 1;
 
-        // Loop back to start if we exceed the length
+        // Stop playback if we exceed the length and repeat is off
         if (nextIdx >= arr.length) {
-          nextIdx = 0;
+          setIsPlaying(false);
+          if (audioRef.current) {
+            audioRef.current.pause();
+            audioRef.current.currentTime = 0;
+          }
+          if (isYoutubeModeRef.current && ytPlayer) {
+            try { ytPlayer.pauseVideo(); } catch (e) {}
+          }
+          setProgress(0);
+          setCurrentTime(0);
+          return;
         }
       }
 
@@ -644,6 +694,15 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
         toggleLyrics,
         isQueueVisible,
         toggleQueue,
+        isAlbumVisible,
+        toggleAlbum,
+        viewingAlbumName,
+        viewingAlbumId,
+        setViewingAlbumName,
+        localSongs,
+        setLocalSongs,
+        searchResults,
+        setSearchResults,
         crossfadeDuration,
         setCrossfadeDuration,
       }}

@@ -7,15 +7,16 @@ import { cn } from "@/lib/utils";
 import { VolumeSlider } from "./VolumeSlider";
 import { TearAnimation } from "./QueueItem";
 import { Song } from "@/types/music";
+import { MOCK_SONGS } from "@/lib/mockData";
 
 export function BottomPlayer() {
-  const { 
-    currentSong, 
-    isPlaying, 
-    togglePlay, 
-    progress, 
-    toggleExpanded, 
-    isExpanded, 
+  const {
+    currentSong,
+    isPlaying,
+    togglePlay,
+    progress,
+    toggleExpanded,
+    isExpanded,
     currentTime,
     seek,
     volume,
@@ -35,9 +36,16 @@ export function BottomPlayer() {
     toggleQueue,
     userQueue,
     contextQueue,
+    history,
     reorderUserQueue,
     removeFromUserQueue,
-    playSong
+    playSong,
+    isAlbumVisible,
+    toggleAlbum,
+    setViewingAlbumName,
+    localSongs,
+    searchResults,
+    playlists
   } = usePlayer();
 
   const handleSeek = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -76,25 +84,163 @@ export function BottomPlayer() {
   const displayCurrentTime = isNaN(currentTime) ? 0 : currentTime;
   const displayDuration = isNaN(duration) || duration === 0 ? 0 : duration;
 
+  // Aggregate all unique songs across all known sources
+  const allAvailableSongs = [
+    ...MOCK_SONGS,
+    ...localSongs,
+    ...likedSongs,
+    ...playlists.flatMap(p => p.songs),
+    ...searchResults,
+    ...userQueue,
+    ...contextQueue,
+    ...history,
+    ...(currentSong ? [currentSong] : [])
+  ];
+
+  // Unique songs by ID, filter out any undefined elements
+  const uniqueSongs = Array.from(new Map(allAvailableSongs.filter(Boolean).map(s => [s.id, s])).values());
+
+  // Filter songs in active album (matching album name case-insensitively)
+  const currentAlbumSongs = uniqueSongs.filter(s => s && s.album && currentSong.album && s.album.toLowerCase() === currentSong.album.toLowerCase());
+
+  // Group unique songs to form suggested albums
+  const albumsMap = new Map<string, { name: string; artist: string; coverArt: string; albumId?: string; songs: Song[] }>();
+  uniqueSongs.forEach(s => {
+    if (!s || !s.album || s.album === "Unknown Album" || s.album === "Local Folder" || s.album === "Local Device") return;
+    const albumKey = s.album.toLowerCase();
+    if (!albumsMap.has(albumKey)) {
+      albumsMap.set(albumKey, {
+        name: s.album,
+        artist: s.artist,
+        coverArt: s.albumArt,
+        albumId: s.albumId,
+        songs: []
+      });
+    }
+    albumsMap.get(albumKey)!.songs.push(s);
+  });
+
+  const allAlbums = Array.from(albumsMap.values());
+  const similarAlbums = allAlbums.filter(a => a && a.name.toLowerCase() !== currentSong.album.toLowerCase());
+
   return (
     <AnimatePresence>
       {!isExpanded && currentSong && (
-        <motion.div 
+        <motion.div
           initial={{ y: 100, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: 100, opacity: 0 }}
           transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
           className="fixed bottom-0 left-0 right-0 z-50 flex justify-center py-6 px-10 pointer-events-none"
         >
+          {/* Floating Album Sidebar */}
+          <AnimatePresence>
+            {isAlbumVisible && (
+              <motion.div
+                initial={{ x: -20, y: 20, scale: 0.9, opacity: 0, transformOrigin: "bottom left" }}
+                animate={{ x: 0, y: 0, scale: 1, opacity: 1 }}
+                exit={{ x: -20, y: 20, scale: 0.9, opacity: 0 }}
+                transition={{ type: 'spring', bounce: 0.4, duration: 0.5 }}
+                className="absolute bottom-[110%] left-10 mb-2 w-96 max-h-[60vh] glass-panel bg-black/40 backdrop-blur-xl z-[100] rounded-[2.5rem] p-6 overflow-y-auto no-scrollbar pointer-events-auto flex flex-col text-white"
+              >
+                <div className="flex items-center justify-between mb-6">
+                  <h3 className="text-lg font-bold text-white">Album Info</h3>
+                  <button onClick={toggleAlbum} className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors">
+                    <span className="material-symbols-outlined text-sm">close</span>
+                  </button>
+                </div>
+                {/* Current Album Square Tile */}
+                <div
+                  onClick={() => {
+                    setViewingAlbumName(currentSong.album, currentSong.albumId);
+                    if (isAlbumVisible) toggleAlbum();
+                  }}
+                  className="relative w-full aspect-square rounded-[1.8rem] overflow-hidden border border-white/10 cursor-pointer group shadow-2xl mb-6 flex-shrink-0"
+                >
+                  <img
+                    src={currentSong.albumArt}
+                    alt={currentSong.album}
+                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                  />
+                  {/* Glass overlay with album name only */}
+                  <div className="absolute inset-x-3 bottom-3 bg-black/40 backdrop-blur-md border border-white/10 p-3 rounded-2xl flex flex-col justify-center text-left transition-all group-hover:bg-black/60">
+                    <h4 className="font-bold text-white text-sm truncate leading-snug group-hover:text-accent transition-colors">
+                      {currentSong.album}
+                    </h4>
+                  </div>
+                </div>
+
+                {/* Album Tracks */}
+                <div className="flex flex-col gap-2 mb-6">
+                  <span className="text-[10px] uppercase font-bold tracking-widest text-accent mb-1">Album Tracks</span>
+                  <div className="flex flex-col gap-1 max-h-[150px] overflow-y-auto no-scrollbar">
+                    {currentAlbumSongs.map((s, i) => (
+                      <div
+                        key={`bottomalbum-${s.id}-${i}`}
+                        onClick={() => playSong(s, currentAlbumSongs)}
+                        className={cn(
+                          "p-2 rounded-xl flex items-center gap-3 cursor-pointer transition-all border border-transparent text-xs",
+                          s.id === currentSong.id
+                            ? "bg-accent/15 border-accent/20 text-accent font-bold"
+                            : "bg-white/5 hover:bg-white/10 opacity-70 hover:opacity-100"
+                        )}
+                      >
+                        <span className="tabular-nums text-[10px] w-4 text-center">{i + 1}</span>
+                        <div className="flex-1 min-w-0">
+                          <p className="truncate">{s.title}</p>
+                        </div>
+                        {s.id === currentSong.id && isPlaying && (
+                          <span className="material-symbols-outlined text-[10px] animate-spin">sync</span>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Suggested Albums */}
+                {similarAlbums.length > 0 && (
+                  <div className="flex flex-col gap-2">
+                    <span className="text-[10px] uppercase font-bold tracking-widest text-white/40 mb-1 flex items-center gap-2">
+                      Suggested Albums <span className="h-px bg-white/10 flex-1"></span>
+                    </span>
+                    <div className="flex flex-col gap-2 pb-2">
+                      {similarAlbums.map((album, i) => (
+                        <div
+                          key={`bottom-sim-album-${album.name}-${i}`}
+                          onClick={() => {
+                            setViewingAlbumName(album.name, album.albumId);
+                            if (isAlbumVisible) toggleAlbum();
+                          }}
+                          className="p-2 bg-white/5 hover:bg-white/10 cursor-pointer rounded-xl flex items-center gap-3 transition-all border border-white/5 hover:border-white/10 group"
+                        >
+                          <img
+                            src={album.coverArt}
+                            alt={album.name}
+                            className="w-8 h-8 rounded-md object-cover flex-shrink-0"
+                          />
+                          <div className="flex flex-col flex-1 min-w-0">
+                            <span className="font-bold text-white truncate text-xs group-hover:text-accent transition-colors">{album.name}</span>
+                            <span className="text-[9px] text-white/50 truncate">{album.artist} • {album.songs.length} Tracks</span>
+                          </div>
+                          <span className="material-symbols-outlined text-white/30 group-hover:text-white transition-colors text-sm">arrow_forward</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </motion.div>
+            )}
+          </AnimatePresence>
+
           {/* Floating Queue Sidebar */}
           <AnimatePresence>
             {isQueueVisible && (
               <motion.div
-                 initial={{ x: 20, y: 20, scale: 0.9, opacity: 0, transformOrigin: "bottom right" }}
-                 animate={{ x: 0, y: 0, scale: 1, opacity: 1 }}
-                 exit={{ x: 20, y: 20, scale: 0.9, opacity: 0 }}
-                 transition={{ type: 'spring', bounce: 0.4, duration: 0.5 }}
-                 className="absolute bottom-[110%] right-10 mb-2 w-96 max-h-[60vh] glass-panel bg-black/40 backdrop-blur-xl z-[100] rounded-[2.5rem] p-6 overflow-y-auto no-scrollbar pointer-events-auto flex flex-col"
+                initial={{ x: 20, y: 20, scale: 0.9, opacity: 0, transformOrigin: "bottom right" }}
+                animate={{ x: 0, y: 0, scale: 1, opacity: 1 }}
+                exit={{ x: 20, y: 20, scale: 0.9, opacity: 0 }}
+                transition={{ type: 'spring', bounce: 0.4, duration: 0.5 }}
+                className="absolute bottom-[110%] right-10 mb-2 w-96 max-h-[60vh] glass-panel bg-black/40 backdrop-blur-xl z-[100] rounded-[2.5rem] p-6 overflow-y-auto no-scrollbar pointer-events-auto flex flex-col"
               >
                 <div className="flex items-center justify-between mb-6">
                   <h3 className="text-lg font-bold text-white">Up Next</h3>
@@ -172,22 +318,22 @@ export function BottomPlayer() {
           <footer className="w-full max-w-7xl glass-panel bg-black/10 backdrop-blur-xl rounded-[2.5rem] p-3 px-8 shadow-2xl flex items-center justify-between pointer-events-auto transition-all">
             {/* Now Playing */}
             <div className="flex items-center gap-4 w-1/4">
-              <div 
-                className="size-16 flex-shrink-0 rounded-2xl overflow-hidden shadow-2xl shadow-accent/20 cursor-pointer" 
+              <div
+                className="size-16 flex-shrink-0 rounded-2xl overflow-hidden shadow-2xl shadow-accent/20 cursor-pointer"
                 onClick={toggleExpanded}
               >
-                <img alt={currentSong.title} className="w-full h-full object-cover" src={currentSong.albumArt}/>
+                <img alt={currentSong.title} className="w-full h-full object-cover" src={currentSong.albumArt} />
               </div>
               <div className="flex flex-col overflow-hidden">
-                <a 
-                  className="text-sm font-bold text-white hover:text-accent truncate transition-colors cursor-pointer" 
+                <a
+                  className="text-sm font-bold text-white hover:text-accent truncate transition-colors cursor-pointer"
                   onClick={(e) => { e.preventDefault(); toggleExpanded(); }}
                 >
                   {currentSong.title}
                 </a>
                 <a className="text-[10px] text-slate-500 font-bold uppercase tracking-wider hover:text-white truncate transition-colors cursor-pointer">{currentSong.artist}</a>
               </div>
-              <button 
+              <button
                 onClick={(e) => { e.stopPropagation(); toggleLike(currentSong); }}
                 className={cn("hover:scale-110 active:scale-95 transition-all ml-2", likedSongs.some(s => s.id === currentSong.id) ? "text-accent" : "text-slate-400 hover:text-white")}
               >
@@ -198,8 +344,8 @@ export function BottomPlayer() {
             {/* Playback Controls */}
             <div className="flex flex-col items-center gap-3 flex-1 max-w-xl">
               <div className="flex items-center gap-8">
-                <button 
-                  onClick={toggleShuffle} 
+                <button
+                  onClick={toggleShuffle}
                   className={`${isShuffle ? 'text-accent' : 'text-slate-400 hover:text-white'} transition-colors`}
                 >
                   <span className="material-symbols-outlined text-2xl">shuffle</span>
@@ -207,7 +353,7 @@ export function BottomPlayer() {
                 <button onClick={playPrevious} className="text-white/80 hover:text-white hover:scale-110 transition-all">
                   <span className="material-symbols-outlined text-3xl">skip_previous</span>
                 </button>
-                <button 
+                <button
                   onClick={togglePlay}
                   className="size-12 bg-white text-black rounded-full flex items-center justify-center hover:scale-105 active:scale-95 transition-all shadow-xl"
                 >
@@ -218,8 +364,8 @@ export function BottomPlayer() {
                 <button onClick={playNext} className="text-white/80 hover:text-white hover:scale-110 transition-all">
                   <span className="material-symbols-outlined text-3xl">skip_next</span>
                 </button>
-                <button 
-                  onClick={toggleRepeat} 
+                <button
+                  onClick={toggleRepeat}
                   className={`${isRepeat ? 'text-accent' : 'text-slate-400 hover:text-white'} transition-colors`}
                 >
                   <span className="material-symbols-outlined text-2xl">
@@ -227,17 +373,17 @@ export function BottomPlayer() {
                   </span>
                 </button>
               </div>
-              
+
               <div className="flex items-center gap-3 w-full">
                 <span className="text-[10px] text-slate-500 font-bold tabular-nums w-8 text-right">
                   {formatTime(displayCurrentTime)}
                 </span>
-                <div 
-                  className="h-1 flex-1 bg-white/5 rounded-full relative group cursor-pointer overflow-hidden" 
+                <div
+                  className="h-1 flex-1 bg-white/5 rounded-full relative group cursor-pointer overflow-hidden"
                   onClick={handleSeek}
                 >
-                  <div 
-                    className="absolute inset-y-0 left-0 bg-accent rounded-full pointer-events-none shadow-[0_0_10px_rgba(99,102,241,0.5)]" 
+                  <div
+                    className="absolute inset-y-0 left-0 bg-accent rounded-full pointer-events-none shadow-[0_0_10px_rgba(99,102,241,0.5)]"
                     style={{ width: `${progress * 100}%` }}
                   ></div>
                   <div className="absolute inset-0 bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"></div>
@@ -250,17 +396,18 @@ export function BottomPlayer() {
 
             {/* Volume & Tools */}
             <div className="flex items-center justify-end gap-5 w-1/4">
-              <button 
-                onClick={(e) => { e.stopPropagation(); toggleLyrics(); }}
-                className={cn("transition-colors", isLyricsVisible ? "text-accent" : "text-slate-400 hover:text-white")}
-              >
-                <span className="material-symbols-outlined text-2xl">lyrics</span>
-              </button>
-              <button 
+              <button
                 onClick={(e) => { e.stopPropagation(); toggleQueue(); }}
                 className={cn("transition-colors", isQueueVisible ? "text-accent" : "text-slate-400 hover:text-white")}
               >
                 <span className="material-symbols-outlined text-2xl">queue_music</span>
+              </button>
+              <button
+                onClick={(e) => { e.stopPropagation(); toggleAlbum(); }}
+                className={cn("transition-colors", isAlbumVisible ? "text-accent" : "text-slate-400 hover:text-white")}
+                title="Album panel"
+              >
+                <span className="material-symbols-outlined text-2xl">album</span>
               </button>
               <VolumeSlider volume={volume} setVolume={setVolume} className="w-36 ml-1" />
               <button onClick={toggleExpanded} className="text-slate-400 hover:text-white transition-colors">

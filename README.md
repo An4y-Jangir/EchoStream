@@ -13,7 +13,7 @@
 * **Smart Queue & History**: Full support for active user-managed queue, context-based queue fallbacks (e.g. playing through related tracks or search results), and history tracking.
 * **Lyrics Syncing**: Live `.lrc` file parser with auto-fetching integration from `lrclib.net` supporting line-by-line and word-level modes.
 * **Discrepancy Grouping**: Case-insensitive grouping of albums to correctly merge compilation folders or tracks with varying featured-artist tags.
-* **Boundary Playback Controls**: Stops playback (pauses audio players and resets timelines) when the queue or playlist ends and repeat is disabled, preventing infinite loops.
+* **Playlist Looping**: Automatically wraps around and plays the first song in the playlist when the last song finishes playing, ensuring continuous music delivery.
 
 ### 🎨 Design & Micro-Animations
 * **Dynamic Custom Cursor**: A hardware-accelerated pointer follower with a spring-delayed outer ring (`damping: 25`, `stiffness: 220`) that trails the cursor.

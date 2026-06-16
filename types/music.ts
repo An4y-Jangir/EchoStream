@@ -1,6 +1,12 @@
+export interface LyricWord {
+  text: string;
+  time: number; // absolute time in seconds
+}
+
 export interface LyricLine {
   time: number; // in seconds
   text: string;
+  words?: LyricWord[];
 }
 
 export interface Song {

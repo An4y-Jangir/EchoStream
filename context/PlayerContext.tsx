@@ -103,6 +103,10 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
   const isShuffleRef = useRef(isShuffle);
   const isRepeatRef = useRef(isRepeat);
 
+  // Cache for prefetched lyrics
+  const prefetchedLyricsCache = useRef<Map<string, any[]>>(new Map());
+  const currentlyFetchingLyrics = useRef<Set<string>>(new Set());
+
   // PlaybackSource: the full roster of the active playlist/context
   const [playbackSource, setPlaybackSource] = useState<PlaybackSource | null>(null);
   const playbackSourceRef = useRef<PlaybackSource | null>(null);
@@ -288,6 +292,53 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
     }
     return () => clearInterval(interval);
   }, [isPlaying, ytPlayer]);
+  const fetchLyrics = async (song: Song): Promise<any[]> => {
+    if (song.lyrics && song.lyrics.length > 0) return song.lyrics;
+
+    const cached = prefetchedLyricsCache.current.get(song.id);
+    if (cached) return cached;
+
+    const query = new URLSearchParams({
+      track_name: song.title,
+      artist_name: song.artist === "Local Device" || song.artist === "Local Folder" ? "" : song.artist,
+      album_name: song.album === "Local Folder" ? "" : song.album
+    }).toString();
+
+    try {
+      const res = await fetch(`https://lrclib.net/api/get?${query}`);
+      if (!res.ok) throw new Error("Fetch failed");
+      const data = await res.json();
+      let lyricsList: any[] = [];
+      if (data.syncedLyrics) {
+        lyricsList = parseLrc(data.syncedLyrics);
+      } else if (data.plainLyrics) {
+        lyricsList = [{ time: 0, text: data.plainLyrics }];
+      } else {
+        lyricsList = [{ time: 0, text: "Lyrics unavailable" }];
+      }
+      prefetchedLyricsCache.current.set(song.id, lyricsList);
+      return lyricsList;
+    } catch (e) {
+      console.warn("Failed to fetch lyrics:", e);
+      const fallback = [{ time: 0, text: "Lyrics unavailable" }];
+      prefetchedLyricsCache.current.set(song.id, fallback);
+      return fallback;
+    }
+  };
+
+  const prefetchLyrics = (song: Song) => {
+    if (!song || (song.lyrics && song.lyrics.length > 0)) return;
+    if (currentlyFetchingLyrics.current.has(song.id)) return;
+    currentlyFetchingLyrics.current.add(song.id);
+    fetchLyrics(song)
+      .then(lyrics => {
+        song.lyrics = lyrics;
+      })
+      .catch(() => {})
+      .finally(() => {
+        currentlyFetchingLyrics.current.delete(song.id);
+      });
+  };
 
   const triggerCrossfade = (nextSong: Song) => {
     if (isCrossfadingRef.current) return;
@@ -314,7 +365,7 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
       .then(() => {
         // Swap active references so the UI immediately switches to the next song
         if (currentSongRef.current) {
-          const newHistory = [...historyRef.current, currentSongRef.current];
+          const newHistory = [...historyRef.current, currentSongRef.current!];
           historyRef.current = newHistory;
           setHistory(newHistory);
         }
@@ -343,34 +394,13 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
 
         // Fetch lyrics for nextSong in background
         if (!nextSong.lyrics || nextSong.lyrics.length === 0) {
-          const query = new URLSearchParams({
-            track_name: nextSong.title,
-            artist_name: nextSong.artist === "Local Device" || nextSong.artist === "Local Folder" ? "" : nextSong.artist,
-            album_name: nextSong.album === "Local Folder" ? "" : nextSong.album
-          }).toString();
-
-          fetch(`https://lrclib.net/api/get?${query}`)
-            .then(res => {
-              if (res.ok) return res.json();
-              throw new Error("Lrclib fetch failed");
-            })
-            .then(data => {
-              let lyricsList: { time: number; text: string }[] = [];
-              if (data.syncedLyrics) {
-                lyricsList = parseLrc(data.syncedLyrics);
-              } else if (data.plainLyrics) {
-                lyricsList = [{ time: 0, text: data.plainLyrics }];
-              }
-              
-              if (currentSongRef.current?.id === nextSong.id) {
-                const updatedSong = { ...nextSong, lyrics: lyricsList };
-                currentSongRef.current = updatedSong;
-                setCurrentSong(updatedSong);
-              }
-            })
-            .catch(e => {
-              console.warn("Failed to fetch next song lyrics in background", e);
-            });
+          fetchLyrics(nextSong).then(lyrics => {
+            if (currentSongRef.current?.id === nextSong.id) {
+              const updatedSong = { ...nextSong, lyrics };
+              currentSongRef.current = updatedSong;
+              setCurrentSong(updatedSong);
+            }
+          });
         }
 
         // Begin crossfade volume ramp
@@ -690,36 +720,22 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
 
     // Fetch lyrics asynchronously in the background so audio playback starts instantly
     if (!song.lyrics || song.lyrics.length === 0) {
-      const query = new URLSearchParams({
-        track_name: song.title,
-        artist_name: song.artist === "Local Device" || song.artist === "Local Folder" ? "" : song.artist,
-        album_name: song.album === "Local Folder" ? "" : song.album
-      }).toString();
-
-      fetch(`https://lrclib.net/api/get?${query}`)
-        .then(res => {
-          if (res.ok) return res.json();
-          throw new Error("Lrclib fetch failed");
-        })
-        .then(data => {
-          let lyricsList: { time: number; text: string }[] = [];
-          if (data.syncedLyrics) {
-            lyricsList = parseLrc(data.syncedLyrics);
-          } else if (data.plainLyrics) {
-            lyricsList = [{ time: 0, text: data.plainLyrics }];
-          }
-          
-          // Verify that this song is still the active one before updating
-          if (currentSongRef.current?.id === song.id) {
-            const updatedSong = { ...song, lyrics: lyricsList };
-            currentSongRef.current = updatedSong;
-            setCurrentSong(updatedSong);
-          }
-        })
-        .catch(e => {
-          console.warn("Failed to fetch lyrics in background:", e);
-        });
+      fetchLyrics(song).then(lyrics => {
+        if (currentSongRef.current?.id === song.id) {
+          const updatedSong = { ...song, lyrics };
+          currentSongRef.current = updatedSong;
+          setCurrentSong(updatedSong);
+        }
+      });
     }
+
+    // Prefetch next song's lyrics in the background after 1 second
+    setTimeout(() => {
+      const nextSong = getNextSong();
+      if (nextSong) {
+        prefetchLyrics(nextSong);
+      }
+    }, 1000);
   };
 
   /**

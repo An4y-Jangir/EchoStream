@@ -208,7 +208,7 @@ export function ExpandedPlayer() {
 
             {/* Right: Lyrics Only */}
             <div className="w-full lg:w-[55%] h-[80vh] flex flex-col justify-center max-w-[800px]">
-               <LiveLyrics lyrics={currentSong.lyrics} currentTime={currentTime} />
+               <LiveLyrics key={currentSong.id} lyrics={currentSong.lyrics} currentTime={currentTime} />
             </div>
           </div>
 

@@ -720,6 +720,9 @@ video {
 .block {
   display: block;
 }
+.inline-block {
+  display: inline-block;
+}
 .flex {
   display: flex;
 }
@@ -945,6 +948,9 @@ video {
 }
 .origin-bottom-right {
   transform-origin: bottom right;
+}
+.origin-center {
+  transform-origin: center;
 }
 .-translate-x-1\/2 {
   --tw-translate-x: -50%;

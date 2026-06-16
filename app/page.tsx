@@ -30,12 +30,14 @@ export default function Home() {
     addSongToPlaylist,
     createPlaylist,
     removeSongFromPlaylist,
+    deletePlaylist,
     localSongs,
     setLocalSongs,
     searchResults,
     setSearchResults,
     userQueue,
-    contextQueue
+    contextQueue,
+    triggerQueueLanding
   } = usePlayer();
   const fileInputRef = useRef<HTMLInputElement>(null);
   
@@ -95,7 +97,7 @@ export default function Home() {
     }
   }, [viewingAlbumName, viewingAlbumId, setSearchResults]);
 
-  const [logoStyle, setLogoStyle] = useState<'default' | 'ripple' | 'infinity' | 'equalizer'>('default');
+  const [logoStyle, setLogoStyle] = useState<'default' | 'ripple' | 'infinity' | 'equalizer'>('equalizer');
   const [isLogoHovered, setIsLogoHovered] = useState(false);
   const cycleLogo = () => {
     const styles: ('default' | 'ripple' | 'infinity' | 'equalizer')[] = ['default', 'ripple', 'infinity', 'equalizer'];
@@ -282,6 +284,18 @@ export default function Home() {
       const endRect = playlistHeaderRef.current.getBoundingClientRect();
       setFlightImageUrl(song.albumArt);
       setFlightData({ start: startRect, end: endRect });
+    }
+  };
+
+  const triggerQueueFlight = (song: Song, startRect: DOMRect) => {
+    const queueBtn = document.getElementById("bottom-queue-btn") || document.getElementById("expanded-queue-btn");
+    if (queueBtn) {
+      const endRect = queueBtn.getBoundingClientRect();
+      setFlightImageUrl(song.albumArt);
+      setFlightData({ start: startRect, end: endRect });
+      setTimeout(() => {
+        triggerQueueLanding();
+      }, 900);
     }
   };
 
@@ -845,7 +859,7 @@ export default function Home() {
                             >
                               <span className="material-symbols-outlined text-sm">playlist_add</span>
                             </button>
-                            <button onClick={(e) => { e.stopPropagation(); addToQueue(song); }} className="size-8 bg-white/5 hover:bg-white/20 text-white rounded-full flex items-center justify-center transition-colors" title="Add to Queue">
+                            <button onClick={(e) => { e.stopPropagation(); addToQueue(song); triggerQueueFlight(song, e.currentTarget.getBoundingClientRect()); }} className="size-8 bg-white/5 hover:bg-white/20 text-white rounded-full flex items-center justify-center transition-colors" title="Add to Queue">
                               <span className="material-symbols-outlined fill-[1] text-sm">queue_music</span>
                             </button>
                             <button className="size-8 bg-accent text-white rounded-full flex items-center justify-center shadow-lg pointer-events-none">
@@ -900,7 +914,7 @@ export default function Home() {
                           >
                             <span className="material-symbols-outlined text-sm">playlist_add</span>
                           </button>
-                          <button onClick={(e) => { e.stopPropagation(); addToQueue(song); }} className="size-8 bg-white/5 hover:bg-white/20 text-white rounded-full flex items-center justify-center transition-colors" title="Add to Queue">
+                          <button onClick={(e) => { e.stopPropagation(); addToQueue(song); triggerQueueFlight(song, e.currentTarget.getBoundingClientRect()); }} className="size-8 bg-white/5 hover:bg-white/20 text-white rounded-full flex items-center justify-center transition-colors" title="Add to Queue">
                             <span className="material-symbols-outlined fill-[1] text-sm">queue_music</span>
                           </button>
                           <button className="size-8 bg-accent text-white rounded-full flex items-center justify-center shadow-lg pointer-events-none">
@@ -1022,7 +1036,7 @@ export default function Home() {
                           >
                             <span className="material-symbols-outlined text-sm">playlist_add</span>
                           </button>
-                          <button onClick={(e) => { e.stopPropagation(); addToQueue(song); }} className="size-10 bg-white/10 hover:bg-white/20 text-white rounded-full flex items-center justify-center transition-colors" title="Add to Queue">
+                          <button onClick={(e) => { e.stopPropagation(); addToQueue(song); triggerQueueFlight(song, e.currentTarget.getBoundingClientRect()); }} className="size-10 bg-white/10 hover:bg-white/20 text-white rounded-full flex items-center justify-center transition-colors" title="Add to Queue">
                             <span className="material-symbols-outlined fill-[1] text-[20px]">queue_music</span>
                           </button>
                           <button className="size-10 bg-accent text-white rounded-full flex items-center justify-center shadow-lg pointer-events-none">
@@ -1068,7 +1082,7 @@ export default function Home() {
                           >
                             <span className="material-symbols-outlined text-sm">playlist_add</span>
                           </button>
-                          <button onClick={(e) => { e.stopPropagation(); addToQueue(song); }} className="size-10 bg-white/10 hover:bg-white/20 text-white rounded-full flex items-center justify-center transition-colors" title="Add to Queue">
+                          <button onClick={(e) => { e.stopPropagation(); addToQueue(song); triggerQueueFlight(song, e.currentTarget.getBoundingClientRect()); }} className="size-10 bg-white/10 hover:bg-white/20 text-white rounded-full flex items-center justify-center transition-colors" title="Add to Queue">
                             <span className="material-symbols-outlined fill-[1] text-[20px]">queue_music</span>
                           </button>
                           <button className="size-10 bg-accent text-white rounded-full flex items-center justify-center shadow-lg pointer-events-none">
@@ -1108,7 +1122,7 @@ export default function Home() {
                             <p className="text-xs text-slate-500 font-medium truncate">{song.artist}</p>
                           </div>
                           <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <button onClick={(e) => { e.stopPropagation(); addToQueue(song); }} className="size-10 bg-white/10 hover:bg-white/20 text-white rounded-full flex items-center justify-center transition-colors" title="Add to Queue">
+                            <button onClick={(e) => { e.stopPropagation(); addToQueue(song); triggerQueueFlight(song, e.currentTarget.getBoundingClientRect()); }} className="size-10 bg-white/10 hover:bg-white/20 text-white rounded-full flex items-center justify-center transition-colors" title="Add to Queue">
                               <span className="material-symbols-outlined fill-[1] text-[20px]">queue_music</span>
                             </button>
                             <button className="size-10 bg-accent text-white rounded-full flex items-center justify-center shadow-lg pointer-events-none">
@@ -1135,14 +1149,30 @@ export default function Home() {
                     </button>
                   </div>
                 </div>
-                <div className="flex-1">
-                  <p className="text-[10px] font-bold text-accent uppercase tracking-[0.3em] mb-2">Playlist</p>
-                  <h2 className="text-5xl font-black text-white mb-4 tracking-tighter">{currentPlaylist.title}</h2>
-                  <div className="flex items-center gap-4 text-slate-500 text-sm font-medium">
-                    <span>{currentPlaylist.songs.length} tracks</span>
-                    <span className="size-1 bg-slate-700 rounded-full"></span>
-                    <span>Created by you</span>
+                <div className="flex-1 flex flex-col md:flex-row md:items-end justify-between gap-6">
+                  <div>
+                    <p className="text-[10px] font-bold text-accent uppercase tracking-[0.3em] mb-2">Playlist</p>
+                    <h2 className="text-5xl font-black text-white mb-4 tracking-tighter">{currentPlaylist.title}</h2>
+                    <div className="flex items-center gap-4 text-slate-500 text-sm font-medium">
+                      <span>{currentPlaylist.songs.length} tracks</span>
+                      <span className="size-1 bg-slate-700 rounded-full"></span>
+                      <span>Created by you</span>
+                    </div>
                   </div>
+                  <button 
+                    onClick={() => {
+                      if (confirm(`Are you sure you want to delete the playlist "${currentPlaylist.title}"?`)) {
+                        deletePlaylist(currentPlaylist.id);
+                        setActiveTab('discover');
+                        setSelectedPlaylistId(null);
+                      }
+                    }}
+                    className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-500 border border-red-500/20 hover:border-red-500/40 hover:scale-105 active:scale-95 transition-all text-xs font-bold uppercase tracking-wider"
+                    title="Delete Playlist"
+                  >
+                    <span className="material-symbols-outlined text-base">delete</span>
+                    Delete Playlist
+                  </button>
                 </div>
               </div>
 
@@ -1171,7 +1201,7 @@ export default function Home() {
                       </div>
                       <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                         <button 
-                          onClick={(e) => { e.stopPropagation(); addToQueue(song); }} 
+                          onClick={(e) => { e.stopPropagation(); addToQueue(song); triggerQueueFlight(song, e.currentTarget.getBoundingClientRect()); }} 
                           className="size-10 bg-white/5 hover:bg-white/20 text-white rounded-full flex items-center justify-center transition-colors" 
                           title="Add to Queue"
                         >
@@ -1324,7 +1354,7 @@ export default function Home() {
                                 <span className="material-symbols-outlined text-sm">playlist_add</span>
                               </button>
                               <button 
-                                onClick={(e) => { e.stopPropagation(); addToQueue(song); }} 
+                                onClick={(e) => { e.stopPropagation(); addToQueue(song); triggerQueueFlight(song, e.currentTarget.getBoundingClientRect()); }} 
                                 className="size-10 bg-white/5 hover:bg-white/20 text-white rounded-full flex items-center justify-center transition-colors" 
                                 title="Add to Queue"
                               >

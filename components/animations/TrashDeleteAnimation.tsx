@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Song } from "@/types/music";
 
@@ -12,6 +12,11 @@ interface TrashDeleteAnimationProps {
 
 export function TrashDeleteAnimation({ song, startRect, onComplete }: TrashDeleteAnimationProps) {
   const [phase, setPhase] = useState<'idle' | 'enter' | 'open' | 'flight' | 'close' | 'exit'>('idle');
+  const onCompleteRef = useRef(onComplete);
+
+  useEffect(() => {
+    onCompleteRef.current = onComplete;
+  }, [onComplete]);
 
   useEffect(() => {
     // Start sequence
@@ -39,7 +44,7 @@ export function TrashDeleteAnimation({ song, startRect, onComplete }: TrashDelet
 
     // 5. Exit finishes, complete deletion
     const tComplete = setTimeout(() => {
-      onComplete();
+      onCompleteRef.current();
     }, 1800);
 
     return () => {
@@ -49,7 +54,7 @@ export function TrashDeleteAnimation({ song, startRect, onComplete }: TrashDelet
       clearTimeout(tExit);
       clearTimeout(tComplete);
     };
-  }, [onComplete]);
+  }, []);
 
   if (!startRect) return null;
 

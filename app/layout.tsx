@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 import { PlayerProvider } from "@/context/PlayerContext";
+import { CustomCursor } from "@/components/ui/CustomCursor";
 
 export const metadata: Metadata = {
   title: "Music Player",
@@ -22,6 +23,7 @@ export default function RootLayout({
       </head>
       <body className="bg-background-dark text-slate-100 font-display selection:bg-accent/30 selection:text-white">
         <PlayerProvider>
+          <CustomCursor />
           {children}
         </PlayerProvider>
       </body>

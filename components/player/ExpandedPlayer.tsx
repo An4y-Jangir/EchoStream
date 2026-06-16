@@ -35,6 +35,7 @@ export function ExpandedPlayer() {
     toggleLyrics,
     isQueueVisible,
     toggleQueue,
+    isQueueLanding,
     userQueue,
     contextQueue,
     history,
@@ -458,8 +459,23 @@ export function ExpandedPlayer() {
 
                 {/* Right: Tools & Volume */}
                 <div className="flex items-center justify-end gap-5 w-1/4">
-                  <button onClick={toggleQueue} className={`transition-colors ${isQueueVisible ? "text-accent" : "text-white/50 hover:text-white"}`}>
-                    <span className="material-symbols-outlined text-xl">queue_music</span>
+                  <button 
+                    id="expanded-queue-btn" 
+                    onClick={toggleQueue} 
+                    className={cn("relative transition-colors p-1.5 rounded-lg", isQueueVisible ? "text-accent" : "text-white/50 hover:text-white")}
+                  >
+                    <span className="material-symbols-outlined text-xl relative z-10">queue_music</span>
+                    <AnimatePresence>
+                      {isQueueLanding && (
+                        <motion.div 
+                          key="queue-expanded-landing-pulse"
+                          className="absolute inset-0 bg-accent/20 rounded-lg z-0"
+                          initial={{ opacity: 0, scale: 0.8 }}
+                          animate={{ opacity: [0, 1, 0], scale: [0.8, 1.4, 1.1] }}
+                          transition={{ duration: 0.6 }}
+                        />
+                      )}
+                    </AnimatePresence>
                   </button>
                   <button onClick={toggleAlbum} className={`transition-colors ${isAlbumVisible ? "text-accent" : "text-white/50 hover:text-white"}`} title="Album info & suggestions">
                     <span className="material-symbols-outlined text-xl">album</span>

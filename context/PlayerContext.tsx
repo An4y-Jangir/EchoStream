@@ -54,6 +54,8 @@ interface PlayerContextType {
   toggleLyrics: () => void;
   isQueueVisible: boolean;
   toggleQueue: () => void;
+  isQueueLanding: boolean;
+  triggerQueueLanding: () => void;
   isAlbumVisible: boolean;
   toggleAlbum: () => void;
   viewingAlbumName: string | null;
@@ -171,6 +173,12 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
 
   const toggleQueue = () => {
     setIsQueueVisible(prev => !prev);
+  };
+
+  const [isQueueLanding, setIsQueueLanding] = useState(false);
+  const triggerQueueLanding = () => {
+    setIsQueueLanding(true);
+    setTimeout(() => setIsQueueLanding(false), 1000);
   };
 
   const toggleAlbum = () => {
@@ -694,6 +702,8 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
         toggleLyrics,
         isQueueVisible,
         toggleQueue,
+        isQueueLanding,
+        triggerQueueLanding,
         isAlbumVisible,
         toggleAlbum,
         viewingAlbumName,

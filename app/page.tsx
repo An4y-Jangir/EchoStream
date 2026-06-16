@@ -26,6 +26,8 @@ export default function Home() {
     viewingAlbumName, 
     viewingAlbumId,
     setViewingAlbumName,
+    viewedAlbumSongs,
+    viewedAlbumLoading,
     playlists,
     addSongToPlaylist,
     createPlaylist,
@@ -69,33 +71,7 @@ export default function Home() {
     }
   }, [activeTab, setViewingAlbumName]);
 
-  const [albumLoading, setAlbumLoading] = useState(false);
-
-  useEffect(() => {
-    if (viewingAlbumName && viewingAlbumId) {
-      const fetchAlbumSongs = async () => {
-        setAlbumLoading(true);
-        try {
-          const res = await fetch(`/api/album?id=${viewingAlbumId}`);
-          if (res.ok) {
-            const data = await res.json();
-            const songs = data.results || [];
-            // Merge new album songs into searchResults
-            setSearchResults(prev => {
-              const existingIds = new Set(prev.map(s => s.id));
-              const newSongs = songs.filter((s: Song) => !existingIds.has(s.id));
-              return [...prev, ...newSongs];
-            });
-          }
-        } catch (e) {
-          console.error("Failed to fetch album tracks:", e);
-        } finally {
-          setAlbumLoading(false);
-        }
-      };
-      fetchAlbumSongs();
-    }
-  }, [viewingAlbumName, viewingAlbumId, setSearchResults]);
+  // Album fetching is managed globally in PlayerContext
 
   const [logoStyle, setLogoStyle] = useState<'default' | 'ripple' | 'infinity' | 'equalizer'>('equalizer');
   const [isLogoHovered, setIsLogoHovered] = useState(false);
@@ -1247,29 +1223,11 @@ export default function Home() {
               </button>
 
               {(() => {
-                const allAvailableSongs = [
-                  ...MOCK_SONGS,
-                  ...localSongs,
-                  ...likedSongs,
-                  ...playlists.flatMap(p => p.songs),
-                  ...searchResults,
-                  ...userQueue,
-                  ...contextQueue,
-                  ...history,
-                  ...(currentSong ? [currentSong] : [])
-                ];
-                const uniqueAllSongs = Array.from(new Map(allAvailableSongs.filter(Boolean).map(s => [s.id, s])).values());
-                const albumSongs = uniqueAllSongs.filter(s => 
-                  s && 
-                  s.album &&
-                  viewingAlbumName &&
-                  s.album.toLowerCase() === viewingAlbumName.toLowerCase()
-                );
-                const uniqueAlbumSongs = Array.from(new Map(albumSongs.map(s => [s.id, s])).values());
+                const uniqueAlbumSongs = viewedAlbumSongs;
                 const albumCover = uniqueAlbumSongs[0]?.albumArt || "https://images.unsplash.com/photo-1470225620780-dba8ba36b745";
                 const albumArtist = uniqueAlbumSongs[0]?.artist || "Unknown Artist";
 
-                if (albumLoading) {
+                if (viewedAlbumLoading) {
                   return (
                     <div className="flex flex-col items-center justify-center py-20">
                       <span className="material-symbols-outlined text-4xl text-accent animate-spin mb-4">sync</span>

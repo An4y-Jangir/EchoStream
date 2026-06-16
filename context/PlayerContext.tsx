@@ -4,6 +4,7 @@ import React, { createContext, useContext, useState, useRef, useEffect } from "r
 import { Song, Playlist } from "@/types/music";
 import { parseLrc } from "@/lib/lrcParser";
 import YouTube from 'react-youtube';
+import { MOCK_SONGS } from "@/lib/mockData";
 
 // ---------------------------------------------------------------------------
 // PlaybackSource: tracks which playlist/context the current song came from.
@@ -67,6 +68,10 @@ interface PlayerContextType {
   setSearchResults: React.Dispatch<React.SetStateAction<Song[]>>;
   crossfadeDuration: number;
   setCrossfadeDuration: (duration: number) => void;
+  viewedAlbumSongs: Song[];
+  viewedAlbumLoading: boolean;
+  currentAlbumSongs: Song[];
+  currentAlbumLoading: boolean;
 }
 
 const PlayerContext = createContext<PlayerContextType | undefined>(undefined);
@@ -118,6 +123,54 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
   const [localSongs, setLocalSongs] = useState<Song[]>([]);
   const [searchResults, setSearchResults] = useState<Song[]>([]);
   const [crossfadeDuration, setCrossfadeDurationState] = useState(3);
+  const [viewedAlbumSongs, setViewedAlbumSongs] = useState<Song[]>([]);
+  const [viewedAlbumLoading, setViewedAlbumLoading] = useState(false);
+  const [currentAlbumSongs, setCurrentAlbumSongs] = useState<Song[]>([]);
+  const [currentAlbumLoading, setCurrentAlbumLoading] = useState(false);
+
+  const crossfadeDurationRef = useRef(crossfadeDuration);
+  useEffect(() => {
+    crossfadeDurationRef.current = crossfadeDuration;
+  }, [crossfadeDuration]);
+
+  const getNextSong = (): Song | null => {
+    // 1. Repeat Mode (single song repeat)
+    if (isRepeatRef.current && currentSongRef.current) {
+      return currentSongRef.current;
+    }
+
+    // 2. User Queue
+    if (userQueueRef.current.length > 0) {
+      return userQueueRef.current[0];
+    }
+
+    // 3. Playback Source
+    const ps = playbackSourceRef.current;
+    if (ps && ps.originalArray && ps.originalArray.length > 0) {
+      const arr = ps.originalArray;
+      const curId = currentSongRef.current?.id;
+      const curIdx = arr.findIndex(s => String(s?.id) === String(curId));
+      
+      if (isShuffleRef.current) {
+        if (arr.length > 1) {
+          let nextIdx = curIdx;
+          while (nextIdx === curIdx) {
+            nextIdx = Math.floor(Math.random() * arr.length);
+          }
+          return arr[nextIdx];
+        }
+      } else {
+        const nextIdx = curIdx === -1 ? 0 : curIdx + 1;
+        if (nextIdx < arr.length) {
+          return arr[nextIdx];
+        } else {
+          // Loop the playlist: wrap around to the first song
+          return arr[0];
+        }
+      }
+    }
+    return null;
+  };
 
   const isLyricsVisible = lyricsMode !== 'hidden';
 
@@ -190,8 +243,13 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
   const toggleShuffle = () => setIsShuffle(!isShuffle);
   const toggleRepeat = () => setIsRepeat(!isRepeat);
 
+  const audioRef1 = useRef<HTMLAudioElement | null>(null);
+  const audioRef2 = useRef<HTMLAudioElement | null>(null);
+  const activeAudioIndexRef = useRef<1 | 2>(1);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const isYoutubeModeRef = useRef(false);
+  const isCrossfadingRef = useRef(false);
+  const fadeIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   // Use Refs to avoid stale closures in event listeners
   const playNextRef = useRef<(isAutoEnd?: boolean | any) => void>(() => { });
@@ -231,47 +289,199 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
     return () => clearInterval(interval);
   }, [isPlaying, ytPlayer]);
 
-  // Initialize audio element only on client
+  const triggerCrossfade = (nextSong: Song) => {
+    if (isCrossfadingRef.current) return;
+    isCrossfadingRef.current = true;
+
+    // Clear any existing interval
+    if (fadeIntervalRef.current) clearInterval(fadeIntervalRef.current);
+
+    // Determine active and inactive elements
+    const activeAudio = activeAudioIndexRef.current === 1 ? audioRef1.current : audioRef2.current;
+    const nextAudio = activeAudioIndexRef.current === 1 ? audioRef2.current : audioRef1.current;
+    const nextIndex = activeAudioIndexRef.current === 1 ? 2 : 1;
+
+    if (!activeAudio || !nextAudio) {
+      isCrossfadingRef.current = false;
+      return;
+    }
+
+    nextAudio.src = nextSong.audioUrl;
+    nextAudio.volume = 0;
+    
+    // Play nextAudio immediately, transition UI and volume in parallel
+    nextAudio.play()
+      .then(() => {
+        // Swap active references so the UI immediately switches to the next song
+        if (currentSongRef.current) {
+          const newHistory = [...historyRef.current, currentSongRef.current];
+          historyRef.current = newHistory;
+          setHistory(newHistory);
+        }
+
+        if (userQueueRef.current.length > 0 && userQueueRef.current[0].id === nextSong.id) {
+          const [_, ...rest] = userQueueRef.current;
+          userQueueRef.current = rest;
+          setUserQueue(rest);
+        } else {
+          const ps = playbackSourceRef.current;
+          if (ps && ps.originalArray) {
+            const idx = ps.originalArray.findIndex(s => String(s?.id) === String(nextSong.id));
+            if (idx !== -1) {
+              const remaining = ps.originalArray.slice(idx + 1);
+              contextQueueRef.current = remaining;
+              setContextQueue(remaining);
+            }
+          }
+        }
+
+        // Initialize currentSong with standard nextSong details
+        currentSongRef.current = nextSong;
+        setCurrentSong(nextSong);
+        activeAudioIndexRef.current = nextIndex;
+        audioRef.current = nextAudio;
+
+        // Fetch lyrics for nextSong in background
+        if (!nextSong.lyrics || nextSong.lyrics.length === 0) {
+          const query = new URLSearchParams({
+            track_name: nextSong.title,
+            artist_name: nextSong.artist === "Local Device" || nextSong.artist === "Local Folder" ? "" : nextSong.artist,
+            album_name: nextSong.album === "Local Folder" ? "" : nextSong.album
+          }).toString();
+
+          fetch(`https://lrclib.net/api/get?${query}`)
+            .then(res => {
+              if (res.ok) return res.json();
+              throw new Error("Lrclib fetch failed");
+            })
+            .then(data => {
+              let lyricsList: { time: number; text: string }[] = [];
+              if (data.syncedLyrics) {
+                lyricsList = parseLrc(data.syncedLyrics);
+              } else if (data.plainLyrics) {
+                lyricsList = [{ time: 0, text: data.plainLyrics }];
+              }
+              
+              if (currentSongRef.current?.id === nextSong.id) {
+                const updatedSong = { ...nextSong, lyrics: lyricsList };
+                currentSongRef.current = updatedSong;
+                setCurrentSong(updatedSong);
+              }
+            })
+            .catch(e => {
+              console.warn("Failed to fetch next song lyrics in background", e);
+            });
+        }
+
+        // Begin crossfade volume ramp
+        const durationMs = crossfadeDurationRef.current * 1000;
+        const intervalMs = 50;
+        const steps = durationMs / intervalMs;
+        let currentStep = 0;
+        const startVolume = activeAudio.volume;
+        const targetVolume = volume;
+
+        fadeIntervalRef.current = setInterval(() => {
+          currentStep++;
+          const ratio = currentStep / steps;
+
+          activeAudio.volume = Math.max(0, startVolume * (1 - ratio));
+          nextAudio.volume = Math.min(targetVolume, targetVolume * ratio);
+
+          if (currentStep >= steps) {
+            if (fadeIntervalRef.current) clearInterval(fadeIntervalRef.current);
+            fadeIntervalRef.current = null;
+            
+            activeAudio.pause();
+            activeAudio.src = "";
+            activeAudio.volume = targetVolume;
+            isCrossfadingRef.current = false;
+          }
+        }, intervalMs);
+      })
+      .catch(err => {
+        console.warn("Failed to play next audio during crossfade:", err);
+        isCrossfadingRef.current = false;
+      });
+  };
+
+  // Initialize audio elements only on client
   useEffect(() => {
-    audioRef.current = new Audio();
-    audioRef.current.volume = volume;
+    audioRef1.current = new Audio();
+    audioRef2.current = new Audio();
+    audioRef.current = audioRef1.current; // Start with element 1 active
 
-    const audio = audioRef.current;
+    audioRef1.current.volume = volume;
+    audioRef2.current.volume = volume;
 
-    const handleTimeUpdate = () => {
-      setCurrentTime(audio.currentTime);
-      if (audio.duration) {
+    const setupAudioListeners = (audio: HTMLAudioElement, index: 1 | 2) => {
+      const handleTimeUpdate = () => {
+        // Only update state if this audio is the active one
+        if (activeAudioIndexRef.current !== index) return;
+        
+        setCurrentTime(audio.currentTime);
+        if (audio.duration) {
+          setDuration(audio.duration);
+          setProgress(audio.currentTime / audio.duration);
+        }
+
+        // Trigger crossfade if nearing the end
+        const remainingTime = audio.duration - audio.currentTime;
+        if (
+          crossfadeDurationRef.current > 0 &&
+          remainingTime <= crossfadeDurationRef.current &&
+          !isCrossfadingRef.current &&
+          !isYoutubeModeRef.current
+        ) {
+          const nextSong = getNextSong();
+          if (nextSong) {
+            triggerCrossfade(nextSong);
+          }
+        }
+      };
+
+      const handleLoadedMetadata = () => {
+        if (activeAudioIndexRef.current !== index) return;
         setDuration(audio.duration);
-        setProgress(audio.currentTime / audio.duration);
-      }
+      };
+
+      const handleEnded = () => {
+        if (activeAudioIndexRef.current !== index) return;
+        setProgress(1);
+        playNextRef.current(true);
+      };
+
+      const handleError = () => {
+        console.warn(`Failed to load audio source on element ${index}.`);
+      };
+
+      audio.addEventListener('timeupdate', handleTimeUpdate);
+      audio.addEventListener('loadedmetadata', handleLoadedMetadata);
+      audio.addEventListener('ended', handleEnded);
+      audio.addEventListener('error', handleError);
+
+      return () => {
+        audio.removeEventListener('timeupdate', handleTimeUpdate);
+        audio.removeEventListener('loadedmetadata', handleLoadedMetadata);
+        audio.removeEventListener('ended', handleEnded);
+        audio.removeEventListener('error', handleError);
+      };
     };
 
-    const handleLoadedMetadata = () => {
-      setDuration(audio.duration);
-    };
-
-    const handleEnded = () => {
-      setProgress(1);
-      // Advance to next song automatically, respecting repeat mode
-      playNextRef.current(true);
-    };
-
-    const handleError = () => {
-      console.warn("Failed to load audio source.");
-    };
-
-    audio.addEventListener('timeupdate', handleTimeUpdate);
-    audio.addEventListener('loadedmetadata', handleLoadedMetadata);
-    audio.addEventListener('ended', handleEnded);
-    audio.addEventListener('error', handleError);
+    const cleanup1 = setupAudioListeners(audioRef1.current, 1);
+    const cleanup2 = setupAudioListeners(audioRef2.current, 2);
 
     return () => {
-      audio.removeEventListener('timeupdate', handleTimeUpdate);
-      audio.removeEventListener('loadedmetadata', handleLoadedMetadata);
-      audio.removeEventListener('ended', handleEnded);
-      audio.removeEventListener('error', handleError);
-      audio.pause();
-      audio.src = "";
+      cleanup1();
+      cleanup2();
+      if (audioRef1.current) {
+        audioRef1.current.pause();
+        audioRef1.current.src = "";
+      }
+      if (audioRef2.current) {
+        audioRef2.current.pause();
+        audioRef2.current.src = "";
+      }
     };
   }, []);
 
@@ -301,10 +511,100 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem('echo-playlists', JSON.stringify(playlists));
   }, [playlists]);
 
+  // Fetch viewed album songs when viewingAlbumId changes
+  useEffect(() => {
+    if (viewingAlbumName && viewingAlbumId) {
+      const fetchAlbumSongs = async () => {
+        setViewedAlbumLoading(true);
+        try {
+          const res = await fetch(`/api/album?id=${viewingAlbumId}`);
+          if (res.ok) {
+            const data = await res.json();
+            setViewedAlbumSongs(data.results || []);
+          } else {
+            setViewedAlbumSongs([]);
+          }
+        } catch (e) {
+          console.error("Failed to fetch viewed album tracks:", e);
+          setViewedAlbumSongs([]);
+        } finally {
+          setViewedAlbumLoading(false);
+        }
+      };
+      fetchAlbumSongs();
+    } else {
+      // Fallback: filter local/mock/cached songs matching viewingAlbumName
+      if (viewingAlbumName) {
+        const allAvailableSongs = [
+          ...MOCK_SONGS,
+          ...localSongs,
+          ...likedSongs,
+          ...playlists.flatMap(p => p.songs),
+          ...searchResults,
+          ...userQueue,
+          ...contextQueue,
+          ...history,
+          ...(currentSongRef.current ? [currentSongRef.current] : [])
+        ];
+        const uniqueSongs = Array.from(new Map(allAvailableSongs.filter(Boolean).map(s => [s.id, s])).values());
+        const filtered = uniqueSongs.filter(s => s && s.album && s.album.toLowerCase() === viewingAlbumName.toLowerCase());
+        setViewedAlbumSongs(filtered);
+      } else {
+        setViewedAlbumSongs([]);
+      }
+    }
+  }, [viewingAlbumName, viewingAlbumId, localSongs, likedSongs, playlists, searchResults, userQueue, contextQueue, history]);
+
+  // Fetch current song's album songs when album panel is visible and currentSong has an albumId
+  useEffect(() => {
+    const activeSong = currentSong;
+    if (isAlbumVisible && activeSong?.albumId) {
+      const fetchCurrentAlbumSongs = async () => {
+        setCurrentAlbumLoading(true);
+        try {
+          const res = await fetch(`/api/album?id=${activeSong.albumId}`);
+          if (res.ok) {
+            const data = await res.json();
+            setCurrentAlbumSongs(data.results || []);
+          } else {
+            setCurrentAlbumSongs([]);
+          }
+        } catch (e) {
+          console.error("Failed to fetch current album tracks:", e);
+          setCurrentAlbumSongs([]);
+        } finally {
+          setCurrentAlbumLoading(false);
+        }
+      };
+      fetchCurrentAlbumSongs();
+    } else {
+      // Fallback: filter local/mock/cached songs matching currentSong.album
+      if (activeSong?.album) {
+        const allAvailableSongs = [
+          ...MOCK_SONGS,
+          ...localSongs,
+          ...likedSongs,
+          ...playlists.flatMap(p => p.songs),
+          ...searchResults,
+          ...userQueue,
+          ...contextQueue,
+          ...history,
+          activeSong
+        ];
+        const uniqueSongs = Array.from(new Map(allAvailableSongs.filter(Boolean).map(s => [s.id, s])).values());
+        const filtered = uniqueSongs.filter(s => s && s.album && s.album.toLowerCase() === activeSong.album.toLowerCase());
+        setCurrentAlbumSongs(filtered);
+      } else {
+        setCurrentAlbumSongs([]);
+      }
+    }
+  }, [isAlbumVisible, currentSong, localSongs, likedSongs, playlists, searchResults, userQueue, contextQueue, history]);
+
   // Sync volume state to audio element
   useEffect(() => {
-    if (audioRef.current) {
-      audioRef.current.volume = volume;
+    if (!isCrossfadingRef.current) {
+      if (audioRef1.current) audioRef1.current.volume = volume;
+      if (audioRef2.current) audioRef2.current.volume = volume;
     }
     try {
       if (ytPlayer && ytPlayer.getIframe()) {
@@ -326,48 +626,29 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const playSongInstance = async (song: Song) => {
-    // Attempt auto-fetching lyrics if file has none
-    let enhancedSong = { ...song };
-    if (!song.lyrics || song.lyrics.length === 0) {
-      try {
-        const query = new URLSearchParams({
-          track_name: song.title,
-          artist_name: song.artist === "Local Device" || song.artist === "Local Folder" ? "" : song.artist,
-          album_name: song.album === "Local Folder" ? "" : song.album
-        }).toString();
-
-        const res = await fetch(`https://lrclib.net/api/get?${query}`);
-        if (res.ok) {
-          const data = await res.json();
-          if (data.syncedLyrics) {
-            enhancedSong.lyrics = parseLrc(data.syncedLyrics);
-          } else if (data.plainLyrics) {
-            enhancedSong.lyrics = [{ time: 0, text: data.plainLyrics }];
-          }
-        }
-      } catch (e) {
-        console.warn("Failed to fetch lyrics automatically", e);
-      }
-    }
-
-    if (!enhancedSong.lyrics) {
-      enhancedSong.lyrics = [];
-    }
-
-    // Synchronous ref update for rapid clicks
-    const isYoutube = enhancedSong.audioUrl.startsWith("youtube:");
+  const playSongInstance = (song: Song) => {
+    const isYoutube = song.audioUrl.startsWith("youtube:");
     isYoutubeModeRef.current = isYoutube;
 
-    // Synchronous ref update for rapid clicks
-    // Synchronous ref update for rapid clicks
-    currentSongRef.current = enhancedSong;
-    setCurrentSong(enhancedSong);
+    currentSongRef.current = song;
+    setCurrentSong(song);
+
+    // Clear any active crossfade when loading a new song directly
+    if (fadeIntervalRef.current) {
+      clearInterval(fadeIntervalRef.current);
+      fadeIntervalRef.current = null;
+    }
+    isCrossfadingRef.current = false;
+
+    // Reset volume of both audio elements to target volume
+    if (audioRef1.current) audioRef1.current.volume = volume;
+    if (audioRef2.current) audioRef2.current.volume = volume;
 
     if (isYoutube) {
-      if (audioRef.current) audioRef.current.pause();
+      if (audioRef1.current) audioRef1.current.pause();
+      if (audioRef2.current) audioRef2.current.pause();
 
-      const vId = enhancedSong.audioUrl.split(":")[1];
+      const vId = song.audioUrl.split(":")[1];
       setYtVideoId(vId);
 
       if (ytPlayer) {
@@ -383,9 +664,17 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
       }
       setYtPlayer(null);
 
-      if (audioRef.current) {
-        audioRef.current.src = enhancedSong.audioUrl;
-        const playPromise = audioRef.current.play();
+      // Stop the inactive element completely
+      const activeAudio = activeAudioIndexRef.current === 1 ? audioRef1.current : audioRef2.current;
+      const inactiveAudio = activeAudioIndexRef.current === 1 ? audioRef2.current : audioRef1.current;
+      if (inactiveAudio) {
+        inactiveAudio.pause();
+        inactiveAudio.src = "";
+      }
+
+      if (activeAudio) {
+        activeAudio.src = song.audioUrl;
+        const playPromise = activeAudio.play();
         if (playPromise !== undefined) {
           playPromise.then(() => {
             setIsPlaying(true);
@@ -397,6 +686,39 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
       } else {
         setIsPlaying(true);
       }
+    }
+
+    // Fetch lyrics asynchronously in the background so audio playback starts instantly
+    if (!song.lyrics || song.lyrics.length === 0) {
+      const query = new URLSearchParams({
+        track_name: song.title,
+        artist_name: song.artist === "Local Device" || song.artist === "Local Folder" ? "" : song.artist,
+        album_name: song.album === "Local Folder" ? "" : song.album
+      }).toString();
+
+      fetch(`https://lrclib.net/api/get?${query}`)
+        .then(res => {
+          if (res.ok) return res.json();
+          throw new Error("Lrclib fetch failed");
+        })
+        .then(data => {
+          let lyricsList: { time: number; text: string }[] = [];
+          if (data.syncedLyrics) {
+            lyricsList = parseLrc(data.syncedLyrics);
+          } else if (data.plainLyrics) {
+            lyricsList = [{ time: 0, text: data.plainLyrics }];
+          }
+          
+          // Verify that this song is still the active one before updating
+          if (currentSongRef.current?.id === song.id) {
+            const updatedSong = { ...song, lyrics: lyricsList };
+            currentSongRef.current = updatedSong;
+            setCurrentSong(updatedSong);
+          }
+        })
+        .catch(e => {
+          console.warn("Failed to fetch lyrics in background:", e);
+        });
     }
   };
 
@@ -524,19 +846,9 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
         // Sequential - If we can't find the current song, start from 0
         nextIdx = curIdx === -1 ? 0 : curIdx + 1;
 
-        // Stop playback if we exceed the length and repeat is off
+        // Loop the playlist: wrap around to the first song
         if (nextIdx >= arr.length) {
-          setIsPlaying(false);
-          if (audioRef.current) {
-            audioRef.current.pause();
-            audioRef.current.currentTime = 0;
-          }
-          if (isYoutubeModeRef.current && ytPlayer) {
-            try { ytPlayer.pauseVideo(); } catch (e) {}
-          }
-          setProgress(0);
-          setCurrentTime(0);
-          return;
+          nextIdx = 0;
         }
       }
 
@@ -715,6 +1027,10 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
         setSearchResults,
         crossfadeDuration,
         setCrossfadeDuration,
+        viewedAlbumSongs,
+        viewedAlbumLoading,
+        currentAlbumSongs,
+        currentAlbumLoading,
       }}
     >
       <div className="hidden">

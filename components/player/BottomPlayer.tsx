@@ -44,6 +44,8 @@ export function BottomPlayer() {
     isAlbumVisible,
     toggleAlbum,
     setViewingAlbumName,
+    currentAlbumSongs,
+    currentAlbumLoading,
     localSongs,
     searchResults,
     playlists
@@ -101,8 +103,7 @@ export function BottomPlayer() {
   // Unique songs by ID, filter out any undefined elements
   const uniqueSongs = Array.from(new Map(allAvailableSongs.filter(Boolean).map(s => [s.id, s])).values());
 
-  // Filter songs in active album (matching album name case-insensitively)
-  const currentAlbumSongs = uniqueSongs.filter(s => s && s.album && currentSong.album && s.album.toLowerCase() === currentSong.album.toLowerCase());
+  // currentAlbumSongs is retrieved from PlayerContext
 
   // Group unique songs to form suggested albums
   const albumsMap = new Map<string, { name: string; artist: string; coverArt: string; albumId?: string; songs: Song[] }>();
@@ -175,26 +176,35 @@ export function BottomPlayer() {
                 <div className="flex flex-col gap-2 mb-6">
                   <span className="text-[10px] uppercase font-bold tracking-widest text-accent mb-1">Album Tracks</span>
                   <div className="flex flex-col gap-1 max-h-[150px] overflow-y-auto no-scrollbar">
-                    {currentAlbumSongs.map((s, i) => (
-                      <div
-                        key={`bottomalbum-${s.id}-${i}`}
-                        onClick={() => playSong(s, currentAlbumSongs)}
-                        className={cn(
-                          "p-2 rounded-xl flex items-center gap-3 cursor-pointer transition-all border border-transparent text-xs",
-                          s.id === currentSong.id
-                            ? "bg-accent/15 border-accent/20 text-accent font-bold"
-                            : "bg-white/5 hover:bg-white/10 opacity-70 hover:opacity-100"
-                        )}
-                      >
-                        <span className="tabular-nums text-[10px] w-4 text-center">{i + 1}</span>
-                        <div className="flex-1 min-w-0">
-                          <p className="truncate">{s.title}</p>
-                        </div>
-                        {s.id === currentSong.id && isPlaying && (
-                          <span className="material-symbols-outlined text-[10px] animate-spin">sync</span>
-                        )}
+                    {currentAlbumLoading ? (
+                      <div className="flex flex-col items-center justify-center py-6 gap-2">
+                        <span className="material-symbols-outlined text-lg text-accent animate-spin">sync</span>
+                        <span className="text-[9px] text-slate-500 font-bold uppercase tracking-wider">Loading tracks...</span>
                       </div>
-                    ))}
+                    ) : currentAlbumSongs.length === 0 ? (
+                      <div className="text-slate-500 text-xs py-2 italic text-center">No tracks found</div>
+                    ) : (
+                      currentAlbumSongs.map((s, i) => (
+                        <div
+                          key={`bottomalbum-${s.id}-${i}`}
+                          onClick={() => playSong(s, currentAlbumSongs)}
+                          className={cn(
+                            "p-2 rounded-xl flex items-center gap-3 cursor-pointer transition-all border border-transparent text-xs",
+                            s.id === currentSong.id
+                              ? "bg-accent/15 border-accent/20 text-accent font-bold"
+                              : "bg-white/5 hover:bg-white/10 opacity-70 hover:opacity-100"
+                          )}
+                        >
+                          <span className="tabular-nums text-[10px] w-4 text-center">{i + 1}</span>
+                          <div className="flex-1 min-w-0">
+                            <p className="truncate">{s.title}</p>
+                          </div>
+                          {s.id === currentSong.id && isPlaying && (
+                            <span className="material-symbols-outlined text-[10px] animate-spin">sync</span>
+                          )}
+                        </div>
+                      ))
+                    )}
                   </div>
                 </div>
 

@@ -16,9 +16,16 @@
 * **Boundary Playback Controls**: Stops playback (pauses audio players and resets timelines) when the queue or playlist ends and repeat is disabled, preventing infinite loops.
 
 ### 🎨 Design & Micro-Animations
-* **Interactive Logo Switcher**: Cycle through 4 high-fidelity responsive logo designs (Monogram, Ripple, Infinity, Equalizer) with dynamic hover states.
-* **Parabolic Flight Animation**: Adding a song to a playlist launches its album art in a physical, curved flight path towards the playlist sidebar indicator.
+* **Dynamic Custom Cursor**: A hardware-accelerated pointer follower with a spring-delayed outer ring (`damping: 25`, `stiffness: 220`) that trails the cursor.
+  * *Interactive Hover State*: Outer ring expands, glows with a neon aura, and changes blend-mode to `difference` when hovering over links, buttons, cards, or nav items.
+  * *Tactile Click State*: Inner dot and outer ring scale down and pulse on clicks.
+  * *Text Input State*: Ring transforms into an elegant vertical line (I-beam selection indicator) when hovering text input fields.
+  * *Touch Prevention*: Automatically disabled on touch-only devices to preserve default mobile navigation.
+* **Equalizer Default Startup**: The audio equalizer logo loads by default on startup, immediately establishing a dynamic visual brand presence.
+* **Parabolic Flight Animation (Playlists & Queue)**: Adding a song to either a playlist or the playback queue launches a miniature preview of its album art in a physical, curved flight path towards the target element (the sidebar playlist or the active player's queue button).
+* **Landing Pulse Animations**: Adding songs to both playlists and the queue triggers a visual scaling pulse animation on landing, signaling successful addition with rich micro-feedback.
 * **Cyber-Trash Deletion**: Deleting songs from a playlist triggers a custom mechanical trash bin, opens the lid, launches the song card inside, slams shut, and retreats.
+* **Exposed Playlist Deletion**: Convenient management action to delete custom playlists directly from the playlist header with confirmation prompts.
 * **Dynamic Backdrop**: Blur layers and background colors dynamically adapt to match the color palette of the active album art.
 
 ---

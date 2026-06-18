@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState, useRef, useEffect } from "react";
+import React, { createContext, useContext, useState, useRef, useEffect, useCallback } from "react";
 import { Song, Playlist } from "@/types/music";
 import { parseLrc } from "@/lib/lrcParser";
 import YouTube from 'react-youtube';
@@ -72,6 +72,11 @@ interface PlayerContextType {
   viewedAlbumLoading: boolean;
   currentAlbumSongs: Song[];
   currentAlbumLoading: boolean;
+  viewingArtistName: string | null;
+  viewingArtistId: string | null;
+  viewedArtistDetails: any | null;
+  viewedArtistLoading: boolean;
+  setViewingArtist: (name: string | null, id?: string | null) => void;
 }
 
 const PlayerContext = createContext<PlayerContextType | undefined>(undefined);
@@ -120,10 +125,21 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
   const [viewingAlbumName, setViewingAlbumNameState] = useState<string | null>(null);
   const [viewingAlbumId, setViewingAlbumId] = useState<string | null>(null);
 
-  const setViewingAlbumName = (albumName: string | null, albumId?: string | null) => {
+  const setViewingAlbumName = useCallback((albumName: string | null, albumId?: string | null) => {
     setViewingAlbumNameState(albumName);
     setViewingAlbumId(albumId || null);
-  };
+  }, []);
+
+  const [viewingArtistName, setViewingArtistNameState] = useState<string | null>(null);
+  const [viewingArtistId, setViewingArtistId] = useState<string | null>(null);
+  const [viewedArtistDetails, setViewedArtistDetails] = useState<any | null>(null);
+  const [viewedArtistLoading, setViewedArtistLoading] = useState(false);
+
+  const setViewingArtist = useCallback((artistName: string | null, artistId?: string | null) => {
+    setViewingArtistNameState(artistName);
+    setViewingArtistId(artistId || null);
+  }, []);
+
   const [localSongs, setLocalSongs] = useState<Song[]>([]);
   const [searchResults, setSearchResults] = useState<Song[]>([]);
   const [crossfadeDuration, setCrossfadeDurationState] = useState(3);
@@ -540,6 +556,35 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     localStorage.setItem('echo-playlists', JSON.stringify(playlists));
   }, [playlists]);
+
+  // Fetch viewed artist details when viewingArtistName or viewingArtistId changes
+  useEffect(() => {
+    if (viewingArtistName || viewingArtistId) {
+      const fetchArtistDetails = async () => {
+        setViewedArtistLoading(true);
+        try {
+          const query = viewingArtistId
+            ? `id=${viewingArtistId}`
+            : `name=${encodeURIComponent(viewingArtistName!)}`;
+          const res = await fetch(`/api/artist?${query}`);
+          if (res.ok) {
+            const data = await res.json();
+            setViewedArtistDetails(data.results || null);
+          } else {
+            setViewedArtistDetails(null);
+          }
+        } catch (e) {
+          console.error("Failed to fetch artist details:", e);
+          setViewedArtistDetails(null);
+        } finally {
+          setViewedArtistLoading(false);
+        }
+      };
+      fetchArtistDetails();
+    } else {
+      setViewedArtistDetails(null);
+    }
+  }, [viewingArtistName, viewingArtistId]);
 
   // Fetch viewed album songs when viewingAlbumId changes
   useEffect(() => {
@@ -1047,6 +1092,11 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
         viewedAlbumLoading,
         currentAlbumSongs,
         currentAlbumLoading,
+        viewingArtistName,
+        viewingArtistId,
+        viewedArtistDetails,
+        viewedArtistLoading,
+        setViewingArtist,
       }}
     >
       <div className="hidden">

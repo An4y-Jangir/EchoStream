@@ -27,6 +27,7 @@ export async function GET(request: Request) {
       id: `youtube-${item.videoId}`,
       title: item.name,
       artist: item.artist?.name || 'Unknown Artist',
+      artistId: item.artist?.artistId || undefined,
       album: item.album?.name || 'Unknown Album',
       albumId: item.album?.albumId || undefined,
       albumArt: item.thumbnails?.[1]?.url || item.thumbnails?.[0]?.url || "https://images.unsplash.com/photo-1470225620780-dba8ba36b745",

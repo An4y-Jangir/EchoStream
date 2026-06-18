@@ -13,6 +13,8 @@ import { GlowWrapper } from "@/components/ui/GlowWrapper";
 import { FlightAnimation } from "@/components/animations/FlightAnimation";
 import { TrashDeleteAnimation } from "@/components/animations/TrashDeleteAnimation";
 import { CanvasParticles } from "@/components/ui/CanvasParticles";
+// import { SmoothInput } from "@/components/ui/SmoothInput";
+import { AnimatedInput } from "@/components/ui/AnimatedInput";
 
 const jsmediatags = typeof window !== "undefined" ? require("jsmediatags/dist/jsmediatags.min.js") : null;
 
@@ -28,6 +30,11 @@ export default function Home() {
     setViewingAlbumName,
     viewedAlbumSongs,
     viewedAlbumLoading,
+    viewingArtistName,
+    viewingArtistId,
+    viewedArtistDetails,
+    viewedArtistLoading,
+    setViewingArtist,
     playlists,
     addSongToPlaylist,
     createPlaylist,
@@ -39,11 +46,11 @@ export default function Home() {
     setSearchResults,
     userQueue,
     contextQueue,
-    triggerQueueLanding
+    triggerQueueLanding,
   } = usePlayer();
   const fileInputRef = useRef<HTMLInputElement>(null);
   
-  const [activeTab, setActiveTab] = useState<'discover'|'recent'|'favorites'|'local'|'playlist'|'radio'|'browse'|'album'>('discover');
+  const [activeTab, setActiveTab] = useState<'discover'|'recent'|'favorites'|'local'|'playlist'|'browse'|'album'|'artist'>('discover');
   const [selectedPlaylistId, setSelectedPlaylistId] = useState<string | null>(null);
   const [landingPlaylistId, setLandingPlaylistId] = useState<string | null>(null);
 
@@ -70,6 +77,19 @@ export default function Home() {
       setViewingAlbumName(null);
     }
   }, [activeTab, setViewingAlbumName]);
+
+  // Synchronize activeTab with viewingArtistName context state
+  useEffect(() => {
+    if (viewingArtistName) {
+      setActiveTab('artist');
+    }
+  }, [viewingArtistName]);
+
+  useEffect(() => {
+    if (activeTab !== 'artist') {
+      setViewingArtist(null);
+    }
+  }, [activeTab, setViewingArtist]);
 
   // Album fetching is managed globally in PlayerContext
 
@@ -179,6 +199,7 @@ export default function Home() {
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
+  /*
   const RADIO_STATIONS = [
     {
       id: 'live',
@@ -240,6 +261,7 @@ export default function Home() {
       setIsSearching(false);
     }
   };
+  */
 
   const currentPlaylist = playlists.find(p => p.id === selectedPlaylistId);
   const [flightImageUrl, setFlightImageUrl] = useState("");
@@ -492,10 +514,7 @@ export default function Home() {
             <span className="material-symbols-outlined text-lg">explore</span>
             <span className="text-sm font-medium">Browse</span>
           </a>
-          <a onClick={() => setActiveTab('radio')} className={`nav-item flex items-center gap-4 px-4 py-2.5 rounded-xl cursor-pointer ${activeTab === 'radio' ? 'text-white active-nav bg-white/5' : 'text-slate-400 hover:text-white'}`}>
-            <span className="material-symbols-outlined text-lg">podcasts</span>
-            <span className="text-sm font-medium">Radio</span>
-          </a>
+
         </nav>
         <div className="flex flex-col gap-1">
           <p className="px-4 text-[9px] font-bold text-slate-600 uppercase tracking-widest mb-2">Library</p>
@@ -574,18 +593,10 @@ export default function Home() {
       <main className="flex-1 flex flex-col overflow-y-auto no-scrollbar relative z-10">
         <header className="sticky top-0 z-30 flex items-center justify-between px-10 py-5 bg-background-dark/20 backdrop-blur-md">
           <div className="flex items-center gap-6 flex-1">
-            <div className="flex gap-2">
-              <button className="size-9 rounded-xl flex items-center justify-center text-slate-500 hover:text-white transition-all">
-                <span className="material-symbols-outlined text-lg">west</span>
-              </button>
-              <button className="size-9 rounded-xl flex items-center justify-center text-slate-500 hover:text-white transition-all">
-                <span className="material-symbols-outlined text-lg">east</span>
-              </button>
-            </div>
             <div className="relative w-full max-w-md group">
-              <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-600 text-lg group-focus-within:text-accent transition-colors">search</span>
-              <input 
-                className="w-full bg-white/[0.03] border border-white/[0.02] rounded-xl py-2.5 pl-11 pr-4 text-xs focus:ring-1 focus:ring-accent/30 focus:border-accent/30 focus:bg-white/[0.06] outline-none transition-all text-white placeholder-slate-600" 
+              <AnimatedInput 
+                className="w-full bg-white/[0.03] border border-white/[0.02] rounded-xl py-2.5 pl-11 pr-4 text-xs focus:ring-1 focus:ring-accent/30 focus:border-accent/30 focus:bg-white/[0.06] outline-none transition-all text-transparent caret-white placeholder-transparent" 
+                icon={<span className="material-symbols-outlined text-lg">search</span>}
                 placeholder="Search..." 
                 type="text"
                 value={searchQuery}
@@ -824,7 +835,12 @@ export default function Home() {
                           </div>
                           <div className="flex-1 overflow-hidden">
                             <h3 className="font-semibold text-white/90 truncate text-sm">{song.title}</h3>
-                            <p className="text-[10px] text-slate-600 font-medium truncate">{song.artist}</p>
+                            <p 
+                              onClick={(e) => { e.stopPropagation(); setViewingArtist(song.artist, song.artistId); }} 
+                              className="text-[10px] text-slate-500 font-bold hover:text-accent hover:underline cursor-pointer uppercase tracking-wider truncate"
+                            >
+                              {song.artist}
+                            </p>
                           </div>
                           <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                             <button 
@@ -879,7 +895,12 @@ export default function Home() {
                         </div>
                         <div className="flex-1 overflow-hidden">
                           <h3 className="font-semibold text-white/90 truncate text-sm">{song.title}</h3>
-                          <p className="text-[10px] text-slate-600 font-medium truncate">{song.artist}</p>
+                          <p 
+                            onClick={(e) => { e.stopPropagation(); setViewingArtist(song.artist, song.artistId); }} 
+                            className="text-[10px] text-slate-500 font-bold hover:text-accent hover:underline cursor-pointer uppercase tracking-wider truncate"
+                          >
+                            {song.artist}
+                          </p>
                         </div>
                         <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                           <button 
@@ -905,81 +926,7 @@ export default function Home() {
             </section>
           )}
 
-          {activeTab === 'radio' && (
-            <section className="relative">
-              {/* Pulse Visualizer Background */}
-              <div className="absolute inset-0 pointer-events-none flex items-center justify-center overflow-hidden -z-10">
-                {[1, 2, 3].map((i) => (
-                  <motion.div
-                    key={`pulse-${i}`}
-                    className="absolute rounded-full border border-accent/10"
-                    initial={{ width: 0, height: 0, opacity: 0.5 }}
-                    animate={{ width: "150%", height: "150%", opacity: 0 }}
-                    transition={{
-                      duration: 4,
-                      repeat: Infinity,
-                      delay: i * 1.3,
-                      ease: "easeOut"
-                    }}
-                  />
-                ))}
-              </div>
 
-              <div className="flex flex-col gap-2 mb-12">
-                <h2 className="text-[10px] font-black text-accent uppercase tracking-[0.4em] mb-1.5 opacity-80">Infinite Stream</h2>
-                <h3 className="text-4xl font-black tracking-tight text-white italic">The Radio Hub</h3>
-                <p className="text-slate-500 text-sm max-w-lg">Continuous discovery powered by global trends and human vibes.</p>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                {RADIO_STATIONS.map((station) => (
-                  <GlowWrapper key={station.id} className="rounded-[2.5rem]" glowOpacity={0.4}>
-                    <div 
-                      onClick={() => startRadio(station)}
-                      className="glass-card group cursor-pointer border-white/5 overflow-hidden flex flex-col h-[320px] transition-all duration-500 hover:border-white/10"
-                    >
-                      <div className={`flex-1 relative overflow-hidden bg-gradient-to-br ${station.gradient}`}>
-                        <div className="absolute inset-0 bg-black/10 transition-opacity group-hover:opacity-0" />
-                        
-                        {/* Huge Background Icon */}
-                        <div className="absolute -bottom-8 -right-8 opacity-10 group-hover:opacity-20 transition-all duration-700 group-hover:scale-125 transform-gpu">
-                          <span className="material-symbols-outlined text-[180px] fill-[1]">{station.icon}</span>
-                        </div>
-
-                        <div className="absolute inset-x-8 bottom-8">
-                          <div className="size-16 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-500">
-                             <span className="material-symbols-outlined text-white text-4xl fill-[1]">{station.icon}</span>
-                          </div>
-                          
-                          {/* Station Branding - Per User Request: Title and Name Prominent */}
-                          <h4 className="text-3xl font-black text-white italic tracking-tighter mb-1 drop-shadow-lg">
-                            {station.title}
-                          </h4>
-                          <p className="text-white/70 text-xs font-medium tracking-wide drop-shadow-md">
-                            {station.subtitle}
-                          </p>
-                        </div>
-
-                        {/* Play Overlay */}
-                        <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-                          <div className="size-20 bg-white text-black rounded-full flex items-center justify-center shadow-2xl transform scale-90 group-hover:scale-100 transition-all duration-500">
-                            <span className="material-symbols-outlined text-5xl fill-[1]">play_arrow</span>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="px-8 py-5 flex items-center justify-between gap-4">
-                        <div className="flex items-center gap-2">
-                           <span className="size-2 bg-accent rounded-full animate-pulse shadow-[0_0_8px_rgba(59,130,246,0.6)]" />
-                           <span className="text-[10px] font-black text-accent uppercase tracking-widest">Live Broadcast</span>
-                        </div>
-                        <span className="material-symbols-outlined text-slate-600 text-xl group-hover:text-white transition-colors">sensors</span>
-                      </div>
-                    </div>
-                  </GlowWrapper>
-                ))}
-              </div>
-            </section>
-          )}
 
           {activeTab === 'local' && (
             <section>
@@ -1001,7 +948,12 @@ export default function Home() {
                         </div>
                         <div className="flex-1 overflow-hidden">
                           <h3 className="font-bold text-white truncate">{song.title}</h3>
-                          <p className="text-xs text-slate-500 font-medium truncate">{song.artist}</p>
+                          <p 
+                            onClick={(e) => { e.stopPropagation(); setViewingArtist(song.artist, song.artistId); }} 
+                            className="text-[10px] text-slate-500 font-bold hover:text-accent hover:underline cursor-pointer uppercase tracking-wider truncate"
+                          >
+                            {song.artist}
+                          </p>
                         </div>
                         <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                           <button 
@@ -1047,7 +999,12 @@ export default function Home() {
                         </div>
                         <div className="flex-1 overflow-hidden">
                           <h3 className="font-bold text-white truncate">{song.title}</h3>
-                          <p className="text-xs text-slate-500 font-medium truncate">{song.artist}</p>
+                          <p 
+                            onClick={(e) => { e.stopPropagation(); setViewingArtist(song.artist, song.artistId); }} 
+                            className="text-[10px] text-slate-500 font-bold hover:text-accent hover:underline cursor-pointer uppercase tracking-wider truncate"
+                          >
+                            {song.artist}
+                          </p>
                         </div>
                         <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                           <button 
@@ -1095,7 +1052,12 @@ export default function Home() {
                           </div>
                           <div className="flex-1 overflow-hidden">
                             <h3 className="font-bold text-white truncate">{song.title}</h3>
-                            <p className="text-xs text-slate-500 font-medium truncate">{song.artist}</p>
+                            <p 
+                              onClick={(e) => { e.stopPropagation(); setViewingArtist(song.artist, song.artistId); }} 
+                              className="text-[10px] text-slate-500 font-bold hover:text-accent hover:underline cursor-pointer uppercase tracking-wider truncate"
+                            >
+                              {song.artist}
+                            </p>
                           </div>
                           <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                             <button onClick={(e) => { e.stopPropagation(); addToQueue(song); triggerQueueFlight(song, e.currentTarget.getBoundingClientRect()); }} className="size-10 bg-white/10 hover:bg-white/20 text-white rounded-full flex items-center justify-center transition-colors" title="Add to Queue">
@@ -1170,7 +1132,12 @@ export default function Home() {
                       </div>
                       <div className="flex-1 overflow-hidden">
                         <h3 className="font-semibold text-white/90 truncate text-sm">{song.title}</h3>
-                        <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider truncate">{song.artist}</p>
+                        <p 
+                          onClick={(e) => { e.stopPropagation(); setViewingArtist(song.artist, song.artistId); }} 
+                          className="text-[10px] text-slate-500 font-bold hover:text-accent hover:underline cursor-pointer uppercase tracking-wider truncate"
+                        >
+                          {song.artist}
+                        </p>
                       </div>
                       <div className="flex items-center gap-4 px-4 text-slate-500 text-xs font-bold w-32 truncate">
                         {song.album}
@@ -1297,7 +1264,12 @@ export default function Home() {
                                 "font-semibold truncate text-sm",
                                 isCurrent ? "text-accent" : "text-white/90"
                               )}>{song.title}</h3>
-                              <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider truncate">{song.artist}</p>
+                              <p 
+                                onClick={(e) => { e.stopPropagation(); setViewingArtist(song.artist, song.artistId); }} 
+                                className="text-[10px] text-slate-500 font-bold hover:text-accent hover:underline cursor-pointer uppercase tracking-wider truncate"
+                              >
+                                {song.artist}
+                              </p>
                             </div>
                             <div className="flex items-center gap-4 px-4 text-slate-500 text-xs font-bold w-32 truncate">
                               {song.genre}
@@ -1324,6 +1296,245 @@ export default function Home() {
                       })}
                     </div>
                   </>
+                );
+              })()}
+            </section>
+          )}
+
+          {activeTab === 'artist' && viewingArtistName && (
+            <section>
+              {/* Back Navigation */}
+              <button 
+                onClick={() => {
+                  setViewingArtist(null);
+                  setActiveTab('discover');
+                }} 
+                className="flex items-center gap-2 text-slate-400 hover:text-white mb-8 text-xs font-bold uppercase tracking-widest transition-colors"
+              >
+                <span className="material-symbols-outlined text-sm">west</span>
+                Back
+              </button>
+
+              {(() => {
+                if (viewedArtistLoading) {
+                  return (
+                    <div className="flex flex-col items-center justify-center py-20">
+                      <span className="material-symbols-outlined text-4xl text-accent animate-spin mb-4">sync</span>
+                      <p className="text-slate-500 italic font-medium">Fetching artist profile...</p>
+                    </div>
+                  );
+                }
+
+                // Fallback construction
+                let artist = viewedArtistDetails;
+                if (!artist) {
+                  const allAvailableSongs = [
+                    ...MOCK_SONGS,
+                    ...localSongs,
+                    ...likedSongs,
+                    ...playlists.flatMap(p => p.songs),
+                    ...searchResults,
+                    ...userQueue,
+                    ...contextQueue,
+                    ...history,
+                    ...(currentSong ? [currentSong] : [])
+                  ];
+                  const uniqueSongs = Array.from(new Map(allAvailableSongs.filter(Boolean).map(s => [s.id, s])).values());
+                  const artistSongsFallback = uniqueSongs.filter(s => s && s.artist && s.artist.toLowerCase() === viewingArtistName.toLowerCase());
+                  
+                  if (artistSongsFallback.length > 0) {
+                    artist = {
+                      id: `local-${viewingArtistName}`,
+                      name: viewingArtistName,
+                      thumbnail: artistSongsFallback[0].albumArt,
+                      topSongs: artistSongsFallback,
+                      topAlbums: [],
+                      similarArtists: []
+                    };
+                  }
+                }
+
+                if (!artist) {
+                  return (
+                    <div className="text-slate-500 py-10">
+                      No songs or profile details found for this artist.
+                    </div>
+                  );
+                }
+
+                return (
+                  <div className="space-y-12">
+                    {/* Premium Banner Header */}
+                    <div className="relative h-80 rounded-[3rem] overflow-hidden shadow-2xl flex items-end p-10 group">
+                      {/* Blurred backdrop banner */}
+                      <div 
+                        className="absolute inset-0 bg-cover bg-center scale-105 transition-all duration-700 group-hover:scale-100" 
+                        style={{ backgroundImage: `url(${artist.thumbnail})` }}
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
+                      
+                      <div className="relative z-10 flex flex-col md:flex-row items-center gap-6">
+                        <div className="size-28 rounded-2xl overflow-hidden border-2 border-white/20 shadow-2xl flex-shrink-0">
+                          <img alt={artist.name} className="w-full h-full object-cover" src={artist.thumbnail} />
+                        </div>
+                        <div className="text-center md:text-left">
+                          <p className="text-[10px] font-black text-accent uppercase tracking-[0.4em] mb-1.5 opacity-80">Verified Artist</p>
+                          <h2 className="text-5xl font-black tracking-tighter text-white italic">{artist.name}</h2>
+                          <div className="flex items-center justify-center md:justify-start gap-4 text-slate-400 text-xs font-semibold mt-2.5">
+                            <span>{artist.topSongs?.length || 0} Tracks</span>
+                            {artist.topAlbums?.length > 0 && (
+                              <>
+                                <span className="size-1 bg-slate-600 rounded-full"></span>
+                                <span>{artist.topAlbums.length} Albums</span>
+                              </>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Action buttons */}
+                    {artist.topSongs?.length > 0 && (
+                      <div className="flex gap-4">
+                        <button 
+                          onClick={() => playSong(artist.topSongs[0], artist.topSongs)}
+                          className="flex items-center gap-2 px-6 py-3 bg-white hover:bg-slate-200 text-black rounded-xl text-xs font-bold uppercase tracking-wider transition-all hover:scale-105 active:scale-95 shadow-xl"
+                        >
+                          <span className="material-symbols-outlined text-base fill-[1]">play_arrow</span>
+                          Play All
+                        </button>
+                        <button 
+                          onClick={() => {
+                            if (artist.topSongs.length > 0) {
+                              const shuffled = [...artist.topSongs].sort(() => Math.random() - 0.5);
+                              playSong(shuffled[0], shuffled);
+                            }
+                          }}
+                          className="flex items-center gap-2 px-6 py-3 bg-white/10 hover:bg-white/20 text-white rounded-xl text-xs font-bold uppercase tracking-wider transition-all hover:scale-105 active:scale-95 border border-white/10"
+                        >
+                          <span className="material-symbols-outlined text-base">shuffle</span>
+                          Shuffle
+                        </button>
+                      </div>
+                    )}
+
+                    {/* Left: Popular Tracks List */}
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
+                      <div className="lg:col-span-2 space-y-4">
+                        <h3 className="text-xl font-bold tracking-tight text-white flex items-center gap-2">
+                          Popular Tracks <span className="h-px bg-white/10 flex-1"></span>
+                        </h3>
+                        <div className="space-y-2">
+                          {(artist.topSongs || []).slice(0, 10).map((song: Song, i: number) => {
+                            const isCurrent = currentSong?.id === song.id;
+                            return (
+                              <div 
+                                key={`artistsong-${song.id}-${i}`}
+                                onClick={() => playSong(song, artist.topSongs)}
+                                className={cn(
+                                  "glass-card flex items-center gap-4 p-3 rounded-2xl group cursor-pointer hover:bg-white/5 border-transparent transition-all duration-500",
+                                  isCurrent ? "bg-white/5 border-accent/20" : ""
+                                )}
+                              >
+                                <div className={cn(
+                                  "w-8 text-center font-bold transition-colors tabular-nums",
+                                  isCurrent ? "text-accent animate-pulse" : "text-slate-600 group-hover:text-accent"
+                                )}>{i + 1}</div>
+                                <div className="size-12 flex-shrink-0 rounded-lg overflow-hidden shadow-lg">
+                                  <img alt={song.title} className="w-full h-full object-cover" src={song.albumArt}/>
+                                </div>
+                                <div className="flex-1 overflow-hidden">
+                                  <h3 className={cn(
+                                    "font-semibold truncate text-sm",
+                                    isCurrent ? "text-accent" : "text-white/90"
+                                  )}>{song.title}</h3>
+                                  <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider truncate">{song.album}</p>
+                                </div>
+                                <div className="flex items-center gap-4 px-4 text-slate-500 text-xs font-bold w-32 truncate">
+                                  {song.durationText || "3:00"}
+                                </div>
+                                <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                  <button 
+                                    id={`add-btn-${song.id}-artist`}
+                                    onClick={(e) => { e.stopPropagation(); setAddingSong(song); }} 
+                                    className="size-10 bg-white/5 hover:bg-white/20 text-white rounded-full flex items-center justify-center transition-colors" 
+                                    title="Add to Playlist"
+                                  >
+                                    <span className="material-symbols-outlined text-sm">playlist_add</span>
+                                  </button>
+                                  <button 
+                                    onClick={(e) => { e.stopPropagation(); addToQueue(song); triggerQueueFlight(song, e.currentTarget.getBoundingClientRect()); }} 
+                                    className="size-10 bg-white/5 hover:bg-white/20 text-white rounded-full flex items-center justify-center transition-colors" 
+                                    title="Add to Queue"
+                                  >
+                                    <span className="material-symbols-outlined fill-[1] text-[20px]">queue_music</span>
+                                  </button>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+
+                      {/* Right Sidebar: Albums & Similar Artists */}
+                      <div className="space-y-10">
+                        {/* Albums list */}
+                        {artist.topAlbums?.length > 0 && (
+                          <div className="space-y-4">
+                            <h3 className="text-lg font-bold tracking-tight text-white flex items-center gap-2">
+                              Albums <span className="h-px bg-white/10 flex-1"></span>
+                            </h3>
+                            <div className="grid grid-cols-2 gap-4">
+                              {artist.topAlbums.slice(0, 4).map((album: any, idx: number) => (
+                                <div 
+                                  key={`art-alb-${album.id}-${idx}`}
+                                  onClick={() => setViewingAlbumName(album.name, album.id)}
+                                  className="glass-card p-3 rounded-2xl group cursor-pointer border-white/5 hover:border-accent/30 transition-all flex flex-col gap-2.5"
+                                >
+                                  <div className="relative aspect-square rounded-xl overflow-hidden shadow-lg flex-shrink-0 bg-white/5">
+                                    <img alt={album.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" src={album.coverArt}/>
+                                  </div>
+                                  <div className="min-w-0">
+                                    <h4 className="font-bold text-white text-xs truncate leading-snug group-hover:text-accent transition-colors">{album.name}</h4>
+                                    <p className="text-[9px] text-slate-500 font-bold uppercase mt-0.5 truncate">{album.year || "Album"}</p>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Similar Artists */}
+                        {artist.similarArtists?.length > 0 && (
+                          <div className="space-y-4">
+                            <h3 className="text-lg font-bold tracking-tight text-white flex items-center gap-2">
+                              Similar Artists <span className="h-px bg-white/10 flex-1"></span>
+                            </h3>
+                            <div className="flex flex-col gap-2.5">
+                              {artist.similarArtists.slice(0, 5).map((sim: any, idx: number) => (
+                                <div 
+                                  key={`sim-art-${sim.id}-${idx}`}
+                                  onClick={() => setViewingArtist(sim.name, sim.id)}
+                                  className="p-2 bg-white/5 hover:bg-white/10 border border-white/5 hover:border-accent/10 cursor-pointer rounded-xl flex items-center gap-3 transition-all group"
+                                >
+                                  <img 
+                                    src={sim.thumbnail} 
+                                    alt={sim.name} 
+                                    className="w-10 h-10 rounded-lg object-cover flex-shrink-0 border border-white/10" 
+                                  />
+                                  <div className="flex-1 min-w-0">
+                                    <span className="font-bold text-white text-xs truncate group-hover:text-accent transition-colors block">{sim.name}</span>
+                                    <span className="text-[9px] text-slate-500 font-bold uppercase block mt-0.5">Artist</span>
+                                  </div>
+                                  <span className="material-symbols-outlined text-white/30 group-hover:text-white transition-colors text-sm">arrow_forward</span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
                 );
               })()}
             </section>

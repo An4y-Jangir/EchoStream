@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { usePlayer } from "@/context/PlayerContext";
 import { motion, AnimatePresence, Reorder } from "framer-motion";
 import { cn } from "@/lib/utils";
@@ -8,6 +8,21 @@ import { VolumeSlider } from "./VolumeSlider";
 import { TearAnimation } from "./QueueItem";
 import { Song } from "@/types/music";
 import { MOCK_SONGS } from "@/lib/mockData";
+
+const slideVariants = {
+  initial: (direction: "forward" | "backward") => ({
+    y: direction === "forward" ? -20 : 20,
+    opacity: 0,
+  }),
+  animate: {
+    y: 0,
+    opacity: 1,
+  },
+  exit: (direction: "forward" | "backward") => ({
+    y: direction === "forward" ? 20 : -20,
+    opacity: 0,
+  }),
+};
 
 export function BottomPlayer() {
   const {
@@ -44,6 +59,7 @@ export function BottomPlayer() {
     isAlbumVisible,
     toggleAlbum,
     setViewingAlbumName,
+    setViewingArtist,
     currentAlbumSongs,
     currentAlbumLoading,
     localSongs,
@@ -74,6 +90,23 @@ export function BottomPlayer() {
     removeFromUserQueue(song.id);
     setTimeout(() => setTears(prev => prev.filter(t => t.id !== id)), 900);
   };
+
+  const [direction, setDirection] = useState<'forward' | 'backward'>('forward');
+
+  const handlePrevious = () => {
+    setDirection('backward');
+    playPrevious();
+  };
+
+  const handleNext = () => {
+    setDirection('forward');
+    playNext();
+  };
+
+  useEffect(() => {
+    // Reset direction to forward after song transition starts
+    setDirection('forward');
+  }, [currentSong?.id]);
 
   const formatTime = (timeInSeconds: number) => {
     const m = Math.floor(timeInSeconds / 60);
@@ -335,14 +368,32 @@ export function BottomPlayer() {
               >
                 <img alt={currentSong.title} className="w-full h-full object-cover" src={currentSong.albumArt} />
               </div>
-              <div className="flex flex-col overflow-hidden">
-                <a
-                  className="text-sm font-bold text-white hover:text-accent truncate transition-colors cursor-pointer"
-                  onClick={(e) => { e.preventDefault(); toggleExpanded(); }}
-                >
-                  {currentSong.title}
-                </a>
-                <a className="text-[10px] text-slate-500 font-bold uppercase tracking-wider hover:text-white truncate transition-colors cursor-pointer">{currentSong.artist}</a>
+              <div className="flex flex-col justify-center relative min-w-0 flex-1 overflow-hidden h-12">
+                <AnimatePresence mode="popLayout" initial={false} custom={direction}>
+                  <motion.div
+                    key={currentSong.id}
+                    custom={direction}
+                    variants={slideVariants}
+                    initial="initial"
+                    animate="animate"
+                    exit="exit"
+                    transition={{ type: "spring", stiffness: 200, damping: 20 }}
+                    className="flex flex-col min-w-0"
+                  >
+                    <a
+                      className="text-sm font-bold text-white hover:text-accent truncate transition-colors cursor-pointer"
+                      onClick={(e) => { e.preventDefault(); toggleExpanded(); }}
+                    >
+                      {currentSong.title}
+                    </a>
+                    <a
+                      onClick={() => setViewingArtist(currentSong.artist, currentSong.artistId)}
+                      className="text-[10px] text-slate-500 font-bold uppercase tracking-wider hover:text-accent hover:underline truncate transition-colors cursor-pointer"
+                    >
+                      {currentSong.artist}
+                    </a>
+                  </motion.div>
+                </AnimatePresence>
               </div>
               <button
                 onClick={(e) => { e.stopPropagation(); toggleLike(currentSong); }}
@@ -361,7 +412,7 @@ export function BottomPlayer() {
                 >
                   <span className="material-symbols-outlined text-2xl">shuffle</span>
                 </button>
-                <button onClick={playPrevious} className="text-white/80 hover:text-white hover:scale-110 transition-all">
+                <button onClick={handlePrevious} className="text-white/80 hover:text-white hover:scale-110 transition-all">
                   <span className="material-symbols-outlined text-3xl">skip_previous</span>
                 </button>
                 <button
@@ -372,7 +423,7 @@ export function BottomPlayer() {
                     {isPlaying ? 'pause' : 'play_arrow'}
                   </span>
                 </button>
-                <button onClick={playNext} className="text-white/80 hover:text-white hover:scale-110 transition-all">
+                <button onClick={handleNext} className="text-white/80 hover:text-white hover:scale-110 transition-all">
                   <span className="material-symbols-outlined text-3xl">skip_next</span>
                 </button>
                 <button

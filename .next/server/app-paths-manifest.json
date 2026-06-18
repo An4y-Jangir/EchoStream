@@ -1,5 +1,8 @@
 {
-  "/api/search/route": "app/api/search/route.js",
+  "/_not-found/page": "app/_not-found/page.js",
+  "/page": "app/page.js",
   "/api/album/route": "app/api/album/route.js",
-  "/page": "app/page.js"
+  "/icon.png/route": "app/icon.png/route.js",
+  "/api/search/route": "app/api/search/route.js",
+  "/api/artist/route": "app/api/artist/route.js"
 }

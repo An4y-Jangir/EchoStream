@@ -9,6 +9,7 @@ import { VolumeSlider } from "./VolumeSlider";
 import { TearAnimation } from "./QueueItem";
 import { Song } from "@/types/music";
 import { MOCK_SONGS } from "@/lib/mockData";
+import { GooeyTooltip } from "@/components/ui/GooeyTooltip";
 
 export function ExpandedPlayer() {
   const { 
@@ -45,6 +46,7 @@ export function ExpandedPlayer() {
     isAlbumVisible,
     toggleAlbum,
     setViewingAlbumName,
+    setViewingArtist,
     currentAlbumSongs,
     currentAlbumLoading,
     localSongs,
@@ -432,10 +434,18 @@ export function ExpandedPlayer() {
               <div className="flex items-center justify-between w-full">
                 
                 {/* Left: Song Info */}
-                <div className="flex items-center gap-4 w-1/4">
-                  <div className="flex flex-col">
-                    <span className="font-bold text-white text-base truncate">{currentSong.title}</span>
-                    <span className="text-sm text-white/50 font-medium truncate">{currentSong.artist}</span>
+                <div className="flex items-center gap-4 w-1/4 min-w-0">
+                  <div className="flex flex-col min-w-0">
+                    <GooeyTooltip text={currentSong.title} className="text-base font-bold text-white" />
+                    <span
+                      onClick={() => {
+                        setViewingArtist(currentSong.artist, currentSong.artistId);
+                        toggleExpanded();
+                      }}
+                      className="text-sm text-white/50 font-medium hover:text-accent hover:underline cursor-pointer truncate transition-colors"
+                    >
+                      {currentSong.artist}
+                    </span>
                   </div>
                   <button 
                     onClick={(e) => { e.stopPropagation(); toggleLike(currentSong); }}

@@ -34,6 +34,7 @@ export async function GET(request: Request) {
         id: `youtube-${item.videoId}`,
         title: item.name,
         artist: item.artist?.name || results.artist?.name || 'Unknown Artist',
+        artistId: item.artist?.artistId || results.artist?.artistId || undefined,
         album: results.name,
         albumId: results.albumId,
         albumArt: thumbnail,

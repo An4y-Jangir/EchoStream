@@ -5,7 +5,7 @@ import { PlayerProvider } from "@/context/PlayerContext";
 import { CustomCursor } from "@/components/ui/CustomCursor";
 
 export const metadata: Metadata = {
-  title: "Music Player",
+  title: "EchoStream",
   description: "High-performance Music Streaming Web App",
 };
 

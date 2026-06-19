@@ -38,7 +38,7 @@ export const GlowWrapper: React.FC<GlowWrapperProps> = ({
       onMouseMove={handleMouseMove}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
-      className={`relative overflow-hidden ${className}`}
+      className={`relative overflow-hidden transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-[0_8px_24px_rgba(99,102,241,0.2)] ${className}`}
     >
       <div 
         className="pointer-events-none absolute inset-0 z-50 transition-opacity duration-300"

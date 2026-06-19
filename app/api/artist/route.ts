@@ -37,9 +37,19 @@ export async function GET(request: Request) {
     }
 
     const artistData = await ytmusic.getArtist(id);
+    let rawSongs = artistData.topSongs || [];
+
+    try {
+      const allSongs = await ytmusic.getArtistSongs(id);
+      if (allSongs && allSongs.length > 0) {
+        rawSongs = allSongs;
+      }
+    } catch (err) {
+      console.warn("Failed to fetch artist songs, falling back to topSongs:", err);
+    }
 
     // Map top songs to our front-end Song structure
-    const mappedSongs = (artistData.topSongs || []).map((item) => ({
+    const mappedSongs = rawSongs.map((item) => ({
       id: `youtube-${item.videoId}`,
       title: item.name,
       artist: item.artist?.name || artistData.name,

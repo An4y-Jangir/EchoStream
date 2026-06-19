@@ -10,6 +10,8 @@
 * **Local Media Support**: In-browser client media upload with automatic metadata parsing (ID3 tags, album artwork, track info) using `jsmediatags`.
 * **Dynamic YouTube Music Streaming**: Under-the-hood integration of YouTube Music search and streaming using the `ytmusic-api` node package.
 * **Dynamic Album Fetching**: Dynamic fetching of complete album tracklists (mapped via YouTube Music playlist and browse IDs) using a backend serverless route handler (`/api/album`).
+* **Complete Artist Catalog Support**: Extended the artist detail endpoint (`/api/artist`) to retrieve the full catalog of popular tracks using `getArtistSongs` with automatic overview fallback.
+* **Artist Catalog "See All"**: Toggles between a neat 5-track preview and the complete artist catalog inside the Popular Tracks section on artist pages.
 * **Studio-Grade Audio Crossfading**: Smooth crossfade volume ramping between consecutive audio tracks during automatic playback transitions, avoiding dead air gaps. Crossfade duration can be customized in settings.
 * **Smart Queue & History**: Full support for active user-managed queue, context-based queue fallbacks (e.g. playing through related tracks or search results), and history tracking.
 * **Lyrics Syncing**: Live `.lrc` file parser with auto-fetching integration from `lrclib.net` supporting line-by-line and word-level modes.
@@ -17,6 +19,8 @@
 * **Playlist Looping**: Automatically wraps around and plays the first song in the playlist when the last song finishes playing, ensuring continuous music delivery.
 
 ### 🎨 Design & Micro-Animations
+* **Skiper-Style Vertical Album Accordion**: Inspired by the Skiper UI hover expansion effect (`skiper35`), replaced the albums grid with a vertical hover accordion on the artist page. Album bars collapse into compact 54px rows showing the title and cover art, and expand smoothly to 180px on hover using spring physics (`stiffness: 300`, `damping: 25`), displacing neighboring elements. Reveals a blurred artwork backdrop, album description, and a "View Album" button, and fully retracts on mouse leave.
+* **Clipless Hover Glow & Translation**: Fixed card container clipping by applying the transform translation (`translateY(-4px)`) and purple glow shadow (`#6366f1`) to the outer `GlowWrapper` container rather than the inner card. By using `border-radius: inherit` on `.glass-card`, the glowing border curves perfectly along the parent's rounded corners.
 * **Dynamic Character Animated Search Bar (`AnimatedInput`)**:
   * Replaced traditional input search bars with a character-by-character reveal input field inspired by the Skiper UI visual engine (`skiper68`).
   * Characters slide up and transition using `<AnimatePresence>` and Framer Motion spring curves.

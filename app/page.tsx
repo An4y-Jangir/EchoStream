@@ -64,6 +64,8 @@ export default function Home() {
   const [animatingDeleteIds, setAnimatingDeleteIds] = useState<string[]>([]);
   const playlistHeaderRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
+  const [showAllArtistSongs, setShowAllArtistSongs] = useState(false);
+  const [hoveredAlbumIdx, setHoveredAlbumIdx] = useState<number | null>(null);
 
   // Synchronize activeTab with viewingAlbumName context state
   useEffect(() => {
@@ -82,6 +84,8 @@ export default function Home() {
   useEffect(() => {
     if (viewingArtistName) {
       setActiveTab('artist');
+      setShowAllArtistSongs(false); // Reset to false when switching artist profiles
+      setHoveredAlbumIdx(null); // Reset when switching artist profiles
     }
   }, [viewingArtistName]);
 
@@ -1421,85 +1425,187 @@ export default function Home() {
                     {/* Left: Popular Tracks List */}
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
                       <div className="lg:col-span-2 space-y-4">
-                        <h3 className="text-xl font-bold tracking-tight text-white flex items-center gap-2">
-                          Popular Tracks <span className="h-px bg-white/10 flex-1"></span>
+                        <h3 className="text-xl font-bold tracking-tight text-white flex items-center justify-between gap-4">
+                          <span className="flex items-center gap-2 flex-1">
+                            Popular Tracks <span className="h-px bg-white/10 flex-1"></span>
+                          </span>
+                          {(artist.topSongs || []).length > 5 && (
+                            <button 
+                              onClick={() => setShowAllArtistSongs(!showAllArtistSongs)}
+                              className="text-xs font-bold text-accent hover:underline uppercase tracking-wider transition-all"
+                            >
+                              {showAllArtistSongs ? "See Less" : "See All"}
+                            </button>
+                          )}
                         </h3>
                         <div className="space-y-2">
-                          {(artist.topSongs || []).slice(0, 10).map((song: Song, i: number) => {
-                            const isCurrent = currentSong?.id === song.id;
-                            return (
-                              <div 
-                                key={`artistsong-${song.id}-${i}`}
-                                onClick={() => playSong(song, artist.topSongs)}
-                                className={cn(
-                                  "glass-card flex items-center gap-4 p-3 rounded-2xl group cursor-pointer hover:bg-white/5 border-transparent transition-all duration-500",
-                                  isCurrent ? "bg-white/5 border-accent/20" : ""
-                                )}
-                              >
-                                <div className={cn(
-                                  "w-8 text-center font-bold transition-colors tabular-nums",
-                                  isCurrent ? "text-accent animate-pulse" : "text-slate-600 group-hover:text-accent"
-                                )}>{i + 1}</div>
-                                <div className="size-12 flex-shrink-0 rounded-lg overflow-hidden shadow-lg">
-                                  <img alt={song.title} className="w-full h-full object-cover" src={song.albumArt}/>
+                          {(() => {
+                            const songsToRender = showAllArtistSongs 
+                              ? (artist.topSongs || []) 
+                              : (artist.topSongs || []).slice(0, 5);
+
+                            return songsToRender.map((song: Song, i: number) => {
+                              const isCurrent = currentSong?.id === song.id;
+                              return (
+                                <div 
+                                  key={`artistsong-${song.id}-${i}`}
+                                  onClick={() => playSong(song, artist.topSongs)}
+                                  className={cn(
+                                    "glass-card flex items-center gap-4 p-3 rounded-2xl group cursor-pointer hover:bg-white/5 border-transparent transition-all duration-500",
+                                    isCurrent ? "bg-white/5 border-accent/20" : ""
+                                  )}
+                                >
+                                  <div className={cn(
+                                    "w-8 text-center font-bold transition-colors tabular-nums",
+                                    isCurrent ? "text-accent animate-pulse" : "text-slate-600 group-hover:text-accent"
+                                  )}>{i + 1}</div>
+                                  <div className="size-12 flex-shrink-0 rounded-lg overflow-hidden shadow-lg">
+                                    <img alt={song.title} className="w-full h-full object-cover" src={song.albumArt}/>
+                                  </div>
+                                  <div className="flex-1 overflow-hidden">
+                                    <h3 className={cn(
+                                      "font-semibold truncate text-sm",
+                                      isCurrent ? "text-accent" : "text-white/90"
+                                    )}>{song.title}</h3>
+                                    <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider truncate">{song.album}</p>
+                                  </div>
+                                  <div className="flex items-center gap-4 px-4 text-slate-500 text-xs font-bold w-32 truncate">
+                                    {song.durationText || "3:00"}
+                                  </div>
+                                  <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <button 
+                                      id={`add-btn-${song.id}-artist`}
+                                      onClick={(e) => { e.stopPropagation(); setAddingSong(song); }} 
+                                      className="size-10 bg-white/5 hover:bg-white/20 text-white rounded-full flex items-center justify-center transition-colors" 
+                                      title="Add to Playlist"
+                                    >
+                                      <span className="material-symbols-outlined text-sm">playlist_add</span>
+                                    </button>
+                                    <button 
+                                      onClick={(e) => { e.stopPropagation(); addToQueue(song); triggerQueueFlight(song, e.currentTarget.getBoundingClientRect()); }} 
+                                      className="size-10 bg-white/5 hover:bg-white/20 text-white rounded-full flex items-center justify-center transition-colors" 
+                                      title="Add to Queue"
+                                    >
+                                      <span className="material-symbols-outlined fill-[1] text-[20px]">queue_music</span>
+                                    </button>
+                                  </div>
                                 </div>
-                                <div className="flex-1 overflow-hidden">
-                                  <h3 className={cn(
-                                    "font-semibold truncate text-sm",
-                                    isCurrent ? "text-accent" : "text-white/90"
-                                  )}>{song.title}</h3>
-                                  <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider truncate">{song.album}</p>
-                                </div>
-                                <div className="flex items-center gap-4 px-4 text-slate-500 text-xs font-bold w-32 truncate">
-                                  {song.durationText || "3:00"}
-                                </div>
-                                <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                  <button 
-                                    id={`add-btn-${song.id}-artist`}
-                                    onClick={(e) => { e.stopPropagation(); setAddingSong(song); }} 
-                                    className="size-10 bg-white/5 hover:bg-white/20 text-white rounded-full flex items-center justify-center transition-colors" 
-                                    title="Add to Playlist"
-                                  >
-                                    <span className="material-symbols-outlined text-sm">playlist_add</span>
-                                  </button>
-                                  <button 
-                                    onClick={(e) => { e.stopPropagation(); addToQueue(song); triggerQueueFlight(song, e.currentTarget.getBoundingClientRect()); }} 
-                                    className="size-10 bg-white/5 hover:bg-white/20 text-white rounded-full flex items-center justify-center transition-colors" 
-                                    title="Add to Queue"
-                                  >
-                                    <span className="material-symbols-outlined fill-[1] text-[20px]">queue_music</span>
-                                  </button>
-                                </div>
-                              </div>
-                            );
-                          })}
+                              );
+                            });
+                          })()}
                         </div>
                       </div>
 
                       {/* Right Sidebar: Albums & Similar Artists */}
                       <div className="space-y-10">
-                        {/* Albums list */}
+                        {/* Albums list (Vertical Accordion) */}
                         {artist.topAlbums?.length > 0 && (
                           <div className="space-y-4">
                             <h3 className="text-lg font-bold tracking-tight text-white flex items-center gap-2">
                               Albums <span className="h-px bg-white/10 flex-1"></span>
                             </h3>
-                            <div className="grid grid-cols-2 gap-4">
-                              {artist.topAlbums.slice(0, 4).map((album: any, idx: number) => (
-                                <div 
-                                  key={`art-alb-${album.id}-${idx}`}
-                                  onClick={() => setViewingAlbumName(album.name, album.id)}
-                                  className="glass-card p-3 rounded-2xl group cursor-pointer border-white/5 hover:border-accent/30 transition-all flex flex-col gap-2.5"
-                                >
-                                  <div className="relative aspect-square rounded-xl overflow-hidden shadow-lg flex-shrink-0 bg-white/5">
-                                    <img alt={album.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" src={album.coverArt}/>
-                                  </div>
-                                  <div className="min-w-0">
-                                    <h4 className="font-bold text-white text-xs truncate leading-snug group-hover:text-accent transition-colors">{album.name}</h4>
-                                    <p className="text-[9px] text-slate-500 font-bold uppercase mt-0.5 truncate">{album.year || "Album"}</p>
-                                  </div>
-                                </div>
-                              ))}
+                            <div 
+                              className="flex flex-col gap-2.5 w-full overflow-visible"
+                              onMouseLeave={() => setHoveredAlbumIdx(null)}
+                            >
+                              {artist.topAlbums.slice(0, 5).map((album: any, idx: number) => {
+                                const isHovered = hoveredAlbumIdx === idx;
+                                return (
+                                  <motion.div
+                                    key={`art-alb-${album.id}-${idx}`}
+                                    onMouseEnter={() => setHoveredAlbumIdx(idx)}
+                                    onClick={() => setViewingAlbumName(album.name, album.id)}
+                                    className="relative w-full cursor-pointer overflow-hidden rounded-2xl border border-white/5 bg-white/[0.015] hover:bg-white/[0.03] hover:border-accent/40 backdrop-blur-md transition-colors duration-300"
+                                    animate={{
+                                      height: isHovered ? 180 : 54,
+                                    }}
+                                    transition={{
+                                      type: "spring",
+                                      stiffness: 300,
+                                      damping: 25,
+                                    }}
+                                  >
+                                    {/* Blurred cover art as low opacity background */}
+                                    <div 
+                                      className="absolute inset-0 bg-cover bg-center pointer-events-none filter blur-xl scale-110 transition-opacity duration-500"
+                                      style={{ 
+                                        backgroundImage: `url(${album.coverArt})`,
+                                        opacity: isHovered ? 0.12 : 0 
+                                      }}
+                                    />
+
+                                    {/* Card Content Container */}
+                                    <div className="relative z-10 flex flex-col justify-between h-full p-2.5">
+                                      {/* Always visible header */}
+                                      <div className="flex items-center gap-3 w-full">
+                                        {/* Album Art Icon */}
+                                        <div className="size-8 rounded-lg overflow-hidden shrink-0 shadow-md border border-white/5">
+                                          <img src={album.coverArt} alt={album.name} className="w-full h-full object-cover" />
+                                        </div>
+
+                                        {/* Text Info */}
+                                        <div className="flex-1 min-w-0">
+                                          <h4 className={cn(
+                                            "font-bold text-xs truncate leading-tight transition-colors duration-300",
+                                            isHovered ? "text-accent" : "text-white/80"
+                                          )}>
+                                            {album.name}
+                                          </h4>
+                                          <p className="text-[8.5px] text-slate-500 font-bold uppercase mt-0.5">
+                                            {album.year || "Album"}
+                                          </p>
+                                        </div>
+
+                                        {/* Action indicator */}
+                                        <span className={cn(
+                                          "material-symbols-outlined text-[16px] text-slate-600 transition-all duration-300",
+                                          isHovered ? "rotate-90 text-accent font-bold scale-110" : ""
+                                        )}>
+                                          chevron_right
+                                        </span>
+                                      </div>
+
+                                      {/* Expanded Body details */}
+                                      <AnimatePresence>
+                                        {isHovered && (
+                                          <motion.div
+                                            initial={{ opacity: 0, y: 10 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            exit={{ opacity: 0, y: 10 }}
+                                            transition={{ duration: 0.2, ease: "easeOut" }}
+                                            className="flex gap-3.5 items-center mt-2.5 overflow-hidden"
+                                          >
+                                            {/* Larger Cover */}
+                                            <div className="size-20 rounded-xl overflow-hidden shrink-0 shadow-lg border border-white/10">
+                                              <img src={album.coverArt} alt={album.name} className="w-full h-full object-cover" />
+                                            </div>
+
+                                            {/* Extra details & action */}
+                                            <div className="flex-1 min-w-0 flex flex-col justify-between h-20">
+                                              <p className="text-[10px] text-slate-400 font-medium leading-relaxed line-clamp-2">
+                                                Browse this album to view all songs, play tracks, and add to your playlists.
+                                              </p>
+                                              
+                                              <div className="flex items-center gap-2 mt-auto">
+                                                <button
+                                                  onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    setViewingAlbumName(album.name, album.id);
+                                                  }}
+                                                  className="px-2.5 py-1 bg-accent/20 hover:bg-accent text-accent hover:text-white border border-accent/25 hover:border-transparent rounded-lg text-[9px] font-bold uppercase tracking-wider transition-all duration-300 flex items-center gap-1 shadow-md hover:scale-105 active:scale-95"
+                                                >
+                                                  <span className="material-symbols-outlined text-xs">explore</span>
+                                                  View Album
+                                                </button>
+                                              </div>
+                                            </div>
+                                          </motion.div>
+                                        )}
+                                      </AnimatePresence>
+                                    </div>
+                                  </motion.div>
+                                );
+                              })}
                             </div>
                           </div>
                         )}

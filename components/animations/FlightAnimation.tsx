@@ -27,7 +27,7 @@ export function FlightAnimation({ startRect, endRect, imageUrl, onComplete }: Fl
           scale: 1, 
           opacity: 1,
           rotate: 0,
-          borderRadius: "1rem"
+          borderRadius: "1.5rem"
         }}
         animate={{
           x: targetX,
@@ -35,7 +35,7 @@ export function FlightAnimation({ startRect, endRect, imageUrl, onComplete }: Fl
           scale: [1, 1.2, 0.1], // Pulsate slightly then shrink
           opacity: [1, 1, 0],
           rotate: [0, -10, 360],
-          borderRadius: ["1rem", "0.5rem", "50%"]
+          borderRadius: ["1.5rem", "1rem", "50%"]
         }}
         transition={{
           duration: 0.9,

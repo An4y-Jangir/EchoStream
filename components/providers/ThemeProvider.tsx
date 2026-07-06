@@ -15,14 +15,34 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   useEffect(() => {
-    if (!currentSong?.albumArt) {
-      document.documentElement.style.setProperty("--theme-accent", "#6366f1");
-      document.documentElement.style.setProperty("--theme-bg-glow1", "#1e1b4b");
-      document.documentElement.style.setProperty("--theme-bg-glow2", "#312e81");
-      return;
-    }
+    const hexToRgb = (hex: string) => {
+      const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+      return result ? {
+        r: parseInt(result[1], 16),
+        g: parseInt(result[2], 16),
+        b: parseInt(result[3], 16)
+      } : { r: 99, g: 102, b: 241 };
+    };
 
-    const extractColor = async () => {
+    const applyTheme = async () => {
+      const isDynamic = localStorage.getItem("echo-dynamic-theme") !== "false";
+      const staticAccent = localStorage.getItem("echo-static-accent") || "#6366f1";
+
+      if (!isDynamic) {
+        const { r, g, b } = hexToRgb(staticAccent);
+        document.documentElement.style.setProperty("--theme-accent", `rgb(${r}, ${g}, ${b})`);
+        document.documentElement.style.setProperty("--theme-bg-glow1", `rgba(${r}, ${g}, ${b}, 0.15)`);
+        document.documentElement.style.setProperty("--theme-bg-glow2", `rgba(${r}, ${g}, ${b}, 0.1)`);
+        return;
+      }
+
+      if (!currentSong?.albumArt) {
+        document.documentElement.style.setProperty("--theme-accent", "#6366f1");
+        document.documentElement.style.setProperty("--theme-bg-glow1", "#1e1b4b");
+        document.documentElement.style.setProperty("--theme-bg-glow2", "#312e81");
+        return;
+      }
+
       try {
         if (!facRef.current) return;
 
@@ -49,8 +69,12 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       }
     };
 
-    extractColor();
+    window.addEventListener("theme-change", applyTheme);
+    applyTheme();
 
+    return () => {
+      window.removeEventListener("theme-change", applyTheme);
+    };
   }, [currentSong?.albumArt]);
 
   return <>{children}</>;

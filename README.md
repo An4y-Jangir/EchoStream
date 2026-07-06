@@ -17,8 +17,16 @@
 * **Lyrics Syncing**: Live `.lrc` file parser with auto-fetching integration from `lrclib.net` supporting line-by-line and word-level modes.
 * **Discrepancy Grouping**: Case-insensitive grouping of albums to correctly merge compilation folders or tracks with varying featured-artist tags.
 * **Playlist Looping**: Automatically wraps around and plays the first song in the playlist when the last song finishes playing, ensuring continuous music delivery.
+* **Virtual DSP & Equalizer Module**: Added a 5-band Graphic Equalizer (60Hz, 230Hz, 910Hz, 4kHz, 14kHz), customizable room Reverb modes (Studio, Hall, Club), and predefined presets (Cyberpunk, Bass Boost, Rock, Electronic, Vocal, Flat).
+* **JSON Data Sync Manager**: Integrated full backup/restore functionality, allowing users to export all customized playlists, likes, and visual configurations into a JSON file, or import it to sync data across devices.
+* **Interactive Playlist Editor & Custom Covers**: Added a detail-editing modal next to the playlist delete button. Users can rename playlists and select from 5 premium curated preset covers (Synthwave Neon, Retro Pink Cassette, Abstract Glow, Cosmic Space, and Spinning Vinyl Record) or upload their own custom cover art from their laptop (validated under 2MB).
+* **Custom Profile Avatar Uploader**: Added support for uploading local custom avatars from settings. Custom images are verified to be under 2MB and encoded to Base64 strings for persistent `localStorage` synchronization.
+* **Mute Keyboard Shortcut**: Configured keybind `M`/`m` to toggle muting. Stores the previous volume in memory and restores it when unmuting. Added a keyboard shortcuts cheatsheet directly into settings.
 
 ### 🎨 Design & Micro-Animations
+* **View Navigation History (Back/Forward)**: Built a custom navigation history stack (`navHistory`) that caches active tabs, playlists, albums, and artist views. Added borderless, plain chevron navigation arrows in the header next to the search bar. The arrows dynamically nudge (left for back, right for forward) and transition to the active theme accent color on hover.
+* **Dynamic Accent Color Mapping**: Updated the Tailwind configuration to map `"accent"` to `"var(--theme-accent, #6366f1)"`. All UI accents (buttons, borders, glows, sliders, and highlights) dynamically respond in real-time to active themes (such as dynamic artwork colors or static colors like Cyberpunk Rose).
+* **Static Theme Ambient Mesh Gradients**: When dynamic artwork theme background rendering is disabled, the page renders a deep black canvas (`#09090b`) decorated with two large blurred ambient glow spheres matching the active static accent color.
 * **Skiper-Style Vertical Album Accordion**: Inspired by the Skiper UI hover expansion effect (`skiper35`), replaced the albums grid with a vertical hover accordion on the artist page. Album bars collapse into compact 54px rows showing the title and cover art, and expand smoothly to 180px on hover using spring physics (`stiffness: 300`, `damping: 25`), displacing neighboring elements. Reveals a blurred artwork backdrop, album description, and a "View Album" button, and fully retracts on mouse leave.
 * **Clipless Hover Glow & Translation**: Fixed card container clipping by applying the transform translation (`translateY(-4px)`) and purple glow shadow (`#6366f1`) to the outer `GlowWrapper` container rather than the inner card. By using `border-radius: inherit` on `.glass-card`, the glowing border curves perfectly along the parent's rounded corners.
 * **Dynamic Character Animated Search Bar (`AnimatedInput`)**:
@@ -38,6 +46,9 @@
   * *Tactile Click State*: Inner dot and outer ring scale down and pulse on clicks.
   * *Text Input State*: Ring transforms into an elegant vertical line (I-beam selection indicator) when hovering text input fields.
   * *Touch Prevention*: Automatically disabled on touch-only devices to preserve default mobile navigation.
+* **Aspect Ratio Distortion-Free Landing Pulse**: Replaced scale-based landing pulse animations on playlists with uniform `inset` outer expansion animations to prevent rounded corners from warping.
+* **Rounded Mid-Flight Thumbnail**: Maintained rounded corner aesthetics on the playlist/queue flight animation throughout the flight path.
+* **Header Cleanup**: Removed the notification bell and "Go Pro" button elements to streamline and clean the header bar.
 * **Equalizer Default Startup**: The audio equalizer logo loads by default on startup, immediately establishing a dynamic visual brand presence.
 * **Parabolic Flight Animation (Playlists & Queue)**: Adding a song to either a playlist or the playback queue launches a miniature preview of its album art in a physical, curved flight path towards the target element (the sidebar playlist or the active player's queue button).
 * **Landing Pulse Animations**: Adding songs to both playlists and the queue triggers a visual scaling pulse animation on landing, signaling successful addition with rich micro-feedback.

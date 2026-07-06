@@ -4,6 +4,7 @@ import { useEffect, useState, useRef } from "react";
 import { motion, useMotionValue, useSpring } from "framer-motion";
 
 export function CustomCursor() {
+  const [enabled, setEnabled] = useState(true);
   const [isHovered, setIsHovered] = useState(false);
   const [isInput, setIsInput] = useState(false);
   const [isClicked, setIsClicked] = useState(false);
@@ -17,8 +18,30 @@ export function CustomCursor() {
   const cursorXSpring = useSpring(cursorX, springConfig);
   const cursorYSpring = useSpring(cursorY, springConfig);
 
+  // Sync cursor settings on mount & custom events
   useEffect(() => {
     if (typeof window === "undefined") return;
+
+    const checkEnabled = () => {
+      const isEnabled = localStorage.getItem("echo-custom-cursor") !== "false";
+      setEnabled(isEnabled);
+      if (isEnabled) {
+        document.documentElement.classList.remove("disable-custom-cursor");
+      } else {
+        document.documentElement.classList.add("disable-custom-cursor");
+      }
+    };
+
+    checkEnabled();
+    window.addEventListener("cursor-change", checkEnabled);
+    
+    return () => {
+      window.removeEventListener("cursor-change", checkEnabled);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined" || !enabled) return;
 
     // Check if device uses fine pointer (mouse/trackpad)
     const mediaQuery = window.matchMedia("(pointer: fine)");
@@ -82,9 +105,9 @@ export function CustomCursor() {
       document.removeEventListener("mouseleave", handleMouseLeave);
       document.removeEventListener("mouseenter", handleMouseEnter);
     };
-  }, [cursorX, cursorY, isVisible]);
+  }, [cursorX, cursorY, isVisible, enabled]);
 
-  if (!isPointer || !isVisible) return null;
+  if (!enabled || !isPointer || !isVisible) return null;
 
   return (
     <>

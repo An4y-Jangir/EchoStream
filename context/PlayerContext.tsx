@@ -48,6 +48,7 @@ interface PlayerContextType {
   playlists: Playlist[];
   createPlaylist: (title: string) => void;
   deletePlaylist: (id: string) => void;
+  updatePlaylist: (id: string, title: string, coverArt: string) => void;
   addSongToPlaylist: (playlistId: string, song: Song) => void;
   removeSongFromPlaylist: (playlistId: string, songId: string) => void;
   lyricsMode: 'word' | 'line' | 'hidden';
@@ -184,8 +185,13 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
         if (nextIdx < arr.length) {
           return arr[nextIdx];
         } else {
-          // Loop the playlist: wrap around to the first song
-          return arr[0];
+          const autoplay = typeof window !== "undefined" ? localStorage.getItem("echo-autoplay-next") !== "false" : true;
+          if (autoplay) {
+            // Loop the playlist: wrap around to the first song
+            return arr[0];
+          } else {
+            return null;
+          }
         }
       }
     }
@@ -219,6 +225,15 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
 
   const deletePlaylist = (id: string) => {
     setPlaylists(prev => prev.filter(p => p.id !== id));
+  };
+
+  const updatePlaylist = (id: string, title: string, coverArt: string) => {
+    setPlaylists(prev => prev.map(p => {
+      if (p.id === id) {
+        return { ...p, title, coverArt };
+      }
+      return p;
+    }));
   };
 
   const addSongToPlaylist = (playlistId: string, song: Song) => {
@@ -1009,6 +1024,8 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
   // Moved higher up
 
   useEffect(() => {
+    let prevVolume = 0.8;
+
     const handleKeyDown = (e: KeyboardEvent) => {
       const target = e.target as HTMLElement;
       if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') return;
@@ -1028,6 +1045,18 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
 
       if (e.key.toLowerCase() === 'q') {
         setIsQueueVisible(prev => !prev);
+      }
+
+      if (e.key.toLowerCase() === 'm') {
+        e.preventDefault();
+        setVolumeState(prev => {
+          if (prev > 0) {
+            prevVolume = prev;
+            return 0;
+          } else {
+            return prevVolume > 0 ? prevVolume : 0.8;
+          }
+        });
       }
     };
 
@@ -1068,6 +1097,7 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
         playlists,
         createPlaylist,
         deletePlaylist,
+        updatePlaylist,
         addSongToPlaylist,
         removeSongFromPlaylist,
         lyricsMode,

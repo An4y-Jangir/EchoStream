@@ -74,23 +74,37 @@ export function CanvasParticles() {
     };
 
     // Instantiate particles
-    const particleCount = 80;
     const particles: Particle[] = [];
-    const width = canvas.width / (window.devicePixelRatio || 1);
-    const height = canvas.height / (window.devicePixelRatio || 1);
-    for (let i = 0; i < particleCount; i++) {
-      particles.push({
-        x: Math.random() * width,
-        y: Math.random() * height,
-        vx: (Math.random() - 0.5) * 0.2,
-        vy: (Math.random() - 0.5) * 0.2,
-        baseRadius: Math.random() * 2 + 1,
-        radius: 0,
-        alpha: Math.random() * 0.35 + 0.15,
-        depth: Math.random() * 0.8 + 0.3, // 3D depth speed scaling
-        noiseOffset: Math.random() * 1000
-      });
-    }
+
+    const initParticles = () => {
+      const enabled = localStorage.getItem("echo-particles-enabled") !== "false";
+      const density = localStorage.getItem("echo-particles-density") || "medium";
+      let particleCount = 80;
+      if (density === "low") particleCount = 30;
+      if (density === "high") particleCount = 150;
+
+      particles.length = 0;
+      if (!enabled) return;
+
+      const width = canvas.width / (window.devicePixelRatio || 1);
+      const height = canvas.height / (window.devicePixelRatio || 1);
+      for (let i = 0; i < particleCount; i++) {
+        particles.push({
+          x: Math.random() * width,
+          y: Math.random() * height,
+          vx: (Math.random() - 0.5) * 0.2,
+          vy: (Math.random() - 0.5) * 0.2,
+          baseRadius: Math.random() * 2 + 1,
+          radius: 0,
+          alpha: Math.random() * 0.35 + 0.15,
+          depth: Math.random() * 0.8 + 0.3, // 3D depth speed scaling
+          noiseOffset: Math.random() * 1000
+        });
+      }
+    };
+
+    initParticles();
+    window.addEventListener("particles-change", initParticles);
 
     lastTimeRef.current = performance.now() / 1000;
 
@@ -216,6 +230,7 @@ export function CanvasParticles() {
 
     return () => {
       window.removeEventListener("resize", handleResize);
+      window.removeEventListener("particles-change", initParticles);
       if (animationFrameId.current) {
         cancelAnimationFrame(animationFrameId.current);
       }

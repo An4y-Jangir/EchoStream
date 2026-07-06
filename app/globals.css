@@ -210,7 +210,14 @@ div[class*="rounded-"] > .glass-card {
 
 /* Hide default cursor on mouse/pointer devices to use the CustomCursor */
 @media (pointer: fine) {
-  body, button, a, [role="button"], input, select, textarea, .cursor-pointer {
+  html:not(.disable-custom-cursor) body,
+  html:not(.disable-custom-cursor) button,
+  html:not(.disable-custom-cursor) a,
+  html:not(.disable-custom-cursor) [role="button"],
+  html:not(.disable-custom-cursor) input,
+  html:not(.disable-custom-cursor) select,
+  html:not(.disable-custom-cursor) textarea,
+  html:not(.disable-custom-cursor) .cursor-pointer {
     cursor: none !important;
   }
 }

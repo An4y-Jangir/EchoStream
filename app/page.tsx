@@ -6,10 +6,12 @@ import { BottomPlayer } from "@/components/player/BottomPlayer";
 import { ExpandedPlayer } from "@/components/player/ExpandedPlayer";
 import { useRef, useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
-import { Song } from "@/types/music";
+import { Song, Playlist } from "@/types/music";
 import { motion, AnimatePresence } from "framer-motion";
 import { AddToPlaylistModal } from "@/components/modals/AddToPlaylistModal";
 import { GlowWrapper } from "@/components/ui/GlowWrapper";
+import { TextRoll } from "@/components/ui/TextRoll";
+import { SettingsPage } from "@/components/ui/SettingsPage";
 import { FlightAnimation } from "@/components/animations/FlightAnimation";
 import { TrashDeleteAnimation } from "@/components/animations/TrashDeleteAnimation";
 import { CanvasParticles } from "@/components/ui/CanvasParticles";
@@ -17,6 +19,14 @@ import { CanvasParticles } from "@/components/ui/CanvasParticles";
 import { AnimatedInput } from "@/components/ui/AnimatedInput";
 
 const jsmediatags = typeof window !== "undefined" ? require("jsmediatags/dist/jsmediatags.min.js") : null;
+
+const PREMADE_COVERS = [
+  "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=500&auto=format&fit=crop", // Synthwave Neon
+  "https://images.unsplash.com/photo-1535478044878-3ed83d5456ef?q=80&w=500&auto=format&fit=crop", // Retro Pink Cassette (New)
+  "https://images.unsplash.com/photo-1536924940846-227afb31e2a5?q=80&w=500&auto=format&fit=crop", // Abstract Glow
+  "https://images.unsplash.com/photo-1462331940025-496dfbfc7564?q=80&w=500&auto=format&fit=crop", // Cosmic Space
+  "https://images.unsplash.com/photo-1603048588665-791ca8aea617?q=80&w=500&auto=format&fit=crop", // Spinning Vinyl Record (New)
+];
 
 export default function Home() {
   const { 
@@ -40,6 +50,7 @@ export default function Home() {
     createPlaylist,
     removeSongFromPlaylist,
     deletePlaylist,
+    updatePlaylist,
     localSongs,
     setLocalSongs,
     searchResults,
@@ -50,15 +61,120 @@ export default function Home() {
   } = usePlayer();
   const fileInputRef = useRef<HTMLInputElement>(null);
   
-  const [activeTab, setActiveTab] = useState<'discover'|'recent'|'favorites'|'local'|'playlist'|'browse'|'album'|'artist'>('discover');
+  const [activeTab, setActiveTab] = useState<'discover'|'recent'|'favorites'|'local'|'playlist'|'browse'|'album'|'artist'|'settings'>('discover');
   const [selectedPlaylistId, setSelectedPlaylistId] = useState<string | null>(null);
   const [landingPlaylistId, setLandingPlaylistId] = useState<string | null>(null);
+
+  const [userName, setUserName] = useState("Alex Rivera");
+  const [userPfp, setUserPfp] = useState("/alex_pfp.png");
+
+  const [isDynamicTheme, setIsDynamicTheme] = useState(true);
+  const [staticAccent, setStaticAccent] = useState("#6366f1");
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      setUserName(localStorage.getItem("echo-username") || "Alex Rivera");
+      setUserPfp(localStorage.getItem("echo-userpfp") || "/alex_pfp.png");
+      
+      const storedLogo = localStorage.getItem("echo-logostyle") as any;
+      if (storedLogo) setLogoStyle(storedLogo);
+
+      const checkTheme = () => {
+        setIsDynamicTheme(localStorage.getItem("echo-dynamic-theme") !== "false");
+        setStaticAccent(localStorage.getItem("echo-static-accent") || "#6366f1");
+      };
+      checkTheme();
+      window.addEventListener("theme-change", checkTheme);
+      return () => {
+        window.removeEventListener("theme-change", checkTheme);
+      };
+    }
+  }, []);
 
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearching, setIsSearching] = useState(false);
 
+  // Navigation History Stack
+  const [navHistory, setNavHistory] = useState<Array<{
+    tab: 'discover'|'recent'|'favorites'|'local'|'playlist'|'browse'|'album'|'artist'|'settings';
+    playlistId: string | null;
+    albumName: string | null;
+    albumId: string | null;
+    artistName: string | null;
+    artistId: string | null;
+  }>>([{
+    tab: 'discover',
+    playlistId: null,
+    albumName: null,
+    albumId: null,
+    artistName: null,
+    artistId: null
+  }]);
+  const [navIndex, setNavIndex] = useState(0);
+  const isNavigatingRef = useRef(false);
+
+  useEffect(() => {
+    if (isNavigatingRef.current) {
+      isNavigatingRef.current = false;
+      return;
+    }
+
+    const currentEntry = {
+      tab: activeTab,
+      playlistId: selectedPlaylistId,
+      albumName: viewingAlbumName,
+      albumId: viewingAlbumId,
+      artistName: viewingArtistName,
+      artistId: viewingArtistId
+    };
+
+    setNavHistory(prev => {
+      const last = prev[navIndex];
+      if (last && 
+          last.tab === activeTab && 
+          last.playlistId === selectedPlaylistId && 
+          last.albumName === viewingAlbumName && 
+          last.artistName === viewingArtistName) {
+        return prev;
+      }
+      
+      const nextHistory = prev.slice(0, navIndex + 1);
+      nextHistory.push(currentEntry);
+      setNavIndex(nextHistory.length - 1);
+      return nextHistory;
+    });
+  }, [activeTab, selectedPlaylistId, viewingAlbumName, viewingAlbumId, viewingArtistName, viewingArtistId]);
+
+  const goBack = () => {
+    if (navIndex > 0) {
+      isNavigatingRef.current = true;
+      const prevEntry = navHistory[navIndex - 1];
+      setNavIndex(navIndex - 1);
+      
+      setActiveTab(prevEntry.tab);
+      setSelectedPlaylistId(prevEntry.playlistId);
+      setViewingAlbumName(prevEntry.albumName, prevEntry.albumId);
+      setViewingArtist(prevEntry.artistName, prevEntry.artistId);
+    }
+  };
+
+  const goForward = () => {
+    if (navIndex < navHistory.length - 1) {
+      isNavigatingRef.current = true;
+      const nextEntry = navHistory[navIndex + 1];
+      setNavIndex(navIndex + 1);
+
+      setActiveTab(nextEntry.tab);
+      setSelectedPlaylistId(nextEntry.playlistId);
+      setViewingAlbumName(nextEntry.albumName, nextEntry.albumId);
+      setViewingArtist(nextEntry.artistName, nextEntry.artistId);
+    }
+  };
+
   // Playlist states
   const [addingSong, setAddingSong] = useState<Song | null>(null);
+  const [editingPlaylist, setEditingPlaylist] = useState<Playlist | null>(null);
+  const plCoverUploadRef = useRef<HTMLInputElement>(null);
   const [flightData, setFlightData] = useState<{ start: DOMRect, end: DOMRect } | null>(null);
   const [deletingSongData, setDeletingSongData] = useState<{ song: Song, playlistId: string, startRect: DOMRect } | null>(null);
   const [animatingDeleteIds, setAnimatingDeleteIds] = useState<string[]>([]);
@@ -99,10 +215,14 @@ export default function Home() {
 
   const [logoStyle, setLogoStyle] = useState<'default' | 'ripple' | 'infinity' | 'equalizer'>('equalizer');
   const [isLogoHovered, setIsLogoHovered] = useState(false);
+  const handleLogoStyleChange = (style: 'default' | 'ripple' | 'infinity' | 'equalizer') => {
+    setLogoStyle(style);
+    localStorage.setItem("echo-logostyle", style);
+  };
   const cycleLogo = () => {
     const styles: ('default' | 'ripple' | 'infinity' | 'equalizer')[] = ['default', 'ripple', 'infinity', 'equalizer'];
     const nextIdx = (styles.indexOf(logoStyle) + 1) % styles.length;
-    setLogoStyle(styles[nextIdx]);
+    handleLogoStyleChange(styles[nextIdx]);
   };
 
   const hasHistory = (history || []).length > 0;
@@ -271,6 +391,13 @@ export default function Home() {
   const [flightImageUrl, setFlightImageUrl] = useState("");
 
   const triggerFlight = (song: Song, startRect: DOMRect, playlistId: string) => {
+    const flightEnabled = localStorage.getItem("echo-flight-animations") !== "false";
+    if (!flightEnabled) {
+      setLandingPlaylistId(playlistId);
+      setTimeout(() => setLandingPlaylistId(null), 1000);
+      return;
+    }
+
     const sidebarPl = document.getElementById(`sidebar-pl-${playlistId}`);
     if (sidebarPl) {
       const endRect = sidebarPl.getBoundingClientRect();
@@ -290,6 +417,12 @@ export default function Home() {
   };
 
   const triggerQueueFlight = (song: Song, startRect: DOMRect) => {
+    const flightEnabled = localStorage.getItem("echo-flight-animations") !== "false";
+    if (!flightEnabled) {
+      triggerQueueLanding();
+      return;
+    }
+
     const queueBtn = document.getElementById("bottom-queue-btn") || document.getElementById("expanded-queue-btn");
     if (queueBtn) {
       const endRect = queueBtn.getBoundingClientRect();
@@ -305,7 +438,7 @@ export default function Home() {
     <div className="flex h-screen overflow-hidden relative">
         {/* Dynamic Background */}
         <div className="absolute inset-0 z-0 pointer-events-none transition-all duration-1000 ease-in-out">
-          {currentSong ? (
+          {currentSong && isDynamicTheme ? (
             <>
               <div 
                 className="absolute inset-0 bg-cover bg-center transition-all duration-1000 opacity-60 scale-105"
@@ -314,7 +447,18 @@ export default function Home() {
               <div className="absolute inset-0 bg-black/50 backdrop-blur-xl" />
             </>
           ) : (
-            <div className="absolute inset-0 dynamic-bg" />
+            <>
+              {/* Static theme ambient mesh gradient */}
+              <div className="absolute inset-0 bg-[#09090b]" />
+              <div 
+                className="absolute top-[-10%] left-[-10%] w-[60%] h-[60%] rounded-full opacity-[0.25] blur-[130px] transition-all duration-1000 ease-in-out"
+                style={{ backgroundColor: staticAccent }}
+              />
+              <div 
+                className="absolute bottom-[-10%] right-[-10%] w-[60%] h-[60%] rounded-full opacity-[0.18] blur-[130px] transition-all duration-1000 ease-in-out"
+                style={{ backgroundColor: staticAccent }}
+              />
+            </>
           )}
           <CanvasParticles />
         </div>
@@ -539,8 +683,8 @@ export default function Home() {
             <span className="text-sm font-medium">Import Files</span>
           </div>
         </div>
-        <div className="flex flex-col gap-1 mt-4">
-          <div ref={playlistHeaderRef} className="px-4 flex items-center justify-between mb-2">
+        <div className="flex flex-col gap-1 flex-1 min-h-0">
+          <div ref={playlistHeaderRef} className="px-4 flex items-center justify-between mb-2 flex-shrink-0">
             <p className="text-[9px] font-bold text-slate-600 uppercase tracking-widest">Playlists</p>
             <button 
               onClick={() => {
@@ -552,44 +696,62 @@ export default function Home() {
               <span className="material-symbols-outlined text-sm">add</span>
             </button>
           </div>
-          {playlists.length === 0 ? (
-            <div className="px-4 py-3 bg-white/5 rounded-xl border border-dashed border-white/10 mx-2">
-              <p className="text-[10px] text-slate-500 font-bold uppercase text-center">No playlists yet</p>
-            </div>
-          ) : (
-            playlists.map(p => (
-              <a 
-                key={p.id}
-                id={`sidebar-pl-${p.id}`}
-                onClick={() => { setActiveTab('playlist'); setSelectedPlaylistId(p.id); }} 
-                className={`nav-item flex items-center gap-4 px-4 py-2.5 rounded-xl cursor-pointer relative transition-all duration-300 ${selectedPlaylistId === p.id && activeTab === 'playlist' ? 'text-white active-nav bg-white/5' : 'text-slate-400 hover:text-white'}`}
-              >
-                <span className="material-symbols-outlined text-lg">playlist_play</span>
-                <span className="text-sm font-medium truncate">{p.title}</span>
-                <AnimatePresence>
-                  {landingPlaylistId === p.id && (
-                    <motion.div 
-                      key="landing-pulse"
-                      className="absolute inset-0 bg-accent/20 rounded-xl"
-                      initial={{ opacity: 0, scale: 0.8 }}
-                      animate={{ opacity: [0, 1, 0], scale: [0.8, 1.2, 1] }}
-                      transition={{ duration: 0.6 }}
-                    />
-                  )}
-                </AnimatePresence>
-              </a>
-            ))
-          )}
+          <div className="flex-1 overflow-y-auto no-scrollbar space-y-1">
+            {playlists.length === 0 ? (
+              <div className="px-4 py-3 bg-white/5 rounded-xl border border-dashed border-white/10 mx-2">
+                <p className="text-[10px] text-slate-500 font-bold uppercase text-center">No playlists yet</p>
+              </div>
+            ) : (
+              playlists.map(p => (
+                <motion.a 
+                  key={p.id}
+                  id={`sidebar-pl-${p.id}`}
+                  onClick={() => { setActiveTab('playlist'); setSelectedPlaylistId(p.id); }} 
+                  initial="initial"
+                  whileHover="hovered"
+                  className={`nav-item flex items-center gap-4 px-4 py-2.5 rounded-xl cursor-pointer relative transition-all duration-300 ${selectedPlaylistId === p.id && activeTab === 'playlist' ? 'text-white active-nav bg-white/5' : 'text-slate-400 hover:text-white'}`}
+                >
+                  <span className="material-symbols-outlined text-lg flex-shrink-0">playlist_play</span>
+                  <TextRoll className="text-sm font-medium flex-1 min-w-0">{p.title}</TextRoll>
+                  <AnimatePresence>
+                    {landingPlaylistId === p.id && (
+                      <motion.div 
+                        key="landing-pulse"
+                        className="absolute bg-accent/20 rounded-xl pointer-events-none"
+                        initial={{ inset: 0, opacity: 0 }}
+                        animate={{ inset: [-4, -8, -4], opacity: [0, 1, 0] }}
+                        transition={{ duration: 0.6 }}
+                      />
+                    )}
+                  </AnimatePresence>
+                </motion.a>
+              ))
+            )}
+          </div>
         </div>
         <div className="mt-auto pt-6">
-          <div className="px-3 py-3 flex items-center gap-3 rounded-xl cursor-pointer hover:bg-white/5 transition-colors group">
-            <img alt="Alex Rivera" className="size-8 rounded-lg border border-white/10 object-cover" src="/alex_pfp.png"/>
+          <motion.div 
+            onClick={() => setActiveTab('settings')}
+            initial="initial"
+            whileHover="hovered"
+            className={`px-3 py-3 flex items-center gap-3 rounded-xl cursor-pointer transition-all duration-300 group ${activeTab === 'settings' ? 'text-white active-nav bg-white/5' : 'text-slate-400 hover:text-white'}`}
+          >
+            <img alt="User avatar" className="size-8 rounded-lg border border-white/10 object-cover" src={userPfp}/>
             <div className="flex-1 overflow-hidden">
-              <p className="text-xs font-semibold truncate">Alex Rivera</p>
+              <p className="text-xs font-semibold truncate">{userName}</p>
               <p className="text-[9px] text-slate-600 font-bold uppercase">Pro Tier</p>
             </div>
-            <span className="material-symbols-outlined text-slate-600 group-hover:text-slate-400 transition-colors text-lg">settings</span>
-          </div>
+            <motion.span 
+              variants={{
+                initial: { rotate: 0, scale: 1, color: "#475569" }, // slate-600
+                hovered: { rotate: 180, scale: 1.15, color: "#94a3b8" } // slate-400
+              }}
+              transition={{ type: "spring", stiffness: 150, damping: 12 }}
+              className="material-symbols-outlined text-lg"
+            >
+              settings
+            </motion.span>
+          </motion.div>
         </div>
       </aside>
 
@@ -597,6 +759,60 @@ export default function Home() {
       <main className="flex-1 flex flex-col overflow-y-auto no-scrollbar relative z-10">
         <header className="sticky top-0 z-30 flex items-center justify-between px-10 py-5 bg-background-dark/20 backdrop-blur-md">
           <div className="flex items-center gap-6 flex-1">
+            {/* View Navigation Buttons */}
+            <div className="flex items-center gap-3.5 mr-3">
+              <button
+                onClick={goBack}
+                disabled={navIndex <= 0}
+                className={cn(
+                  "p-1 transition-all flex items-center justify-center select-none outline-none",
+                  navIndex > 0
+                    ? "text-white cursor-pointer"
+                    : "text-slate-700 cursor-not-allowed opacity-35"
+                )}
+                title="Go back"
+              >
+                <motion.span
+                  variants={{
+                    initial: { x: 0, scale: 1 },
+                    hovered: navIndex > 0 ? { x: -3, scale: 1.2, color: "var(--theme-accent, #6366f1)" } : {},
+                    tap: navIndex > 0 ? { scale: 0.9 } : {}
+                  }}
+                  initial="initial"
+                  whileHover="hovered"
+                  whileTap="tap"
+                  className="material-symbols-outlined text-2xl font-bold select-none"
+                >
+                  chevron_left
+                </motion.span>
+              </button>
+              <button
+                onClick={goForward}
+                disabled={navIndex >= navHistory.length - 1}
+                className={cn(
+                  "p-1 transition-all flex items-center justify-center select-none outline-none",
+                  navIndex < navHistory.length - 1
+                    ? "text-white cursor-pointer"
+                    : "text-slate-700 cursor-not-allowed opacity-35"
+                )}
+                title="Go forward"
+              >
+                <motion.span
+                  variants={{
+                    initial: { x: 0, scale: 1 },
+                    hovered: navIndex < navHistory.length - 1 ? { x: 3, scale: 1.2, color: "var(--theme-accent, #6366f1)" } : {},
+                    tap: navIndex < navHistory.length - 1 ? { scale: 0.9 } : {}
+                  }}
+                  initial="initial"
+                  whileHover="hovered"
+                  whileTap="tap"
+                  className="material-symbols-outlined text-2xl font-bold select-none"
+                >
+                  chevron_right
+                </motion.span>
+              </button>
+            </div>
+
             <div className="relative w-full max-w-md group">
               <AnimatedInput 
                 className="w-full bg-white/[0.03] border border-white/[0.02] rounded-xl py-2.5 pl-11 pr-4 text-xs focus:ring-1 focus:ring-accent/30 focus:border-accent/30 focus:bg-white/[0.06] outline-none transition-all text-transparent caret-white placeholder-transparent" 
@@ -644,15 +860,6 @@ export default function Home() {
                 </div>
               )}
             </div>
-          </div>
-          <div className="flex items-center gap-4">
-            <button className="size-10 rounded-xl flex items-center justify-center text-slate-500 relative hover:text-white transition-colors">
-              <span className="material-symbols-outlined text-xl">notifications</span>
-              <span className="absolute top-3 right-3 size-1.5 bg-accent rounded-full"></span>
-            </button>
-            <button className="text-accent border border-accent/20 px-5 py-2 rounded-xl text-xs font-bold hover:bg-accent hover:text-white transition-all">
-              Go Pro
-            </button>
           </div>
         </header>
 
@@ -1101,20 +1308,30 @@ export default function Home() {
                       <span>Created by you</span>
                     </div>
                   </div>
-                  <button 
-                    onClick={() => {
-                      if (confirm(`Are you sure you want to delete the playlist "${currentPlaylist.title}"?`)) {
-                        deletePlaylist(currentPlaylist.id);
-                        setActiveTab('discover');
-                        setSelectedPlaylistId(null);
-                      }
-                    }}
-                    className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-500 border border-red-500/20 hover:border-red-500/40 hover:scale-105 active:scale-95 transition-all text-xs font-bold uppercase tracking-wider"
-                    title="Delete Playlist"
-                  >
-                    <span className="material-symbols-outlined text-base">delete</span>
-                    Delete Playlist
-                  </button>
+                  <div className="flex items-center gap-3">
+                    <button 
+                      onClick={() => setEditingPlaylist(currentPlaylist)}
+                      className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-white border border-white/5 hover:border-white/10 hover:scale-105 active:scale-95 transition-all text-xs font-bold uppercase tracking-wider"
+                      title="Edit Playlist"
+                    >
+                      <span className="material-symbols-outlined text-base">edit</span>
+                      Edit Details
+                    </button>
+                    <button 
+                      onClick={() => {
+                        if (confirm(`Are you sure you want to delete the playlist "${currentPlaylist.title}"?`)) {
+                          deletePlaylist(currentPlaylist.id);
+                          setActiveTab('discover');
+                          setSelectedPlaylistId(null);
+                        }
+                      }}
+                      className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-500 border border-red-500/20 hover:border-red-500/40 hover:scale-105 active:scale-95 transition-all text-xs font-bold uppercase tracking-wider"
+                      title="Delete Playlist"
+                    >
+                      <span className="material-symbols-outlined text-base">delete</span>
+                      Delete Playlist
+                    </button>
+                  </div>
                 </div>
               </div>
 
@@ -1381,118 +1598,89 @@ export default function Home() {
                         <div className="size-28 rounded-2xl overflow-hidden border-2 border-white/20 shadow-2xl flex-shrink-0">
                           <img alt={artist.name} className="w-full h-full object-cover" src={artist.thumbnail} />
                         </div>
-                        <div className="text-center md:text-left">
-                          <p className="text-[10px] font-black text-accent uppercase tracking-[0.4em] mb-1.5 opacity-80">Verified Artist</p>
-                          <h2 className="text-5xl font-black tracking-tighter text-white italic">{artist.name}</h2>
-                          <div className="flex items-center justify-center md:justify-start gap-4 text-slate-400 text-xs font-semibold mt-2.5">
-                            <span>{artist.topSongs?.length || 0} Tracks</span>
-                            {artist.topAlbums?.length > 0 && (
-                              <>
-                                <span className="size-1 bg-slate-600 rounded-full"></span>
-                                <span>{artist.topAlbums.length} Albums</span>
-                              </>
-                            )}
-                          </div>
+
+                        <div className="flex-1 text-center md:text-left space-y-3">
+                          <span className="text-[10px] text-accent font-extrabold uppercase tracking-[0.35em] bg-accent/10 px-3 py-1 rounded-full border border-accent/20">
+                            Verified Artist
+                          </span>
+                          <h1 className="text-5xl font-black tracking-tighter text-white font-space-grotesk">{artist.name}</h1>
+                          <p className="text-slate-400 text-xs font-semibold uppercase tracking-wider">{artist.topSongs?.length || 0} tracks available on this node</p>
                         </div>
                       </div>
                     </div>
 
-                    {/* Action buttons */}
-                    {artist.topSongs?.length > 0 && (
-                      <div className="flex gap-4">
-                        <button 
-                          onClick={() => playSong(artist.topSongs[0], artist.topSongs)}
-                          className="flex items-center gap-2 px-6 py-3 bg-white hover:bg-slate-200 text-black rounded-xl text-xs font-bold uppercase tracking-wider transition-all hover:scale-105 active:scale-95 shadow-xl"
-                        >
-                          <span className="material-symbols-outlined text-base fill-[1]">play_arrow</span>
-                          Play All
-                        </button>
-                        <button 
-                          onClick={() => {
-                            if (artist.topSongs.length > 0) {
-                              const shuffled = [...artist.topSongs].sort(() => Math.random() - 0.5);
-                              playSong(shuffled[0], shuffled);
-                            }
-                          }}
-                          className="flex items-center gap-2 px-6 py-3 bg-white/10 hover:bg-white/20 text-white rounded-xl text-xs font-bold uppercase tracking-wider transition-all hover:scale-105 active:scale-95 border border-white/10"
-                        >
-                          <span className="material-symbols-outlined text-base">shuffle</span>
-                          Shuffle
-                        </button>
-                      </div>
-                    )}
-
-                    {/* Left: Popular Tracks List */}
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
-                      <div className="lg:col-span-2 space-y-4">
-                        <h3 className="text-xl font-bold tracking-tight text-white flex items-center justify-between gap-4">
-                          <span className="flex items-center gap-2 flex-1">
-                            Popular Tracks <span className="h-px bg-white/10 flex-1"></span>
-                          </span>
-                          {(artist.topSongs || []).length > 5 && (
+                      {/* Left: Top Songs */}
+                      <div className="lg:col-span-2 space-y-6">
+                        <div className="flex items-center justify-between">
+                          <h3 className="text-lg font-bold tracking-tight text-white flex items-center gap-2">
+                            Top Tracks <span className="h-px bg-white/10 flex-grow w-24"></span>
+                          </h3>
+                          {artist.topSongs?.length > 5 && (
                             <button 
                               onClick={() => setShowAllArtistSongs(!showAllArtistSongs)}
-                              className="text-xs font-bold text-accent hover:underline uppercase tracking-wider transition-all"
+                              className="text-xs text-slate-500 hover:text-accent font-bold uppercase tracking-wider transition-colors"
                             >
-                              {showAllArtistSongs ? "See Less" : "See All"}
+                              {showAllArtistSongs ? "Show Less" : "Show All"}
                             </button>
                           )}
-                        </h3>
-                        <div className="space-y-2">
-                          {(() => {
-                            const songsToRender = showAllArtistSongs 
-                              ? (artist.topSongs || []) 
-                              : (artist.topSongs || []).slice(0, 5);
+                        </div>
 
-                            return songsToRender.map((song: Song, i: number) => {
-                              const isCurrent = currentSong?.id === song.id;
-                              return (
-                                <div 
-                                  key={`artistsong-${song.id}-${i}`}
-                                  onClick={() => playSong(song, artist.topSongs)}
-                                  className={cn(
-                                    "glass-card flex items-center gap-4 p-3 rounded-2xl group cursor-pointer hover:bg-white/5 border-transparent transition-all duration-500",
-                                    isCurrent ? "bg-white/5 border-accent/20" : ""
-                                  )}
-                                >
-                                  <div className={cn(
-                                    "w-8 text-center font-bold transition-colors tabular-nums",
-                                    isCurrent ? "text-accent animate-pulse" : "text-slate-600 group-hover:text-accent"
-                                  )}>{i + 1}</div>
-                                  <div className="size-12 flex-shrink-0 rounded-lg overflow-hidden shadow-lg">
-                                    <img alt={song.title} className="w-full h-full object-cover" src={song.albumArt}/>
-                                  </div>
-                                  <div className="flex-1 overflow-hidden">
-                                    <h3 className={cn(
-                                      "font-semibold truncate text-sm",
-                                      isCurrent ? "text-accent" : "text-white/90"
-                                    )}>{song.title}</h3>
-                                    <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider truncate">{song.album}</p>
-                                  </div>
-                                  <div className="flex items-center gap-4 px-4 text-slate-500 text-xs font-bold w-32 truncate">
-                                    {song.durationText || "3:00"}
-                                  </div>
-                                  <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                    <button 
-                                      id={`add-btn-${song.id}-artist`}
-                                      onClick={(e) => { e.stopPropagation(); setAddingSong(song); }} 
-                                      className="size-10 bg-white/5 hover:bg-white/20 text-white rounded-full flex items-center justify-center transition-colors" 
-                                      title="Add to Playlist"
-                                    >
-                                      <span className="material-symbols-outlined text-sm">playlist_add</span>
-                                    </button>
-                                    <button 
-                                      onClick={(e) => { e.stopPropagation(); addToQueue(song); triggerQueueFlight(song, e.currentTarget.getBoundingClientRect()); }} 
-                                      className="size-10 bg-white/5 hover:bg-white/20 text-white rounded-full flex items-center justify-center transition-colors" 
-                                      title="Add to Queue"
-                                    >
-                                      <span className="material-symbols-outlined fill-[1] text-[20px]">queue_music</span>
-                                    </button>
-                                  </div>
+                        <div className="flex flex-col gap-2">
+                          {(showAllArtistSongs ? artist.topSongs : artist.topSongs.slice(0, 5)).map((song: any, index: number) => {
+                            const isCurrent = currentSong?.id === song.id;
+                            const isAnimatingDelete = animatingDeleteIds.includes(song.id);
+                            return (
+                              <div 
+                                key={`art-song-${song.id}-${index}`}
+                                className={cn(
+                                  "flex items-center gap-4 p-3 rounded-2xl border border-white/5 bg-white/[0.015] hover:bg-white/[0.03] transition-all group",
+                                  isCurrent ? "border-accent/30 bg-accent/5" : "",
+                                  isAnimatingDelete ? "opacity-30 pointer-events-none scale-95" : ""
+                                )}
+                              >
+                                <span className="w-6 text-center text-xs font-bold text-slate-650 group-hover:text-white transition-colors">{index + 1}</span>
+                                
+                                <div className="size-11 rounded-lg overflow-hidden shrink-0 border border-white/10 shadow-md">
+                                  <img src={song.albumArt} alt={song.title} className="w-full h-full object-cover" />
                                 </div>
-                              );
-                            });
-                          })()}
+
+                                <div className="flex-1 min-w-0">
+                                  <span className={cn(
+                                    "font-semibold text-sm truncate block transition-colors duration-300",
+                                    isCurrent ? "text-accent" : "text-white/90"
+                                  )}>
+                                    {song.title}
+                                  </span>
+                                  <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wide block mt-0.5">{song.album}</span>
+                                </div>
+
+                                <div className="flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                                  <button 
+                                    id={`add-btn-${song.id}`}
+                                    onClick={(e) => { e.stopPropagation(); setAddingSong(song); }} 
+                                    className="size-8 bg-white/5 hover:bg-white/20 text-white rounded-full flex items-center justify-center transition-colors" 
+                                    title="Add to Playlist"
+                                  >
+                                    <span className="material-symbols-outlined text-sm">playlist_add</span>
+                                  </button>
+                                  <button 
+                                    onClick={(e) => { e.stopPropagation(); addToQueue(song); triggerQueueFlight(song, e.currentTarget.getBoundingClientRect()); }} 
+                                    className="size-8 bg-white/5 hover:bg-white/20 text-white rounded-full flex items-center justify-center transition-colors" 
+                                    title="Add to Queue"
+                                  >
+                                    <span className="material-symbols-outlined fill-[1] text-sm">queue_music</span>
+                                  </button>
+                                  <button 
+                                    onClick={() => playSong(song, artist?.topSongs || [])}
+                                    className="size-8 bg-accent text-white rounded-full flex items-center justify-center shadow-lg hover:scale-105 transition-transform"
+                                  >
+                                    <span className="material-symbols-outlined fill-[1] text-base">play_arrow</span>
+                                  </button>
+                                </div>
+                              </div>
+                            );
+                          })}
                         </div>
                       </div>
 
@@ -1645,6 +1833,18 @@ export default function Home() {
               })()}
             </section>
           )}
+
+          {activeTab === 'settings' && (
+            <SettingsPage 
+              userName={userName}
+              setUserName={setUserName}
+              userPfp={userPfp}
+              setUserPfp={setUserPfp}
+              logoStyle={logoStyle}
+              setLogoStyle={handleLogoStyleChange}
+              setActiveTab={setActiveTab}
+            />
+          )}
         </div>
       </main>
 
@@ -1691,6 +1891,134 @@ export default function Home() {
               setDeletingSongData(null);
             }}
           />
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {editingPlaylist && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="glass-panel w-full max-w-lg rounded-3xl p-6 relative overflow-hidden border border-white/10"
+            >
+              <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
+                <span className="material-symbols-outlined text-accent">edit</span> Edit Playlist Details
+              </h3>
+
+              <div className="space-y-6">
+                {/* Playlist Name Input */}
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-slate-400 uppercase tracking-wider block">Playlist Name</label>
+                  <input
+                    type="text"
+                    defaultValue={editingPlaylist.title}
+                    id="edit-pl-name-input"
+                    className="w-full bg-white/[0.03] border border-white/10 rounded-xl px-4 py-2.5 text-sm focus:ring-1 focus:ring-accent/30 focus:border-accent/30 outline-none text-white transition-all font-bold"
+                    placeholder="Enter playlist name..."
+                  />
+                </div>
+
+                {/* Cover Art selection */}
+                <div className="space-y-3">
+                  <label className="text-xs font-bold text-slate-400 uppercase tracking-wider block">Cover Art</label>
+                  
+                  {/* Selected cover preview */}
+                  <div className="flex items-center gap-4 mb-4">
+                    <img
+                      id="edit-pl-cover-preview"
+                      src={editingPlaylist.coverArt}
+                      className="size-20 rounded-2xl object-cover border border-white/10 shadow-lg"
+                      alt="Playlist Cover Preview"
+                    />
+                    <div>
+                      <span className="text-[10px] text-accent font-extrabold uppercase tracking-wider bg-accent/10 px-2 py-0.5 rounded">
+                        Active Cover
+                      </span>
+                      <p className="text-xs text-slate-500 mt-1">Select from presets below or upload your own.</p>
+                    </div>
+                  </div>
+
+                  {/* Preset Covers Grid */}
+                  <div className="grid grid-cols-6 gap-2">
+                    {PREMADE_COVERS.map((cover, idx) => (
+                      <button
+                        key={idx}
+                        onClick={() => {
+                          const img = document.getElementById("edit-pl-cover-preview") as HTMLImageElement;
+                          if (img) img.src = cover;
+                        }}
+                        className="aspect-square rounded-xl overflow-hidden border border-white/10 hover:border-white/30 transition-all hover:scale-105 active:scale-95"
+                      >
+                        <img src={cover} className="w-full h-full object-cover" alt="cover option" />
+                      </button>
+                    ))}
+
+                    {/* Upload custom cover button */}
+                    <button
+                      onClick={() => plCoverUploadRef.current?.click()}
+                      className="aspect-square rounded-xl bg-white/[0.03] border-2 border-dashed border-white/10 hover:border-accent hover:bg-white/[0.06] transition-all flex items-center justify-center group"
+                      title="Upload custom cover"
+                    >
+                      <span className="material-symbols-outlined text-white/50 group-hover:text-accent transition-colors text-lg">add_photo_alternate</span>
+                    </button>
+                  </div>
+
+                  <input
+                    type="file"
+                    ref={plCoverUploadRef}
+                    accept="image/*"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      if (!file.type.startsWith("image/")) {
+                        alert("Please select a valid image file.");
+                        return;
+                      }
+                      if (file.size > 2 * 1024 * 1024) {
+                        alert("Selected image is too large! Please choose an image smaller than 2MB.");
+                        return;
+                      }
+                      const reader = new FileReader();
+                      reader.onload = (event) => {
+                        const base64 = event.target?.result as string;
+                        const img = document.getElementById("edit-pl-cover-preview") as HTMLImageElement;
+                        if (img && base64) img.src = base64;
+                      };
+                      reader.readAsDataURL(file);
+                    }}
+                    className="hidden"
+                  />
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex gap-3 justify-end pt-4 border-t border-white/5">
+                  <button
+                    onClick={() => setEditingPlaylist(null)}
+                    className="bg-white/5 hover:bg-white/10 text-white border border-white/5 px-4 py-2.5 rounded-xl text-xs font-bold transition-all uppercase tracking-wider"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={() => {
+                      const nameInput = document.getElementById("edit-pl-name-input") as HTMLInputElement;
+                      const img = document.getElementById("edit-pl-cover-preview") as HTMLImageElement;
+                      if (nameInput && nameInput.value.trim() && img) {
+                        updatePlaylist(editingPlaylist.id, nameInput.value.trim(), img.src);
+                        setEditingPlaylist(null);
+                      } else {
+                        alert("Playlist name cannot be empty!");
+                      }
+                    }}
+                    className="bg-accent text-white px-5 py-2.5 rounded-xl text-xs font-bold transition-all hover:scale-105 active:scale-95 uppercase tracking-wider shadow-lg shadow-accent/25"
+                  >
+                    Save Changes
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </div>
         )}
       </AnimatePresence>
 

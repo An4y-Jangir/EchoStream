@@ -12,7 +12,7 @@ const config: Config = {
         background: "var(--background)",
         foreground: "var(--foreground)",
         "primary": "#121212",
-        "accent": "#6366f1",
+        "accent": "var(--theme-accent, #6366f1)",
         "background-light": "#f7f7f7",
         "background-dark": "#0a0a0a",
       },

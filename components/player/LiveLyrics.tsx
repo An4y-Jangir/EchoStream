@@ -13,6 +13,19 @@ interface LiveLyricsProps {
 export function LiveLyrics({ lyrics, currentTime }: LiveLyricsProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const { seek, duration, lyricsMode, isPlaying } = usePlayer();
+  const [lyricsSize, setLyricsSize] = useState("large");
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const checkSize = () => {
+      setLyricsSize(localStorage.getItem("echo-lyrics-size") || "large");
+    };
+    checkSize();
+    window.addEventListener("lyrics-size-change", checkSize);
+    return () => {
+      window.removeEventListener("lyrics-size-change", checkSize);
+    };
+  }, []);
 
   // Smooth time interpolation using requestAnimationFrame to bypass the slow 250ms/500ms updates
   const [smoothTime, setSmoothTime] = useState(currentTime);
@@ -123,8 +136,10 @@ export function LiveLyrics({ lyrics, currentTime }: LiveLyricsProps) {
             }}
             transition={{ duration: 0.7, ease: "easeOut" }}
             className={`
-              font-bold tracking-tight break-words cursor-pointer transition-all
-              text-4xl md:text-5xl lg:text-7xl w-[85%] flex flex-wrap gap-x-[0.3em] gap-y-2
+              font-bold tracking-tight break-words cursor-pointer transition-all w-[85%] flex flex-wrap gap-x-[0.3em] gap-y-2
+              ${lyricsSize === "small" ? "text-2xl md:text-3xl lg:text-4xl" : ""}
+              ${lyricsSize === "medium" ? "text-3xl md:text-4xl lg:text-5xl" : ""}
+              ${lyricsSize === "large" ? "text-4xl md:text-5xl lg:text-7xl" : ""}
               ${isAlternate ? 'ml-auto justify-end text-right' : 'mr-auto justify-start text-left'}
             `}
             style={{ originX: isAlternate ? 1 : 0 }}

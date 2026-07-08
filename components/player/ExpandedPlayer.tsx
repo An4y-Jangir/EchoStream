@@ -425,7 +425,7 @@ export function ExpandedPlayer() {
             )}
           </AnimatePresence>          {/* Bottom Player Bar */}
           <div className="fixed bottom-8 left-1/2 -translate-x-1/2 w-[95%] max-w-7xl z-[60] flex flex-col">
-            <div className="glass-panel bg-black/40 backdrop-blur-2xl border border-white/10 rounded-3xl p-6 shadow-2xl flex flex-col gap-4">
+            <div className="glass-panel bg-black/40 backdrop-blur-2xl border border-white/10 rounded-3xl p-4 md:p-6 shadow-2xl flex flex-col gap-3 md:gap-4">
               
               {/* Desktop Controls (hidden on mobile) */}
               <div className="hidden md:flex flex-col gap-4 w-full">
@@ -527,7 +527,7 @@ export function ExpandedPlayer() {
               </div>
 
               {/* Mobile Controls (visible only on mobile) */}
-              <div className="flex md:hidden flex-col gap-4 w-full">
+              <div className="flex md:hidden flex-col gap-2.5 w-full">
                 {/* Title & Artist & Favorite */}
                 <div className="flex items-center justify-between">
                   <div className="flex flex-col min-w-0">
@@ -537,7 +537,7 @@ export function ExpandedPlayer() {
                         setViewingArtist(currentSong.artist, currentSong.artistId);
                         toggleExpanded();
                       }}
-                      className="text-xs text-white/55 font-semibold hover:text-accent truncate transition-colors cursor-pointer mt-1"
+                      className="text-xs text-white/55 font-semibold hover:text-accent truncate transition-colors cursor-pointer mt-0.5"
                     >
                       {currentSong.artist}
                     </span>
@@ -551,7 +551,7 @@ export function ExpandedPlayer() {
                 </div>
 
                 {/* Progress Bar */}
-                <div className="flex flex-col gap-1 w-full mt-2">
+                <div className="flex flex-col gap-1 w-full mt-1">
                   <div 
                     className="w-full h-1.5 bg-white/10 rounded-full cursor-pointer relative"
                     onClick={handleSeek}
@@ -568,7 +568,7 @@ export function ExpandedPlayer() {
                 </div>
 
                 {/* Playback Controls Row */}
-                <div className="flex items-center justify-between px-2 mt-2">
+                <div className="flex items-center justify-between px-2 mt-1">
                   <button onClick={toggleShuffle} className={`${isShuffle ? 'text-accent' : 'text-white/50'} transition-colors`}>
                     <span className="material-symbols-outlined text-xl">shuffle</span>
                   </button>
@@ -577,7 +577,7 @@ export function ExpandedPlayer() {
                   </button>
                   <button 
                     onClick={togglePlay}
-                    className="size-12 bg-white text-black rounded-full flex items-center justify-center shadow-xl transform active:scale-95 transition-all"
+                    className="size-11 md:size-12 bg-white text-black rounded-full flex items-center justify-center shadow-xl transform active:scale-95 transition-all"
                   >
                     <span className="material-symbols-outlined fill-[1] text-2xl">{isPlaying ? 'pause' : 'play_arrow'}</span>
                   </button>
@@ -590,7 +590,7 @@ export function ExpandedPlayer() {
                 </div>
 
                 {/* Tools Row */}
-                <div className="flex items-center justify-between px-1 mt-2 text-white/50 border-t border-white/5 pt-3">
+                <div className="flex items-center justify-between px-1 mt-1 text-white/50 border-t border-white/5 pt-2">
                   <button onClick={toggleQueue} className={cn("transition-colors p-1", isQueueVisible ? "text-accent" : "hover:text-white")}>
                     <span className="material-symbols-outlined text-xl">queue_music</span>
                   </button>

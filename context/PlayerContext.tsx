@@ -472,6 +472,9 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
     audioRef2.current = new Audio();
     audioRef.current = audioRef1.current; // Start with element 1 active
 
+    audioRef1.current.preload = "auto";
+    audioRef2.current.preload = "auto";
+
     audioRef1.current.volume = volume;
     audioRef2.current.volume = volume;
 
@@ -750,11 +753,9 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
         } catch (e) { }
       }
     } else {
-      setYtVideoId(null);
       if (ytPlayer) {
         try { ytPlayer.pauseVideo(); } catch (e) { }
       }
-      setYtPlayer(null);
 
       // Stop the inactive element completely
       const activeAudio = activeAudioIndexRef.current === 1 ? audioRef1.current : audioRef2.current;
@@ -1213,26 +1214,36 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
       }}
     >
       <div className="hidden">
-        {ytVideoId && (
-          <YouTube
-            videoId={ytVideoId}
-            opts={{
-              height: '0',
-              width: '0',
-              playerVars: {
-                autoplay: 1,
-                controls: 0,
-                modestbranding: 1,
-                playsinline: 1,
+        <YouTube
+          videoId={ytVideoId || ""}
+          opts={{
+            height: '0',
+            width: '0',
+            playerVars: {
+              autoplay: 1,
+              controls: 0,
+              modestbranding: 1,
+              playsinline: 1,
+            }
+          }}
+          onReady={(event: any) => {
+            setYtPlayer(event.target);
+            event.target.setVolume(volume * 100);
+
+            // If the user already clicked a YouTube song, load and play it now
+            if (currentSongRef.current && currentSongRef.current.audioUrl.startsWith("youtube:")) {
+              const vId = currentSongRef.current.audioUrl.split(":")[1];
+              try {
+                event.target.loadVideoById(vId);
+                event.target.playVideo();
+                setIsPlaying(true);
+              } catch (e) {
+                console.warn("Failed to autoplay YouTube song on ready:", e);
               }
-            }}
-            onReady={(event: any) => {
-              setYtPlayer(event.target);
-              event.target.setVolume(volume * 100);
-            }}
-            onStateChange={handleYtStateChange}
-          />
-        )}
+            }
+          }}
+          onStateChange={handleYtStateChange}
+        />
       </div>
       {children}
     </PlayerContext.Provider>

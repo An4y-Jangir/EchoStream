@@ -1393,7 +1393,7 @@ export default function Home() {
                     <div 
                       key={`plsong-${song.id}-${i}`} 
                       onClick={() => playSong(song, currentPlaylist.songs)} 
-                      className={`glass-card flex items-center gap-4 p-3 rounded-2xl group cursor-pointer hover:bg-white/5 border-transparent transition-all duration-500 ${
+                      className={`glass-card flex items-center gap-2 md:gap-4 p-3 rounded-2xl group cursor-pointer hover:bg-white/5 border-transparent transition-all duration-500 ${
                         animatingDeleteIds.includes(song.id) ? 'opacity-10 scale-95 pointer-events-none translate-x-2' : ''
                       }`}
                     >
@@ -1410,7 +1410,7 @@ export default function Home() {
                           {song.artist}
                         </p>
                       </div>
-                      <div className="flex items-center gap-4 px-4 text-slate-500 text-xs font-bold w-32 truncate">
+                      <div className="hidden md:flex items-center gap-4 px-4 text-slate-500 text-xs font-bold w-32 truncate">
                         {song.album}
                       </div>
                       <div className="flex items-center gap-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
@@ -1519,7 +1519,7 @@ export default function Home() {
                             key={`albumsong-${song.id}-${i}`} 
                             onClick={() => playSong(song, uniqueAlbumSongs)} 
                             className={cn(
-                              "glass-card flex items-center gap-4 p-3 rounded-2xl group cursor-pointer hover:bg-white/5 border-transparent transition-all duration-500",
+                              "glass-card flex items-center gap-2 md:gap-4 p-3 rounded-2xl group cursor-pointer hover:bg-white/5 border-transparent transition-all duration-500",
                               isCurrent ? "bg-white/5 border-accent/20" : ""
                             )}
                           >
@@ -1542,7 +1542,7 @@ export default function Home() {
                                 {song.artist}
                               </p>
                             </div>
-                            <div className="flex items-center gap-4 px-4 text-slate-500 text-xs font-bold w-32 truncate">
+                            <div className="hidden md:flex items-center gap-4 px-4 text-slate-500 text-xs font-bold w-32 truncate">
                               {song.genre}
                             </div>
                             <div className="flex items-center gap-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">

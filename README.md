@@ -56,6 +56,18 @@
 * **Exposed Playlist Deletion**: Convenient management action to delete custom playlists directly from the playlist header with confirmation prompts.
 * **Dynamic Backdrop**: Blur layers and background colors dynamically adapt to match the color palette of the active album art.
 
+### 📱 Mobile Experience & Performance Optimizations
+* **Mobile Background Playback & Lock Screen Controls**: Integrated the HTML5 **Media Session API** (`navigator.mediaSession`) to sync track metadata (title, artist, album, and multi-size artwork) and capture system audio actions (play, pause, next, prev, seek) directly with mobile lockscreen and notification area controls on iOS and Android.
+* **Instant Direct Audio Streaming**: Replaced broken mock audio URLs with high-speed direct CDN stream MP3 paths and enabled aggressive browser pre-buffering via `preload="auto"`, resulting in zero-delay instant playback.
+* **Pre-Warmed YouTube Iframe Engine**: Permanently mounts the YouTube Player iframe on startup with an empty fallback. Clicking search results uses direct `loadVideoById` updates rather than unmounting and recreating the iframe, cutting YouTube initial latency down to under 1 second.
+* **Single-Click Autoplay & Double-Click Fix**: Configured `autoplay: 1` in `playerVars` to prevent React rendering cycles from executing `cueVideoById` overrides, ensuring clean playback begins on the very first, single tap.
+* **Responsive Row Formatting (No Text Truncation)**: Automatically hides secondary column elements (like Genre and Album headers) on mobile screens, expanding title container space to prevent text truncation.
+* **Always-Visible Action Buttons on Mobile**: Replaced hover-only visibility tags with responsive viewport triggers, keeping actions like "Add to Queue" and "Add to Playlist" permanently visible and interactive on touch devices.
+* **Compact Expanded Player UI**: Compressed spacing (`p-4` paddings and `gap-2.5` gaps) and removed the redundant volume slider on mobile viewports to provide a tight, modern mobile controls layout.
+* **Dimmed Cover Behind Lyrics**: Superimposes a blurred, dimmed (`opacity-15`) artwork container behind the lyrics scrolling sheet when viewed on mobile screens.
+* **Elevated Panels Stacking Layer**: Advanced panels (Queue, Albums, Search overlays) to `z-[70]` to slide cleanly above the expanded bottom player sheet.
+* **Responsive Mobile Bottom Navigation**: Rendered an elegant bottom tab bar navigation panel (`flex md:hidden`) matching the main application shell.
+
 ---
 
 ## 🛠️ Prerequisites

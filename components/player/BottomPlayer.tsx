@@ -166,7 +166,7 @@ export function BottomPlayer() {
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: 100, opacity: 0 }}
           transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
-          className="fixed bottom-0 left-0 right-0 z-50 flex justify-center py-6 px-10 pointer-events-none"
+          className="fixed bottom-16 md:bottom-0 left-0 right-0 z-50 flex justify-center py-3 md:py-6 px-4 md:px-10 pointer-events-none"
         >
           {/* Floating Album Sidebar */}
           <AnimatePresence>
@@ -359,7 +359,8 @@ export function BottomPlayer() {
             )}
           </AnimatePresence>
 
-          <footer className="w-full max-w-7xl glass-panel bg-black/10 backdrop-blur-xl rounded-[2.5rem] p-3 px-8 shadow-2xl flex items-center justify-between pointer-events-auto transition-all">
+          {/* Desktop player footer */}
+          <footer className="hidden md:flex w-full max-w-7xl glass-panel bg-black/10 backdrop-blur-xl rounded-[2.5rem] p-3 px-8 shadow-2xl items-center justify-between pointer-events-auto transition-all">
             {/* Now Playing */}
             <div className="flex items-center gap-4 w-1/4">
               <div
@@ -486,6 +487,48 @@ export function BottomPlayer() {
               <VolumeSlider volume={volume} setVolume={setVolume} className="w-36 ml-1" />
               <button onClick={toggleExpanded} className="text-slate-400 hover:text-white transition-colors">
                 <span className="material-symbols-outlined text-2xl">fullscreen</span>
+              </button>
+            </div>
+          </footer>
+
+          {/* Mobile player footer */}
+          <footer className="relative flex md:hidden w-full glass-panel bg-black/80 backdrop-blur-xl rounded-2xl p-2 px-4 shadow-2xl items-center justify-between pointer-events-auto border border-white/5 overflow-hidden">
+            {/* Thin progress bar line at the top */}
+            <div className="absolute top-0 left-0 right-0 h-0.5 bg-white/10 rounded-t-2xl overflow-hidden pointer-events-none">
+              <div 
+                className="h-full bg-accent transition-all duration-300" 
+                style={{ width: `${progress * 100}%` }}
+              />
+            </div>
+
+            <div className="flex items-center gap-3 min-w-0 flex-1 py-1 cursor-pointer" onClick={toggleExpanded}>
+              <img alt={currentSong.title} className="size-10 rounded-lg object-cover flex-shrink-0 border border-white/5" src={currentSong.albumArt} />
+              <div className="flex flex-col min-w-0">
+                <span className="text-xs font-bold text-white truncate">{currentSong.title}</span>
+                <span className="text-[9px] text-white/50 truncate font-semibold">{currentSong.artist}</span>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3 flex-shrink-0">
+              <button
+                onClick={(e) => { e.stopPropagation(); toggleLike(currentSong); }}
+                className={cn("transition-all flex items-center justify-center p-1", likedSongs.some(s => s.id === currentSong.id) ? "text-accent" : "text-slate-400")}
+              >
+                <span className={cn("material-symbols-outlined text-lg", likedSongs.some(s => s.id === currentSong.id) ? "fill-[1]" : "")}>favorite</span>
+              </button>
+              <button
+                onClick={(e) => { e.stopPropagation(); togglePlay(); }}
+                className="size-8 bg-white text-black rounded-full flex items-center justify-center shadow-lg transform active:scale-90 transition-transform"
+              >
+                <span className="material-symbols-outlined fill-[1] text-lg">
+                  {isPlaying ? 'pause' : 'play_arrow'}
+                </span>
+              </button>
+              <button 
+                onClick={(e) => { e.stopPropagation(); playNext(); }} 
+                className="text-slate-300 hover:text-white flex items-center justify-center p-1"
+              >
+                <span className="material-symbols-outlined text-lg">skip_next</span>
               </button>
             </div>
           </footer>

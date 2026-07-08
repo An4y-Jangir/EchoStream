@@ -167,7 +167,7 @@ export function ExpandedPlayer() {
           />
 
           {/* Header */}
-          <div className="relative z-10 flex items-center justify-between px-10 pt-8 pb-4">
+          <div className="relative z-10 flex items-center justify-between px-6 md:px-10 pt-8 pb-4">
             <div className="flex items-center gap-4">
               <button 
                 onClick={toggleExpanded}
@@ -192,13 +192,16 @@ export function ExpandedPlayer() {
           </div>
 
           {/* Main Content (Split Screen) */}
-          <div className="relative z-10 flex-1 flex flex-col lg:flex-row items-center justify-center px-10 gap-16 min-h-0 w-full max-w-[100rem] mx-auto pb-40">
+          <div className="relative z-10 flex-1 flex flex-col lg:flex-row items-center justify-center px-6 lg:px-10 gap-8 lg:gap-16 min-h-0 w-full max-w-[100rem] mx-auto pb-48 md:pb-40">
             {/* Left: Album Cover */}
-            <div className="w-full lg:w-[45%] flex items-center justify-end shrink-0 max-w-[600px]">
+            <div className={cn(
+              "w-full lg:w-[45%] flex items-center justify-center lg:justify-end shrink-0 transition-all duration-500",
+              isLyricsVisible ? "hidden lg:flex" : "flex"
+            )}>
               <motion.img 
                 src={currentSong.albumArt} 
                 alt={currentSong.title}
-                className="w-[85%] aspect-square rounded-[2rem] object-cover"
+                className="w-[70%] sm:w-[60%] lg:w-[85%] aspect-square rounded-[1.5rem] lg:rounded-[2rem] object-cover"
                 initial={{ scale: 0.9, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 transition={{ delay: 0.2 }}
@@ -209,8 +212,23 @@ export function ExpandedPlayer() {
             </div>
 
             {/* Right: Lyrics Only */}
-            <div className="w-full lg:w-[55%] h-[80vh] flex flex-col justify-center max-w-[800px]">
-               <LiveLyrics key={currentSong.id} lyrics={currentSong.lyrics} currentTime={currentTime} />
+            <div className={cn(
+              "relative w-full lg:w-[55%] flex flex-col justify-center transition-all duration-500 max-w-[800px] overflow-hidden rounded-[2rem]",
+              isLyricsVisible ? "h-[50vh] lg:h-[80vh] flex" : "hidden lg:flex h-0 lg:h-[80vh] overflow-hidden"
+            )}>
+              {/* Dimmed Album Cover Background on Mobile when lyrics are active */}
+              {isLyricsVisible && (
+                <div className="absolute inset-0 z-0 flex items-center justify-center pointer-events-none md:hidden">
+                  <img 
+                    src={currentSong.albumArt} 
+                    alt="" 
+                    className="w-[75%] aspect-square rounded-[2rem] object-cover opacity-15 blur-[2px]" 
+                  />
+                </div>
+              )}
+              <div className="relative z-10 w-full h-full flex flex-col justify-center">
+                <LiveLyrics key={currentSong.id} lyrics={currentSong.lyrics} currentTime={currentTime} />
+              </div>
             </div>
           </div>
 
@@ -222,7 +240,7 @@ export function ExpandedPlayer() {
                  animate={{ x: 0, borderTopRightRadius: '0%', borderBottomRightRadius: '0%' }}
                  exit={{ x: '-100%', borderTopRightRadius: '100%', borderBottomRightRadius: '100%' }}
                  transition={{ type: 'spring', bounce: 0.35, duration: 0.6 }}
-                 className="absolute left-0 top-0 bottom-0 w-80 bg-black/40 backdrop-blur-xl z-40 p-6 pt-24 overflow-y-auto no-scrollbar shadow-[20px_0_40px_-10px_rgba(0,0,0,0.5)] border-r border-white/5 flex flex-col"
+                 className="absolute left-0 top-0 bottom-0 w-80 bg-black/40 backdrop-blur-xl z-[70] p-6 pt-24 overflow-y-auto no-scrollbar shadow-[20px_0_40px_-10px_rgba(0,0,0,0.5)] border-r border-white/5 flex flex-col"
               >
                 <div className="flex items-center justify-between mb-8">
                   <h3 className="text-xl font-bold text-white">Up Next</h3>
@@ -304,7 +322,7 @@ export function ExpandedPlayer() {
                  animate={{ x: 0, borderTopLeftRadius: '0%', borderBottomLeftRadius: '0%' }}
                  exit={{ x: '100%', borderTopLeftRadius: '100%', borderBottomLeftRadius: '100%' }}
                  transition={{ type: 'spring', bounce: 0.35, duration: 0.6 }}
-                 className="absolute right-0 top-0 bottom-0 w-80 bg-black/40 backdrop-blur-xl z-40 p-6 pt-24 overflow-y-auto no-scrollbar shadow-[-20px_0_40px_-10px_rgba(0,0,0,0.5)] border-l border-white/5 flex flex-col"
+                 className="absolute right-0 top-0 bottom-0 w-80 bg-black/40 backdrop-blur-xl z-[70] p-6 pt-24 overflow-y-auto no-scrollbar shadow-[-20px_0_40px_-10px_rgba(0,0,0,0.5)] border-l border-white/5 flex flex-col"
               >
                 <div className="flex items-center justify-between mb-6">
                   <h3 className="text-xl font-bold text-white">Album Info</h3>
@@ -405,104 +423,184 @@ export function ExpandedPlayer() {
                 )}
               </motion.div>
             )}
-          </AnimatePresence>
-
-          {/* Bottom Player Bar */}
+          </AnimatePresence>          {/* Bottom Player Bar */}
           <div className="fixed bottom-8 left-1/2 -translate-x-1/2 w-[95%] max-w-7xl z-[60] flex flex-col">
             <div className="glass-panel bg-black/40 backdrop-blur-2xl border border-white/10 rounded-3xl p-6 shadow-2xl flex flex-col gap-4">
               
-              {/* Progress Bar Container */}
-              <div className="flex items-center gap-4 w-full">
-                <span className="text-xs font-semibold tabular-nums text-white/50">{formatTime(displayCurrentTime)}</span>
-                <div 
-                  className="flex-1 h-1.5 bg-white/10 hover:bg-white/20 hover:h-2 transition-all rounded-full overflow-hidden cursor-pointer relative group"
-                  onClick={handleSeek}
-                >
+              {/* Desktop Controls (hidden on mobile) */}
+              <div className="hidden md:flex flex-col gap-4 w-full">
+                {/* Progress Bar Container */}
+                <div className="flex items-center gap-4 w-full">
+                  <span className="text-xs font-semibold tabular-nums text-white/50">{formatTime(displayCurrentTime)}</span>
                   <div 
-                    className="absolute inset-y-0 left-0 bg-white rounded-full transition-all pointer-events-none"
-                    style={{ width: `${progress * 100}%` }}
-                  />
-                  <div 
-                    className="absolute top-1/2 -translate-y-1/2 w-3 h-3 bg-white rounded-full shadow-[0_0_10px_rgba(255,255,255,0.8)] opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity" 
-                    style={{ left: `calc(${progress * 100}% - 6px)` }} 
-                  />
+                    className="flex-1 h-1.5 bg-white/10 hover:bg-white/20 hover:h-2 transition-all rounded-full overflow-hidden cursor-pointer relative group"
+                    onClick={handleSeek}
+                  >
+                    <div 
+                      className="absolute inset-y-0 left-0 bg-white rounded-full transition-all pointer-events-none"
+                      style={{ width: `${progress * 100}%` }}
+                    />
+                    <div 
+                      className="absolute top-1/2 -translate-y-1/2 w-3 h-3 bg-white rounded-full shadow-[0_0_10px_rgba(255,255,255,0.8)] opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity" 
+                      style={{ left: `calc(${progress * 100}% - 6px)` }} 
+                    />
+                  </div>
+                  <span className="text-xs font-semibold tabular-nums text-white/50">{formatTime(displayDuration)}</span>
                 </div>
-                <span className="text-xs font-semibold tabular-nums text-white/50">{formatTime(displayDuration)}</span>
+
+                {/* Controls Section */}
+                <div className="flex items-center justify-between w-full">
+                  
+                  {/* Left: Song Info */}
+                  <div className="flex items-center gap-4 w-1/4 min-w-0">
+                    <div className="flex flex-col min-w-0">
+                      <GooeyTooltip text={currentSong.title} className="text-base font-bold text-white" />
+                      <span
+                        onClick={() => {
+                          setViewingArtist(currentSong.artist, currentSong.artistId);
+                          toggleExpanded();
+                        }}
+                        className="text-sm text-white/50 font-medium hover:text-accent hover:underline cursor-pointer truncate transition-colors"
+                      >
+                        {currentSong.artist}
+                      </span>
+                    </div>
+                    <button 
+                      onClick={(e) => { e.stopPropagation(); toggleLike(currentSong); }}
+                      className={cn("hover:scale-110 active:scale-95 transition-all ml-2", likedSongs.some(s => s.id === currentSong.id) ? "text-accent" : "text-white")}
+                    >
+                      <span className={cn("material-symbols-outlined text-2xl", likedSongs.some(s => s.id === currentSong.id) ? "fill-[1]" : "")}>favorite</span>
+                    </button>
+                  </div>
+
+                  {/* Center: Play Controls */}
+                  <div className="flex items-center gap-8 justify-center flex-1">
+                    <button onClick={toggleShuffle} className={`${isShuffle ? 'text-accent' : 'text-white/50 hover:text-white'} transition-colors`}>
+                      <span className="material-symbols-outlined text-xl">shuffle</span>
+                    </button>
+                    <button onClick={playPrevious} className="text-white hover:scale-110 transition-transform">
+                      <span className="material-symbols-outlined text-3xl">skip_previous</span>
+                    </button>
+                    <button 
+                      onClick={togglePlay}
+                      className="size-12 bg-white text-black rounded-full flex items-center justify-center hover:scale-105 active:scale-95 transition-all shadow-xl"
+                    >
+                      <span className="material-symbols-outlined fill-[1] text-3xl">{isPlaying ? 'pause' : 'play_arrow'}</span>
+                    </button>
+                    <button onClick={playNext} className="text-white hover:scale-110 transition-transform">
+                      <span className="material-symbols-outlined text-3xl">skip_next</span>
+                    </button>
+                    <button onClick={toggleRepeat} className={`${isRepeat ? 'text-accent' : 'text-white/50 hover:text-white'} transition-colors`}>
+                      <span className="material-symbols-outlined text-xl">{isRepeat ? 'repeat_one' : 'repeat'}</span>
+                    </button>
+                  </div>
+
+                  {/* Right: Tools & Volume */}
+                  <div className="flex items-center justify-end gap-5 w-1/4">
+                    <button 
+                      id="expanded-queue-btn" 
+                      onClick={toggleQueue} 
+                      className={cn("relative transition-colors p-1.5 rounded-lg", isQueueVisible ? "text-accent" : "text-white/50 hover:text-white")}
+                    >
+                      <span className="material-symbols-outlined text-xl relative z-10">queue_music</span>
+                      <AnimatePresence>
+                        {isQueueLanding && (
+                          <motion.div 
+                            key="queue-expanded-landing-pulse"
+                            className="absolute inset-0 bg-accent/20 rounded-lg z-0"
+                            initial={{ opacity: 0, scale: 0.8 }}
+                            animate={{ opacity: [0, 1, 0], scale: [0.8, 1.4, 1.1] }}
+                            transition={{ duration: 0.6 }}
+                          />
+                        )}
+                      </AnimatePresence>
+                    </button>
+                    <button onClick={toggleLyrics} className={cn("transition-colors p-1.5", isLyricsVisible ? "text-accent" : "text-white/50 hover:text-white")} title="Toggle lyrics">
+                      <span className="material-symbols-outlined text-xl">lyrics</span>
+                    </button>
+                    <button onClick={toggleAlbum} className={`transition-colors ${isAlbumVisible ? "text-accent" : "text-white/50 hover:text-white"}`} title="Album info & suggestions">
+                      <span className="material-symbols-outlined text-xl">album</span>
+                    </button>
+                    <VolumeSlider volume={volume} setVolume={setVolume} className="w-36 ml-2" />
+                  </div>
+                </div>
               </div>
 
-              {/* Controls Section */}
-              <div className="flex items-center justify-between w-full">
-                
-                {/* Left: Song Info */}
-                <div className="flex items-center gap-4 w-1/4 min-w-0">
+              {/* Mobile Controls (visible only on mobile) */}
+              <div className="flex md:hidden flex-col gap-4 w-full">
+                {/* Title & Artist & Favorite */}
+                <div className="flex items-center justify-between">
                   <div className="flex flex-col min-w-0">
-                    <GooeyTooltip text={currentSong.title} className="text-base font-bold text-white" />
-                    <span
+                    <span className="text-lg font-bold text-white truncate">{currentSong.title}</span>
+                    <span 
                       onClick={() => {
                         setViewingArtist(currentSong.artist, currentSong.artistId);
                         toggleExpanded();
                       }}
-                      className="text-sm text-white/50 font-medium hover:text-accent hover:underline cursor-pointer truncate transition-colors"
+                      className="text-xs text-white/55 font-semibold hover:text-accent truncate transition-colors cursor-pointer mt-1"
                     >
                       {currentSong.artist}
                     </span>
                   </div>
                   <button 
                     onClick={(e) => { e.stopPropagation(); toggleLike(currentSong); }}
-                    className={cn("hover:scale-110 active:scale-95 transition-all ml-2", likedSongs.some(s => s.id === currentSong.id) ? "text-accent" : "text-white")}
+                    className={cn("hover:scale-110 active:scale-95 transition-all p-1 flex items-center justify-center", likedSongs.some(s => s.id === currentSong.id) ? "text-accent" : "text-white")}
                   >
                     <span className={cn("material-symbols-outlined text-2xl", likedSongs.some(s => s.id === currentSong.id) ? "fill-[1]" : "")}>favorite</span>
                   </button>
                 </div>
 
-                {/* Center: Play Controls */}
-                <div className="flex items-center gap-8 justify-center flex-1">
-                  <button onClick={toggleShuffle} className={`${isShuffle ? 'text-accent' : 'text-white/50 hover:text-white'} transition-colors`}>
+                {/* Progress Bar */}
+                <div className="flex flex-col gap-1 w-full mt-2">
+                  <div 
+                    className="w-full h-1.5 bg-white/10 rounded-full cursor-pointer relative"
+                    onClick={handleSeek}
+                  >
+                    <div 
+                      className="absolute inset-y-0 left-0 bg-white rounded-full pointer-events-none"
+                      style={{ width: `${progress * 100}%` }}
+                    />
+                  </div>
+                  <div className="flex justify-between text-[10px] text-white/50 font-bold tabular-nums">
+                    <span>{formatTime(displayCurrentTime)}</span>
+                    <span>{formatTime(displayDuration)}</span>
+                  </div>
+                </div>
+
+                {/* Playback Controls Row */}
+                <div className="flex items-center justify-between px-2 mt-2">
+                  <button onClick={toggleShuffle} className={`${isShuffle ? 'text-accent' : 'text-white/50'} transition-colors`}>
                     <span className="material-symbols-outlined text-xl">shuffle</span>
                   </button>
-                  <button onClick={playPrevious} className="text-white hover:scale-110 transition-transform">
-                    <span className="material-symbols-outlined text-3xl">skip_previous</span>
+                  <button onClick={playPrevious} className="text-white">
+                    <span className="material-symbols-outlined text-2xl">skip_previous</span>
                   </button>
                   <button 
                     onClick={togglePlay}
-                    className="size-12 bg-white text-black rounded-full flex items-center justify-center hover:scale-105 active:scale-95 transition-all shadow-xl"
+                    className="size-12 bg-white text-black rounded-full flex items-center justify-center shadow-xl transform active:scale-95 transition-all"
                   >
-                    <span className="material-symbols-outlined fill-[1] text-3xl">{isPlaying ? 'pause' : 'play_arrow'}</span>
+                    <span className="material-symbols-outlined fill-[1] text-2xl">{isPlaying ? 'pause' : 'play_arrow'}</span>
                   </button>
-                  <button onClick={playNext} className="text-white hover:scale-110 transition-transform">
-                    <span className="material-symbols-outlined text-3xl">skip_next</span>
+                  <button onClick={playNext} className="text-white">
+                    <span className="material-symbols-outlined text-2xl">skip_next</span>
                   </button>
-                  <button onClick={toggleRepeat} className={`${isRepeat ? 'text-accent' : 'text-white/50 hover:text-white'} transition-colors`}>
+                  <button onClick={toggleRepeat} className={`${isRepeat ? 'text-accent' : 'text-white/50'} transition-colors`}>
                     <span className="material-symbols-outlined text-xl">{isRepeat ? 'repeat_one' : 'repeat'}</span>
                   </button>
                 </div>
 
-                {/* Right: Tools & Volume */}
-                <div className="flex items-center justify-end gap-5 w-1/4">
-                  <button 
-                    id="expanded-queue-btn" 
-                    onClick={toggleQueue} 
-                    className={cn("relative transition-colors p-1.5 rounded-lg", isQueueVisible ? "text-accent" : "text-white/50 hover:text-white")}
-                  >
-                    <span className="material-symbols-outlined text-xl relative z-10">queue_music</span>
-                    <AnimatePresence>
-                      {isQueueLanding && (
-                        <motion.div 
-                          key="queue-expanded-landing-pulse"
-                          className="absolute inset-0 bg-accent/20 rounded-lg z-0"
-                          initial={{ opacity: 0, scale: 0.8 }}
-                          animate={{ opacity: [0, 1, 0], scale: [0.8, 1.4, 1.1] }}
-                          transition={{ duration: 0.6 }}
-                        />
-                      )}
-                    </AnimatePresence>
+                {/* Tools Row */}
+                <div className="flex items-center justify-between px-1 mt-2 text-white/50 border-t border-white/5 pt-3">
+                  <button onClick={toggleQueue} className={cn("transition-colors p-1", isQueueVisible ? "text-accent" : "hover:text-white")}>
+                    <span className="material-symbols-outlined text-xl">queue_music</span>
                   </button>
-                  <button onClick={toggleAlbum} className={`transition-colors ${isAlbumVisible ? "text-accent" : "text-white/50 hover:text-white"}`} title="Album info & suggestions">
+                  <button onClick={toggleLyrics} className={cn("transition-colors p-1", isLyricsVisible ? "text-accent" : "hover:text-white")}>
+                    <span className="material-symbols-outlined text-xl">lyrics</span>
+                  </button>
+                  <button onClick={toggleAlbum} className={cn("transition-colors p-1", isAlbumVisible ? "text-accent" : "hover:text-white")}>
                     <span className="material-symbols-outlined text-xl">album</span>
                   </button>
-                  <VolumeSlider volume={volume} setVolume={setVolume} className="w-36 ml-2" />
                 </div>
-
               </div>
             </div>
           </div>

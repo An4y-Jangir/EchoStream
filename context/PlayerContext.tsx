@@ -546,6 +546,8 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
+
+
   // Persistence: Load from localStorage
   useEffect(() => {
     const savedLiked = localStorage.getItem('echo-likedSongs');
@@ -1063,6 +1065,87 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
+
+  // Media Session API integration
+  useEffect(() => {
+    if (typeof window === "undefined" || !("mediaSession" in navigator) || !currentSong) return;
+
+    // Set metadata
+    navigator.mediaSession.metadata = new MediaMetadata({
+      title: currentSong.title,
+      artist: currentSong.artist,
+      album: currentSong.album || "EchoStream",
+      artwork: [
+        { src: currentSong.albumArt, sizes: "96x96", type: "image/jpeg" },
+        { src: currentSong.albumArt, sizes: "128x128", type: "image/jpeg" },
+        { src: currentSong.albumArt, sizes: "192x192", type: "image/jpeg" },
+        { src: currentSong.albumArt, sizes: "256x256", type: "image/jpeg" },
+        { src: currentSong.albumArt, sizes: "384x384", type: "image/jpeg" },
+        { src: currentSong.albumArt, sizes: "512x512", type: "image/jpeg" },
+      ]
+    });
+
+    // Sync playback state
+    navigator.mediaSession.playbackState = isPlaying ? "playing" : "paused";
+  }, [currentSong, isPlaying]);
+
+  // Media Session Action Handlers
+  useEffect(() => {
+    if (typeof window === "undefined" || !("mediaSession" in navigator)) return;
+
+    try {
+      navigator.mediaSession.setActionHandler("play", () => {
+        setIsPlaying(true);
+        if (isYoutubeModeRef.current && ytPlayer) {
+          try { ytPlayer.playVideo(); } catch (e) {}
+        } else {
+          const activeAudio = activeAudioIndexRef.current === 1 ? audioRef1.current : audioRef2.current;
+          if (activeAudio) activeAudio.play().catch(() => {});
+        }
+      });
+
+      navigator.mediaSession.setActionHandler("pause", () => {
+        setIsPlaying(false);
+        if (isYoutubeModeRef.current && ytPlayer) {
+          try { ytPlayer.pauseVideo(); } catch (e) {}
+        } else {
+          const activeAudio = activeAudioIndexRef.current === 1 ? audioRef1.current : audioRef2.current;
+          if (activeAudio) activeAudio.pause();
+        }
+      });
+
+      navigator.mediaSession.setActionHandler("previoustrack", () => {
+        playPrevious();
+      });
+
+      navigator.mediaSession.setActionHandler("nexttrack", () => {
+        playNext();
+      });
+
+      navigator.mediaSession.setActionHandler("seekto", (details) => {
+        if (details.seekTime !== undefined && details.seekTime !== null) {
+          const activeAudio = activeAudioIndexRef.current === 1 ? audioRef1.current : audioRef2.current;
+          if (isYoutubeModeRef.current && ytPlayer) {
+            try { ytPlayer.seekTo(details.seekTime, true); } catch (e) {}
+          } else if (activeAudio && activeAudio.duration) {
+            activeAudio.currentTime = details.seekTime;
+          }
+        }
+      });
+    } catch (e) {
+      console.warn("Failed to set Media Session actions:", e);
+    }
+
+    return () => {
+      if (typeof window !== "undefined" && "mediaSession" in navigator) {
+        navigator.mediaSession.setActionHandler("play", null);
+        navigator.mediaSession.setActionHandler("pause", null);
+        navigator.mediaSession.setActionHandler("previoustrack", null);
+        navigator.mediaSession.setActionHandler("nexttrack", null);
+        navigator.mediaSession.setActionHandler("seekto", null);
+      }
+    };
+  }, [playNext, playPrevious, ytPlayer]);
 
   return (
     <PlayerContext.Provider

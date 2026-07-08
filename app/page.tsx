@@ -464,7 +464,7 @@ export default function Home() {
         </div>
 
       {/* Sidebar */}
-      <aside className="w-64 flex-shrink-0 flex flex-col p-6 gap-6 z-20 relative bg-black/10 backdrop-blur-md">
+      <aside className="hidden md:flex w-64 flex-shrink-0 flex flex-col p-6 gap-6 z-20 relative bg-black/10 backdrop-blur-md">
         <div 
           onClick={cycleLogo}
           onMouseEnter={() => setIsLogoHovered(true)}
@@ -757,7 +757,7 @@ export default function Home() {
 
       {/* Main Content Area */}
       <main className="flex-1 flex flex-col overflow-y-auto no-scrollbar relative z-10">
-        <header className="sticky top-0 z-30 flex items-center justify-between px-10 py-5 bg-background-dark/20 backdrop-blur-md">
+        <header className="sticky top-0 z-30 flex items-center justify-between px-4 md:px-10 py-5 bg-background-dark/20 backdrop-blur-md">
           <div className="flex items-center gap-6 flex-1">
             {/* View Navigation Buttons */}
             <div className="flex items-center gap-3.5 mr-3">
@@ -863,7 +863,57 @@ export default function Home() {
           </div>
         </header>
 
-        <div className="px-10 py-10 pb-40 space-y-20">
+        <div className="px-4 md:px-10 py-6 md:py-10 pb-48 md:pb-40 space-y-12 md:space-y-20">
+          {/* Mobile Library Sub-tabs */}
+          {['favorites', 'recent', 'local', 'playlist'].includes(activeTab) && (
+            <div className="flex md:hidden items-center gap-2 overflow-x-auto no-scrollbar pb-4 border-b border-white/5 mb-6 px-1">
+              <button 
+                onClick={() => setActiveTab('favorites')}
+                className={cn("px-4 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all border", 
+                  activeTab === 'favorites' ? "bg-accent text-white border-accent" : "bg-white/5 text-slate-400 border-white/5"
+                )}
+              >
+                Favorites
+              </button>
+              <button 
+                onClick={() => setActiveTab('recent')}
+                className={cn("px-4 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all border", 
+                  activeTab === 'recent' ? "bg-accent text-white border-accent" : "bg-white/5 text-slate-400 border-white/5"
+                )}
+              >
+                Recent
+              </button>
+              <button 
+                onClick={() => setActiveTab('local')}
+                className={cn("px-4 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all border", 
+                  activeTab === 'local' ? "bg-accent text-white border-accent" : "bg-white/5 text-slate-400 border-white/5"
+                )}
+              >
+                Local
+              </button>
+              {playlists.map(p => (
+                <button 
+                  key={p.id}
+                  onClick={() => { setActiveTab('playlist'); setSelectedPlaylistId(p.id); }}
+                  className={cn("px-4 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all border", 
+                    activeTab === 'playlist' && selectedPlaylistId === p.id ? "bg-accent text-white border-accent" : "bg-white/5 text-slate-400 border-white/5"
+                  )}
+                >
+                  {p.title}
+                </button>
+              ))}
+              <button 
+                onClick={() => {
+                  const name = prompt("Enter playlist name:");
+                  if (name) createPlaylist(name);
+                }}
+                className="px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap bg-white/5 text-accent border border-white/5 flex items-center gap-1"
+              >
+                <span className="material-symbols-outlined text-xs">add</span> New
+              </button>
+            </div>
+          )}
+
           {activeTab === 'discover' && (
             <>
               {/* Features Section - Active Onboarding */}
@@ -1053,7 +1103,7 @@ export default function Home() {
                               {song.artist}
                             </p>
                           </div>
-                          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <div className="flex items-center gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
                             <button 
                               id={`add-btn-${song.id}`}
                               onClick={(e) => { e.stopPropagation(); setAddingSong(song); }} 
@@ -1113,7 +1163,7 @@ export default function Home() {
                             {song.artist}
                           </p>
                         </div>
-                        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div className="flex items-center gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
                           <button 
                             id={`add-btn-${song.id}`}
                             onClick={(e) => { e.stopPropagation(); setAddingSong(song); }} 
@@ -1166,7 +1216,7 @@ export default function Home() {
                             {song.artist}
                           </p>
                         </div>
-                        <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div className="flex items-center gap-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
                           <button 
                             id={`add-btn-${song.id}`}
                             onClick={(e) => { e.stopPropagation(); setAddingSong(song); }} 
@@ -1217,7 +1267,7 @@ export default function Home() {
                             {song.artist}
                           </p>
                         </div>
-                        <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div className="flex items-center gap-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
                           <button 
                             id={`add-btn-${song.id}-fav`}
                             onClick={(e) => { e.stopPropagation(); setAddingSong(song); }} 
@@ -1270,7 +1320,7 @@ export default function Home() {
                               {song.artist}
                             </p>
                           </div>
-                          <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <div className="flex items-center gap-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
                             <button onClick={(e) => { e.stopPropagation(); addToQueue(song); triggerQueueFlight(song, e.currentTarget.getBoundingClientRect()); }} className="size-10 bg-white/10 hover:bg-white/20 text-white rounded-full flex items-center justify-center transition-colors" title="Add to Queue">
                               <span className="material-symbols-outlined fill-[1] text-[20px]">queue_music</span>
                             </button>
@@ -1363,7 +1413,7 @@ export default function Home() {
                       <div className="flex items-center gap-4 px-4 text-slate-500 text-xs font-bold w-32 truncate">
                         {song.album}
                       </div>
-                      <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <div className="flex items-center gap-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
                         <button 
                           onClick={(e) => { e.stopPropagation(); addToQueue(song); triggerQueueFlight(song, e.currentTarget.getBoundingClientRect()); }} 
                           className="size-10 bg-white/5 hover:bg-white/20 text-white rounded-full flex items-center justify-center transition-colors" 
@@ -1495,7 +1545,7 @@ export default function Home() {
                             <div className="flex items-center gap-4 px-4 text-slate-500 text-xs font-bold w-32 truncate">
                               {song.genre}
                             </div>
-                            <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <div className="flex items-center gap-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
                               <button 
                                 id={`add-btn-${song.id}-album`}
                                 onClick={(e) => { e.stopPropagation(); setAddingSong(song); }} 
@@ -1655,7 +1705,7 @@ export default function Home() {
                                   <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wide block mt-0.5">{song.album}</span>
                                 </div>
 
-                                <div className="flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <div className="flex items-center gap-1.5 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
                                   <button 
                                     id={`add-btn-${song.id}`}
                                     onClick={(e) => { e.stopPropagation(); setAddingSong(song); }} 
@@ -2021,6 +2071,44 @@ export default function Home() {
           </div>
         )}
       </AnimatePresence>
+
+      {/* Mobile Navigation Bar */}
+      <nav className="flex md:hidden fixed bottom-0 left-0 right-0 z-40 bg-black/80 backdrop-blur-xl border-t border-white/5 px-4 py-2 justify-around items-center h-16 shadow-[0_-10px_20px_rgba(0,0,0,0.5)]">
+        <button 
+          onClick={() => setActiveTab('discover')} 
+          className={cn("flex flex-col items-center justify-center gap-1 text-[10px] font-bold uppercase transition-colors outline-none", activeTab === 'discover' ? 'text-accent' : 'text-slate-400')}
+        >
+          <span className="material-symbols-outlined text-xl">grid_view</span>
+          Discover
+        </button>
+        <button 
+          onClick={() => setActiveTab('browse')} 
+          className={cn("flex flex-col items-center justify-center gap-1 text-[10px] font-bold uppercase transition-colors outline-none", activeTab === 'browse' ? 'text-accent' : 'text-slate-400')}
+        >
+          <span className="material-symbols-outlined text-xl">explore</span>
+          Browse
+        </button>
+        <button 
+          onClick={() => {
+            if (activeTab === 'favorites' || activeTab === 'recent' || activeTab === 'local' || activeTab === 'playlist') {
+              // Stay
+            } else {
+              setActiveTab('favorites');
+            }
+          }} 
+          className={cn("flex flex-col items-center justify-center gap-1 text-[10px] font-bold uppercase transition-colors outline-none", ['favorites', 'recent', 'local', 'playlist'].includes(activeTab) ? 'text-accent' : 'text-slate-400')}
+        >
+          <span className="material-symbols-outlined text-xl">library_music</span>
+          Library
+        </button>
+        <button 
+          onClick={() => setActiveTab('settings')} 
+          className={cn("flex flex-col items-center justify-center gap-1 text-[10px] font-bold uppercase transition-colors outline-none", activeTab === 'settings' ? 'text-accent' : 'text-slate-400')}
+        >
+          <span className="material-symbols-outlined text-xl">settings</span>
+          Settings
+        </button>
+      </nav>
 
       <BottomPlayer />
       <ExpandedPlayer />

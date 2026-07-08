@@ -497,10 +497,12 @@ export function ExpandedPlayer() {
 
                   {/* Right: Tools & Volume */}
                   <div className="flex items-center justify-end gap-5 w-1/4">
-                    <button 
+                    <motion.button 
                       id="expanded-queue-btn" 
                       onClick={toggleQueue} 
                       className={cn("relative transition-colors p-1.5 rounded-lg", isQueueVisible ? "text-accent" : "text-white/50 hover:text-white")}
+                      animate={isQueueLanding ? { scale: [1, 1.3, 0.9, 1] } : { scale: 1 }}
+                      transition={{ duration: 0.5 }}
                     >
                       <span className="material-symbols-outlined text-xl relative z-10">queue_music</span>
                       <AnimatePresence>
@@ -514,7 +516,7 @@ export function ExpandedPlayer() {
                           />
                         )}
                       </AnimatePresence>
-                    </button>
+                    </motion.button>
                     <button onClick={toggleLyrics} className={cn("transition-colors p-1.5", isLyricsVisible ? "text-accent" : "text-white/50 hover:text-white")} title="Toggle lyrics">
                       <span className="material-symbols-outlined text-xl">lyrics</span>
                     </button>

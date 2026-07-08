@@ -459,10 +459,12 @@ export function BottomPlayer() {
 
             {/* Volume & Tools */}
             <div className="flex items-center justify-end gap-5 w-1/4">
-              <button
+              <motion.button
                 id="bottom-queue-btn"
                 onClick={(e) => { e.stopPropagation(); toggleQueue(); }}
                 className={cn("relative transition-colors p-1.5 rounded-lg", isQueueVisible ? "text-accent" : "text-slate-400 hover:text-white")}
+                animate={isQueueLanding ? { scale: [1, 1.3, 0.9, 1] } : { scale: 1 }}
+                transition={{ duration: 0.5 }}
               >
                 <span className="material-symbols-outlined text-2xl relative z-10">queue_music</span>
                 <AnimatePresence>
@@ -476,7 +478,7 @@ export function BottomPlayer() {
                     />
                   )}
                 </AnimatePresence>
-              </button>
+              </motion.button>
               <button
                 onClick={(e) => { e.stopPropagation(); toggleAlbum(); }}
                 className={cn("transition-colors", isAlbumVisible ? "text-accent" : "text-slate-400 hover:text-white")}

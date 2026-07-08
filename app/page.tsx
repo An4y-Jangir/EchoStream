@@ -709,6 +709,12 @@ export default function Home() {
                   onClick={() => { setActiveTab('playlist'); setSelectedPlaylistId(p.id); }} 
                   initial="initial"
                   whileHover="hovered"
+                  animate={landingPlaylistId === p.id ? "landingBounce" : "initial"}
+                  variants={{
+                    initial: { scale: 1 },
+                    hovered: { scale: 1.02 },
+                    landingBounce: { scale: [1, 1.1, 0.95, 1], transition: { duration: 0.5 } }
+                  }}
                   className={`nav-item flex items-center gap-4 px-4 py-2.5 rounded-xl cursor-pointer relative transition-all duration-300 ${selectedPlaylistId === p.id && activeTab === 'playlist' ? 'text-white active-nav bg-white/5' : 'text-slate-400 hover:text-white'}`}
                 >
                   <span className="material-symbols-outlined text-lg flex-shrink-0">playlist_play</span>

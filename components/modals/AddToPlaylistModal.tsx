@@ -68,7 +68,7 @@ export function AddToPlaylistModal({ song, onClose, onAdded }: AddToPlaylistModa
               <button 
                 key={playlist.id}
                 onClick={() => onAdded(playlist.id)}
-                className="w-full flex items-center gap-4 p-4 rounded-2xl hover:bg-accent/10 hover:border-accent/20 border border-transparent transition-all group"
+                className="w-full flex items-center gap-4 p-4 rounded-2xl bg-white/[0.02] hover:bg-accent/10 border border-white/5 hover:border-accent/20 hover:scale-[1.01] active:scale-[0.99] transition-all group"
               >
                 <div className="size-10 rounded-lg bg-white/5 flex items-center justify-center group-hover:bg-accent/20 transition-colors">
                   <span className="material-symbols-outlined text-accent text-xl">playlist_add</span>

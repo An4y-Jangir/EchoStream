@@ -8,6 +8,8 @@ import { VolumeSlider } from "./VolumeSlider";
 import { TearAnimation } from "./QueueItem";
 import { Song } from "@/types/music";
 import { MOCK_SONGS } from "@/lib/mockData";
+import { AsciiReveal } from "ascii-reveal";
+import { SkeletonBottomPlayer } from "./SkeletonBottomPlayer";
 
 const slideVariants = {
   initial: (direction: "forward" | "backward") => ({
@@ -92,14 +94,31 @@ export function BottomPlayer() {
   };
 
   const [direction, setDirection] = useState<'forward' | 'backward'>('forward');
+  const [revealTrigger, setRevealTrigger] = useState(0);
+  const prevSongIdRef = useRef<string | undefined>(currentSong?.id);
+  const prevPlayingRef = useRef<boolean>(isPlaying);
+
+  useEffect(() => {
+    const songChanged = currentSong?.id !== prevSongIdRef.current;
+    const startedPlaying = !prevPlayingRef.current && isPlaying;
+
+    if (songChanged || startedPlaying) {
+      setRevealTrigger(prev => prev + 1);
+    }
+
+    prevSongIdRef.current = currentSong?.id;
+    prevPlayingRef.current = isPlaying;
+  }, [currentSong?.id, isPlaying]);
 
   const handlePrevious = () => {
     setDirection('backward');
+    setRevealTrigger(prev => prev + 1);
     playPrevious();
   };
 
   const handleNext = () => {
     setDirection('forward');
+    setRevealTrigger(prev => prev + 1);
     playNext();
   };
 
@@ -113,8 +132,6 @@ export function BottomPlayer() {
     const s = Math.floor(timeInSeconds % 60);
     return `${m}:${s.toString().padStart(2, '0')}`;
   };
-
-  if (!currentSong) return null;
 
   // Assuming a mock duration of 200 for calculation from context
   const displayCurrentTime = isNaN(currentTime) ? 0 : currentTime;
@@ -156,21 +173,35 @@ export function BottomPlayer() {
   });
 
   const allAlbums = Array.from(albumsMap.values());
-  const similarAlbums = allAlbums.filter(a => a && a.name.toLowerCase() !== currentSong.album.toLowerCase());
+  const similarAlbums = currentSong && currentSong.album
+    ? allAlbums.filter(a => a && a.name.toLowerCase() !== currentSong.album.toLowerCase())
+    : allAlbums;
+
+  const handlePlayDefault = () => {
+    if (allAvailableSongs.length > 0) {
+      playSong(allAvailableSongs[0], allAvailableSongs);
+    } else if (MOCK_SONGS.length > 0) {
+      playSong(MOCK_SONGS[0], MOCK_SONGS);
+    }
+  };
+
+  if (isExpanded) return null;
 
   return (
-    <AnimatePresence>
-      {!isExpanded && currentSong && (
-        <motion.div
-          initial={{ y: 100, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          exit={{ y: 100, opacity: 0 }}
-          transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
-          className="fixed bottom-16 md:bottom-0 left-0 right-0 z-50 flex justify-center py-3 md:py-6 px-4 md:px-10 pointer-events-none"
-        >
-          {/* Floating Album Sidebar */}
-          <AnimatePresence>
-            {isAlbumVisible && (
+    <div className="fixed bottom-16 md:bottom-0 left-0 right-0 z-50 flex justify-center py-3 md:py-6 px-4 md:px-10 pointer-events-none">
+      <AnimatePresence mode="wait">
+        {currentSong ? (
+          <motion.div
+            key="active-bottom-player"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+            className="w-full flex justify-center pointer-events-none"
+          >
+            {/* Floating Album Sidebar */}
+            <AnimatePresence>
+              {isAlbumVisible && currentSong && (
               <motion.div
                 initial={{ x: -20, y: 20, scale: 0.9, opacity: 0, transformOrigin: "bottom left" }}
                 animate={{ x: 0, y: 0, scale: 1, opacity: 1 }}
@@ -364,37 +395,34 @@ export function BottomPlayer() {
             {/* Now Playing */}
             <div className="flex items-center gap-4 w-1/4">
               <div
-                className="size-16 flex-shrink-0 rounded-2xl overflow-hidden shadow-2xl shadow-accent/20 cursor-pointer"
+                className="size-16 flex-shrink-0 rounded-2xl overflow-hidden shadow-2xl shadow-accent/20 cursor-pointer border border-white/5"
                 onClick={toggleExpanded}
               >
                 <img alt={currentSong.title} className="w-full h-full object-cover" src={currentSong.albumArt} />
               </div>
               <div className="flex flex-col justify-center relative min-w-0 flex-1 overflow-hidden h-12">
-                <AnimatePresence mode="popLayout" initial={false} custom={direction}>
-                  <motion.div
-                    key={currentSong.id}
-                    custom={direction}
-                    variants={slideVariants}
-                    initial="initial"
-                    animate="animate"
-                    exit="exit"
-                    transition={{ type: "spring", stiffness: 200, damping: 20 }}
-                    className="flex flex-col min-w-0"
+                <AsciiReveal
+                  key={`desktop-title-${currentSong.id}-${revealTrigger}`}
+                  preset="decode"
+                  duration="fast"
+                  speed={0.7}
+                  className="flex flex-col min-w-0"
+                >
+                  <a
+                    className="text-sm font-bold text-white hover:text-accent truncate transition-colors cursor-pointer block leading-tight"
+                    onClick={(e) => { e.preventDefault(); toggleExpanded(); }}
+                    title={currentSong.title}
                   >
-                    <a
-                      className="text-sm font-bold text-white hover:text-accent truncate transition-colors cursor-pointer"
-                      onClick={(e) => { e.preventDefault(); toggleExpanded(); }}
-                    >
-                      {currentSong.title}
-                    </a>
-                    <a
-                      onClick={() => setViewingArtist(currentSong.artist, currentSong.artistId)}
-                      className="text-[10px] text-slate-500 font-bold uppercase tracking-wider hover:text-accent hover:underline truncate transition-colors cursor-pointer"
-                    >
-                      {currentSong.artist}
-                    </a>
-                  </motion.div>
-                </AnimatePresence>
+                    {currentSong.title}
+                  </a>
+                  <a
+                    onClick={() => setViewingArtist(currentSong.artist, currentSong.artistId)}
+                    className="text-[10px] text-slate-400 font-bold uppercase tracking-wider hover:text-accent hover:underline truncate transition-colors cursor-pointer block mt-0.5"
+                    title={currentSong.artist}
+                  >
+                    {currentSong.artist}
+                  </a>
+                </AsciiReveal>
               </div>
               <button
                 onClick={(e) => { e.stopPropagation(); toggleLike(currentSong); }}
@@ -505,10 +533,16 @@ export function BottomPlayer() {
 
             <div className="flex items-center gap-3 min-w-0 flex-1 py-1 cursor-pointer" onClick={toggleExpanded}>
               <img alt={currentSong.title} className="size-10 rounded-lg object-cover flex-shrink-0 border border-white/5" src={currentSong.albumArt} />
-              <div className="flex flex-col min-w-0">
-                <span className="text-xs font-bold text-white truncate">{currentSong.title}</span>
-                <span className="text-[9px] text-white/50 truncate font-semibold">{currentSong.artist}</span>
-              </div>
+              <AsciiReveal
+                key={`mobile-title-${currentSong.id}-${revealTrigger}`}
+                preset="decode"
+                duration="fast"
+                speed={0.75}
+                className="flex flex-col min-w-0"
+              >
+                <span className="text-xs font-bold text-white truncate block">{currentSong.title}</span>
+                <span className="text-[9px] text-white/50 truncate font-semibold block">{currentSong.artist}</span>
+              </AsciiReveal>
             </div>
 
             <div className="flex items-center gap-3 flex-shrink-0">
@@ -527,7 +561,7 @@ export function BottomPlayer() {
                 </span>
               </button>
               <button 
-                onClick={(e) => { e.stopPropagation(); playNext(); }} 
+                onClick={(e) => { e.stopPropagation(); handleNext(); }} 
                 className="text-slate-300 hover:text-white flex items-center justify-center p-1"
               >
                 <span className="material-symbols-outlined text-lg">skip_next</span>
@@ -535,7 +569,19 @@ export function BottomPlayer() {
             </div>
           </footer>
         </motion.div>
+      ) : (
+        <motion.div
+          key="skeleton-bottom-player"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.3 }}
+          className="w-full flex justify-center pointer-events-none"
+        >
+          <SkeletonBottomPlayer onPlayDefault={handlePlayDefault} />
+        </motion.div>
       )}
     </AnimatePresence>
+  </div>
   );
 }

@@ -10,6 +10,7 @@ import { TearAnimation } from "./QueueItem";
 import { Song } from "@/types/music";
 import { MOCK_SONGS } from "@/lib/mockData";
 import { GooeyTooltip } from "@/components/ui/GooeyTooltip";
+import { AsciiReveal } from "ascii-reveal";
 
 export function ExpandedPlayer() {
   const { 
@@ -453,18 +454,24 @@ export function ExpandedPlayer() {
                   
                   {/* Left: Song Info */}
                   <div className="flex items-center gap-4 w-1/4 min-w-0">
-                    <div className="flex flex-col min-w-0">
-                      <GooeyTooltip text={currentSong.title} className="text-base font-bold text-white" />
+                    <AsciiReveal
+                      key={`expanded-title-${currentSong.id}`}
+                      preset="decode"
+                      duration="fast"
+                      speed={0.7}
+                      className="flex flex-col min-w-0"
+                    >
+                      <GooeyTooltip text={currentSong.title} className="text-base font-bold text-white block truncate" />
                       <span
                         onClick={() => {
                           setViewingArtist(currentSong.artist, currentSong.artistId);
                           toggleExpanded();
                         }}
-                        className="text-sm text-white/50 font-medium hover:text-accent hover:underline cursor-pointer truncate transition-colors"
+                        className="text-sm text-white/50 font-medium hover:text-accent hover:underline cursor-pointer truncate transition-colors block mt-0.5"
                       >
                         {currentSong.artist}
                       </span>
-                    </div>
+                    </AsciiReveal>
                     <button 
                       onClick={(e) => { e.stopPropagation(); toggleLike(currentSong); }}
                       className={cn("hover:scale-110 active:scale-95 transition-all ml-2", likedSongs.some(s => s.id === currentSong.id) ? "text-accent" : "text-white")}

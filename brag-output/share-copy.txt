@@ -1,0 +1,1 @@
+Meet EchoStream: a high-performance web music player with local + YouTube streaming, 5-band studio DSP EQ, and physics-based micro-animations built right into the browser. 🎧⚡

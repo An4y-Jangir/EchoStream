@@ -14,7 +14,8 @@ export function CustomCursor() {
   const cursorX = useMotionValue(-100);
   const cursorY = useMotionValue(-100);
 
-  const springConfig = { damping: 28, stiffness: 220, mass: 0.4 };
+  // Fast, ultra-responsive spring physics with zero perceptible input lag
+  const springConfig = { damping: 32, stiffness: 600, mass: 0.12 };
   const cursorXSpring = useSpring(cursorX, springConfig);
   const cursorYSpring = useSpring(cursorY, springConfig);
 
@@ -111,51 +112,48 @@ export function CustomCursor() {
 
   return (
     <>
-      {/* Outer Follower Ring */}
+      {/* Outer Follower Ring (GPU transform scale, zero reflow) */}
       <motion.div
-        className="fixed top-0 left-0 rounded-full pointer-events-none z-[9999] mix-blend-screen"
+        className="fixed top-0 left-0 rounded-full pointer-events-none z-[9999] mix-blend-screen size-11"
         style={{
           x: cursorXSpring,
           y: cursorYSpring,
           translateX: "-50%",
           translateY: "-50%",
-          width: isInput ? 2 : isHovered ? 44 : 20,
-          height: isInput ? 24 : isHovered ? 44 : 20,
           borderRadius: isInput ? "4px" : "50%",
           border: isInput ? "none" : `1.5px solid var(--theme-accent, #6366f1)`,
           backgroundColor: isInput 
             ? "var(--theme-accent, #6366f1)" 
             : isHovered 
-              ? "rgba(99, 102, 241, 0.05)"
+              ? "rgba(99, 102, 241, 0.08)"
               : "transparent",
           boxShadow: isHovered 
-            ? "0 0 15px var(--theme-accent, rgba(99, 102, 241, 0.35))"
+            ? "0 0 16px var(--theme-accent, rgba(99, 102, 241, 0.4))"
             : "none",
         }}
         animate={{
-          scale: isClicked ? 0.82 : 1,
+          scale: isInput ? 0.4 : isClicked ? 0.75 : isHovered ? 1.05 : 0.5,
+          opacity: isInput ? 0.9 : isHovered ? 1 : 0.6,
         }}
-        transition={{ type: "spring", stiffness: 450, damping: 25 }}
+        transition={{ type: "spring", stiffness: 550, damping: 28 }}
       />
 
-      {/* Inner Point Dot */}
+      {/* Inner Point Dot (Always 1:1 hardware tracked with zero lag) */}
       <motion.div
-        className="fixed top-0 left-0 rounded-full pointer-events-none z-[9999]"
+        className="fixed top-0 left-0 rounded-full pointer-events-none z-[9999] size-1.5"
         style={{
           x: cursorX,
           y: cursorY,
           translateX: "-50%",
           translateY: "-50%",
-          width: isInput ? 0 : 6,
-          height: isInput ? 0 : 6,
           backgroundColor: "var(--theme-accent, #6366f1)",
-          boxShadow: "0 0 8px var(--theme-accent, #6366f1)",
+          boxShadow: "0 0 6px var(--theme-accent, #6366f1)",
         }}
         animate={{
-          scale: isHovered ? 0 : 1,
-          opacity: isHovered ? 0 : 1,
+          scale: isInput ? 0 : isHovered ? 0.8 : 1,
+          opacity: isInput ? 0 : 1,
         }}
-        transition={{ duration: 0.12 }}
+        transition={{ duration: 0.08 }}
       />
     </>
   );

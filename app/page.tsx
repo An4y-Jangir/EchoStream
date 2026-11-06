@@ -28,10 +28,85 @@ const PREMADE_COVERS = [
   "https://images.unsplash.com/photo-1603048588665-791ca8aea617?q=80&w=500&auto=format&fit=crop", // Spinning Vinyl Record (New)
 ];
 
+const SPOTLIGHT_TRACKS = [
+  {
+    song: MOCK_SONGS[0], // Midnight City
+    badge: "EDITORIAL SPOTLIGHT",
+    accentColor: "from-pink-500/20 via-purple-600/15 to-indigo-950/40",
+    quote: "The quintessential neon synthwave anthem that defined a decade. Soaring saxophone solos and late-night highway energy.",
+    vibeTag: "Synthwave / Electronic",
+  },
+  {
+    song: MOCK_SONGS[1], // Blinding Lights
+    badge: "GLOBAL TOP HIT",
+    accentColor: "from-rose-500/20 via-red-600/15 to-slate-950/40",
+    quote: "An unstoppable 80s-inspired stadium synthpop sensation powered by relentless drum machines and vocal brilliance.",
+    vibeTag: "Synthpop / 80s Retro",
+  },
+  {
+    song: MOCK_SONGS[4], // Resonance
+    badge: "ANALOG VIBE",
+    accentColor: "from-cyan-500/20 via-blue-600/15 to-slate-950/40",
+    quote: "Warm analog synthesizer pads, tape saturation, and timeless nostalgic warmth for deep focus and introspection.",
+    vibeTag: "Chillwave / Lo-Fi",
+  },
+];
+
+const MOOD_FILTERS = [
+  { id: "all", label: "All Vibes", icon: "bolt", genre: null },
+  { id: "synthwave", label: "Synthwave", icon: "flare", genre: "Synthwave" },
+  { id: "electronic", label: "Electronic", icon: "graphic_eq", genre: "Electronic" },
+  { id: "disco", label: "Disco & Funk", icon: "album", genre: "Disco" },
+  { id: "chill", label: "Lo-Fi & Chill", icon: "spa", genre: "Chillwave" },
+  { id: "darkwave", label: "Darkwave", icon: "nightlight", genre: "Darkwave" },
+];
+
+const MOOD_THEMES: Record<string, { accent: string; glow1: string; glow2: string; glow3: string }> = {
+  all: {
+    accent: "rgb(99, 102, 241)",
+    glow1: "rgba(99, 102, 241, 0.75)",
+    glow2: "rgba(236, 72, 153, 0.65)",
+    glow3: "rgba(59, 130, 246, 0.55)",
+  },
+  synthwave: {
+    accent: "rgb(244, 63, 94)",
+    glow1: "rgba(244, 63, 94, 0.8)",
+    glow2: "rgba(168, 85, 247, 0.7)",
+    glow3: "rgba(14, 165, 233, 0.6)",
+  },
+  electronic: {
+    accent: "rgb(6, 182, 212)",
+    glow1: "rgba(6, 182, 212, 0.8)",
+    glow2: "rgba(139, 92, 246, 0.7)",
+    glow3: "rgba(16, 185, 129, 0.6)",
+  },
+  disco: {
+    accent: "rgb(245, 158, 11)",
+    glow1: "rgba(245, 158, 11, 0.8)",
+    glow2: "rgba(249, 115, 22, 0.7)",
+    glow3: "rgba(225, 29, 72, 0.6)",
+  },
+  chill: {
+    accent: "rgb(16, 185, 129)",
+    glow1: "rgba(16, 185, 129, 0.75)",
+    glow2: "rgba(14, 165, 233, 0.65)",
+    glow3: "rgba(139, 92, 246, 0.55)",
+  },
+  darkwave: {
+    accent: "rgb(168, 85, 247)",
+    glow1: "rgba(126, 34, 206, 0.8)",
+    glow2: "rgba(225, 29, 72, 0.7)",
+    glow3: "rgba(30, 58, 138, 0.65)",
+  },
+};
+
 export default function Home() {
   const { 
     playSong, 
     currentSong, 
+    isPlaying,
+    togglePlay,
+    toggleExpanded,
     history, 
     likedSongs, 
     addToQueue, 
@@ -228,6 +303,140 @@ export default function Home() {
   const hasHistory = (history || []).length > 0;
   const hasPersonal = (likedSongs || []).length > 0 || (playlists || []).length > 0;
   const showFeatures = !(hasHistory && hasPersonal);
+
+  // Discover page states & logic
+  const [selectedMood, setSelectedMood] = useState<string>("all");
+  const [spotlightIndex, setSpotlightIndex] = useState(0);
+  const [greeting, setGreeting] = useState<{ title: string; subtitle: string; icon: string }>({
+    title: "Welcome back",
+    subtitle: "Your personal high-fidelity music universe",
+    icon: "graphic_eq"
+  });
+
+  useEffect(() => {
+    const hour = new Date().getHours();
+    if (hour >= 5 && hour < 12) {
+      setGreeting({
+        title: `Good morning, ${userName}`,
+        subtitle: "Kickstart your flow with crisp rhythms and morning frequencies",
+        icon: "wb_sunny"
+      });
+    } else if (hour >= 12 && hour < 18) {
+      setGreeting({
+        title: `Good afternoon, ${userName}`,
+        subtitle: "Lock in with energetic grooves and atmospheric focus",
+        icon: "wb_twilight"
+      });
+    } else if (hour >= 18 && hour < 22) {
+      setGreeting({
+        title: `Good evening, ${userName}`,
+        subtitle: "Unwind with sunset synthesizers and late-night highway soundscapes",
+        icon: "nights_stay"
+      });
+    } else {
+      setGreeting({
+        title: `Midnight Sessions, ${userName}`,
+        subtitle: "Deep synthwave, ambient echoes, and after-hours vibrations",
+        icon: "dark_mode"
+      });
+    }
+  }, [userName]);
+
+  // Dynamically illuminate the background with the selected vibe's ambient color palette
+  useEffect(() => {
+    if (!currentSong) {
+      const theme = MOOD_THEMES[selectedMood] || MOOD_THEMES.all;
+      document.documentElement.style.setProperty("--theme-accent", theme.accent);
+      document.documentElement.style.setProperty("--theme-glow-1", theme.glow1);
+      document.documentElement.style.setProperty("--theme-glow-2", theme.glow2);
+      document.documentElement.style.setProperty("--theme-glow-3", theme.glow3);
+      document.documentElement.style.setProperty("--theme-bg-glow1", theme.glow1);
+      document.documentElement.style.setProperty("--theme-bg-glow2", theme.glow2);
+    }
+  }, [selectedMood, currentSong]);
+
+  // Dynamic Top Listened songs from our music search engine with instant in-memory cache
+  const [topSongs, setTopSongs] = useState<Song[]>([]);
+  const [isLoadingTopSongs, setIsLoadingTopSongs] = useState<boolean>(true);
+  const moodCacheRef = useRef<Record<string, Song[]>>({});
+
+  useEffect(() => {
+    let isMounted = true;
+
+    // Instant zero-lag switch if already loaded in client cache
+    if (moodCacheRef.current[selectedMood] && moodCacheRef.current[selectedMood].length > 0) {
+      setTopSongs(moodCacheRef.current[selectedMood]);
+      setIsLoadingTopSongs(false);
+      return;
+    }
+
+    setIsLoadingTopSongs(true);
+
+    fetch(`/api/top-listened?mood=${encodeURIComponent(selectedMood)}`)
+      .then((res) => {
+        if (!res.ok) throw new Error("Search engine error");
+        return res.json();
+      })
+      .then((data) => {
+        if (isMounted && data.results && data.results.length > 0) {
+          moodCacheRef.current[selectedMood] = data.results;
+          setTopSongs(data.results);
+        }
+      })
+      .catch((err) => {
+        console.warn("Could not fetch top listened songs:", err);
+      })
+      .finally(() => {
+        if (isMounted) setIsLoadingTopSongs(false);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [selectedMood]);
+
+  const filteredSongs = selectedMood === "all"
+    ? MOCK_SONGS
+    : MOCK_SONGS.filter(s => {
+        const targetMood = MOOD_FILTERS.find(m => m.id === selectedMood);
+        if (!targetMood || !targetMood.genre) return true;
+        if (selectedMood === "disco") return s.genre === "Disco" || s.genre === "Funk";
+        return s.genre?.toLowerCase() === targetMood.genre.toLowerCase();
+      });
+
+  // Active songs to display (preferring live top-listened results from our music search engine)
+  const displaySongs = topSongs.length > 0 ? topSongs : filteredSongs;
+
+  const quickTiles = hasHistory 
+    ? Array.from(new Set(history.map(s => s.id))).map(id => history.find(s => s.id === id)!).reverse().slice(0, 5)
+    : displaySongs.slice(0, 5);
+
+  // Dynamic Spotlights built from the top listened search engine results
+  const dynamicSpotlights = topSongs.length >= 3 ? [
+    {
+      song: topSongs[0],
+      badge: "🔥 #1 GLOBAL TOP HIT",
+      accentColor: "from-pink-500/20 via-purple-600/15 to-indigo-950/40",
+      quote: "Leading charts worldwide with massive streaming numbers and critical acclaim across platforms.",
+      vibeTag: topSongs[0].genre || "Chart Leader",
+    },
+    {
+      song: topSongs[1],
+      badge: "⭐ #2 ON HEAVY ROTATION",
+      accentColor: "from-rose-500/20 via-red-600/15 to-slate-950/40",
+      quote: "A global viral sensation dominating streaming queues and trending worldwide queries this week.",
+      vibeTag: topSongs[1].genre || "Heavy Rotation",
+    },
+    {
+      song: topSongs[2],
+      badge: "✨ #3 EDITORIAL SPOTLIGHT",
+      accentColor: "from-cyan-500/20 via-blue-600/15 to-slate-950/40",
+      quote: "Outstanding production, infectious energy, and peak velocity on our global streaming engine.",
+      vibeTag: topSongs[2].genre || "Global Viral",
+    },
+  ] : SPOTLIGHT_TRACKS;
+
+  const currentSpotlight = dynamicSpotlights[spotlightIndex] || dynamicSpotlights[0];
 
   const handleSearch = async (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key !== 'Enter') return;
@@ -436,30 +645,49 @@ export default function Home() {
 
   return (
     <div className="flex h-screen overflow-hidden relative">
-        {/* Dynamic Background */}
-        <div className="absolute inset-0 z-0 pointer-events-none transition-all duration-1000 ease-in-out">
-          {currentSong && isDynamicTheme ? (
-            <>
-              <div 
-                className="absolute inset-0 bg-cover bg-center transition-all duration-1000 opacity-60 scale-105"
-                style={{ backgroundImage: `url(${currentSong.albumArt})` }}
-              />
-              <div className="absolute inset-0 bg-black/50 backdrop-blur-xl" />
-            </>
-          ) : (
-            <>
-              {/* Static theme ambient mesh gradient */}
-              <div className="absolute inset-0 bg-[#09090b]" />
-              <div 
-                className="absolute top-[-10%] left-[-10%] w-[60%] h-[60%] rounded-full opacity-[0.25] blur-[130px] transition-all duration-1000 ease-in-out"
-                style={{ backgroundColor: staticAccent }}
-              />
-              <div 
-                className="absolute bottom-[-10%] right-[-10%] w-[60%] h-[60%] rounded-full opacity-[0.18] blur-[130px] transition-all duration-1000 ease-in-out"
-                style={{ backgroundColor: staticAccent }}
-              />
-            </>
+        {/* Apple Music Dynamic Liquid Ambient Canvas (Hardware Accelerated) */}
+        <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden transition-all duration-1000 ease-in-out bg-[#07070a]">
+          {/* Vibrant warm base blur of artwork if playing */}
+          {currentSong && isDynamicTheme && (
+            <div 
+              className="absolute inset-0 bg-cover bg-center transition-all duration-1000 opacity-45 scale-110 blur-[50px] saturate-200 mix-blend-screen transform-gpu"
+              style={{ backgroundImage: `url(${currentSong.albumArt})` }}
+            />
           )}
+
+          {/* Orb 1: Top-Left Primary Floating Glow */}
+          <div 
+            className="absolute -top-[15%] -left-[10%] w-[85vw] h-[85vh] rounded-full opacity-80 transition-all duration-1000 animate-ambient-1 transform-gpu"
+            style={{ 
+              background: isDynamicTheme 
+                ? 'radial-gradient(circle closest-side at 40% 40%, var(--theme-glow-1, rgba(99, 102, 241, 0.75)) 0%, var(--theme-glow-1, rgba(99, 102, 241, 0.4)) 45%, var(--theme-glow-1, rgba(99, 102, 241, 0.12)) 75%, transparent 100%)' 
+                : `radial-gradient(circle closest-side at 40% 40%, ${staticAccent} 0%, transparent 100%)`,
+            }}
+          />
+
+          {/* Orb 2: Bottom-Right Secondary Color Glow */}
+          <div 
+            className="absolute -bottom-[15%] -right-[10%] w-[80vw] h-[80vh] rounded-full opacity-75 transition-all duration-1000 animate-ambient-2 transform-gpu"
+            style={{ 
+              background: isDynamicTheme 
+                ? 'radial-gradient(circle closest-side at 60% 60%, var(--theme-glow-2, rgba(236, 72, 153, 0.65)) 0%, var(--theme-glow-2, rgba(236, 72, 153, 0.35)) 45%, var(--theme-glow-2, rgba(236, 72, 153, 0.1)) 75%, transparent 100%)' 
+                : `radial-gradient(circle closest-side at 60% 60%, ${staticAccent} 0%, transparent 100%)`,
+            }}
+          />
+
+          {/* Orb 3: Center-Floating Harmonic Accent Glow */}
+          <div 
+            className="absolute top-[20%] left-[20%] w-[70vw] h-[70vh] rounded-full opacity-70 transition-all duration-1000 animate-ambient-3 transform-gpu"
+            style={{ 
+              background: isDynamicTheme 
+                ? 'radial-gradient(circle closest-side at 50% 50%, var(--theme-glow-3, rgba(59, 130, 246, 0.55)) 0%, var(--theme-glow-3, rgba(59, 130, 246, 0.3)) 45%, var(--theme-glow-3, rgba(59, 130, 246, 0.08)) 75%, transparent 100%)' 
+                : 'transparent',
+            }}
+          />
+
+          {/* Subtle contrast gradient for readable text and depth without suffocating the glow */}
+          <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/55 pointer-events-none" />
+
           <CanvasParticles />
         </div>
 
@@ -921,217 +1149,650 @@ export default function Home() {
           )}
 
           {activeTab === 'discover' && (
-            <>
-              {/* Features Section - Active Onboarding */}
-              {showFeatures && (
-                <motion.section 
-                  key="features-section"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.6 }}
-                  className="mb-16 mt-8"
-                >
-                  <div className="flex flex-col mb-10">
-                    <h2 className="text-[10px] font-black text-accent uppercase tracking-[0.4em] mb-2 opacity-80 text-center">Getting Started</h2>
-                    <h3 className="text-4xl font-black tracking-tighter text-white text-center">Make EchoStream Yours</h3>
-                    <p className="text-slate-500 text-sm mt-3 text-center max-w-lg mx-auto">Import your library to unlock the full power of your personal music engine.</p>
+            <div className="space-y-12 md:space-y-16">
+              {/* 1. Time-of-Day Welcome Header & Live Stream Indicator */}
+              <motion.section
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+                className="flex flex-col md:flex-row md:items-end justify-between gap-4"
+              >
+                <div>
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="material-symbols-outlined text-accent text-xl">{greeting.icon}</span>
+                    <span className="text-[11px] font-black uppercase tracking-[0.25em] text-accent/90">Curated Daily</span>
                   </div>
+                  <h1 className="text-3xl md:text-5xl font-black text-white tracking-tight">{greeting.title}</h1>
+                  <p className="text-slate-400 text-xs md:text-sm mt-1 max-w-xl">{greeting.subtitle}</p>
+                </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                    <GlowWrapper className="rounded-3xl" glowOpacity={0.3}>
-                      <div 
-                        onClick={() => fileInputRef.current?.click()}
-                        className="glass-card p-6 h-full flex flex-col gap-4 group cursor-pointer border-white/5 hover:border-accent/30 transition-all"
-                      >
-                        <div className="size-14 bg-accent/10 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">
-                          <span className="material-symbols-outlined text-accent text-3xl">upload_file</span>
-                        </div>
-                        <div>
-                          <h4 className="text-lg font-bold text-white mb-1">Import Media</h4>
-                          <p className="text-xs text-slate-500 leading-relaxed font-medium">Bring your local collection into EchoStream with full metadata support.</p>
-                        </div>
-                        <div className="mt-auto pt-4 flex items-center gap-2 text-accent text-[10px] font-bold uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity">
-                          Open Picker <span className="material-symbols-outlined text-sm">east</span>
-                        </div>
-                      </div>
-                    </GlowWrapper>
-
-                    <GlowWrapper className="rounded-3xl" glowOpacity={0.3}>
-                      <div 
-                        onClick={() => {
-                          const name = prompt("Enter playlist name:");
-                          if (name) createPlaylist(name);
-                        }}
-                        className="glass-card p-6 h-full flex flex-col gap-4 group cursor-pointer border-white/5 hover:border-accent/30 transition-all"
-                      >
-                        <div className="size-14 bg-pink-500/10 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">
-                          <span className="material-symbols-outlined text-pink-500 text-3xl">add_circle</span>
-                        </div>
-                        <div>
-                          <h4 className="text-lg font-bold text-white mb-1">New Playlist</h4>
-                          <p className="text-xs text-slate-500 leading-relaxed font-medium">Organize your vibes into beautiful collections instantly.</p>
-                        </div>
-                        <div className="mt-auto pt-4 flex items-center gap-2 text-pink-500 text-[10px] font-bold uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity">
-                          Create Now <span className="material-symbols-outlined text-sm">east</span>
-                        </div>
-                      </div>
-                    </GlowWrapper>
-
-                    <GlowWrapper className="rounded-3xl" glowOpacity={0.3}>
-                      <div 
-                        onClick={() => searchInputRef.current?.focus()}
-                        className="glass-card p-6 h-full flex flex-col gap-4 group cursor-pointer border-white/5 hover:border-accent/30 transition-all"
-                      >
-                        <div className="size-14 bg-blue-500/10 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">
-                          <span className="material-symbols-outlined text-blue-500 text-3xl">search</span>
-                        </div>
-                        <div>
-                          <h4 className="text-lg font-bold text-white mb-1">Advanced Search</h4>
-                          <p className="text-xs text-slate-500 leading-relaxed font-medium">Search across our global database or your local device.</p>
-                        </div>
-                        <div className="mt-auto pt-4 flex items-center gap-2 text-blue-500 text-[10px] font-bold uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity">
-                          Focus Search <span className="material-symbols-outlined text-sm">east</span>
-                        </div>
-                      </div>
-                    </GlowWrapper>
-
-                    <GlowWrapper className="rounded-3xl" glowOpacity={0.3}>
-                      <div 
-                        className="glass-card p-6 h-full flex flex-col gap-4 group cursor-pointer border-white/5 hover:border-accent/30 transition-all"
-                      >
-                        <div className="size-14 bg-purple-500/10 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">
-                          <span className="material-symbols-outlined text-purple-500 text-3xl">flare</span>
-                        </div>
-                        <div>
-                          <h4 className="text-lg font-bold text-white mb-1">Spotlight Flow</h4>
-                          <p className="text-xs text-slate-500 leading-relaxed font-medium">Our tactile interface reacts to your every move in real-time.</p>
-                        </div>
-                        <div className="mt-auto pt-4 flex items-center gap-2 text-purple-500 text-[10px] font-bold uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity">
-                          Active Interface <span className="material-symbols-outlined text-sm">check</span>
-                        </div>
-                      </div>
-                    </GlowWrapper>
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-2.5 px-3.5 py-1.5 rounded-full bg-white/[0.04] border border-white/10 backdrop-blur-md">
+                    <span className="size-2 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_8px_rgba(52,211,153,0.8)]" />
+                    <span className="text-[10px] font-bold text-slate-300 uppercase tracking-widest">Lossless Engine</span>
                   </div>
-                </motion.section>
-              )}
+                  <button
+                    onClick={() => {
+                      if (displaySongs.length > 0) {
+                        const randomSong = displaySongs[Math.floor(Math.random() * displaySongs.length)];
+                        playSong(randomSong, displaySongs);
+                      }
+                    }}
+                    className="flex items-center gap-2 px-4 py-1.5 rounded-full bg-accent hover:bg-accent/90 text-white text-xs font-bold transition-all shadow-lg shadow-accent/25 hover:scale-105 active:scale-95 cursor-pointer"
+                  >
+                    <span className="material-symbols-outlined text-sm fill-[1]">shuffle</span>
+                    Quick Mix
+                  </button>
+                </div>
+              </motion.section>
 
-              {/* Personalized Section */}
-              {hasPersonal && (
-                <motion.section 
-                  key="personalized-section"
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ duration: 1.2, ease: "easeOut" }}
-                  className="mb-12"
-                >
-                  <div className="flex items-center justify-between mb-8">
-                    <div>
-                      <h2 className="text-[10px] font-black text-accent uppercase tracking-[0.4em] mb-1.5 opacity-80">Personalized</h2>
-                      <h3 className="text-2xl font-bold tracking-tight text-white">Made For You</h3>
+              {/* 2. Jump Back In / Quick Shelf */}
+              <motion.section
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.1 }}
+              >
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+                  {/* Favorites Quick Tile */}
+                  <div 
+                    onClick={() => {
+                      if (likedSongs.length > 0) {
+                        playSong(likedSongs[0], likedSongs);
+                      } else {
+                        setActiveTab('favorites');
+                      }
+                    }}
+                    className="group relative flex items-center gap-3 p-2.5 pr-3 rounded-2xl bg-gradient-to-r from-accent/20 to-pink-500/10 border border-white/5 hover:border-accent/40 backdrop-blur-md cursor-pointer transition-all hover:bg-white/[0.06] overflow-hidden"
+                  >
+                    <div className="size-11 rounded-xl bg-gradient-to-br from-accent to-pink-500 flex items-center justify-center flex-shrink-0 shadow-md">
+                      <span className="material-symbols-outlined text-white text-xl fill-[1]">favorite</span>
                     </div>
-                    <button className="text-[10px] font-bold text-slate-500 hover:text-accent flex items-center gap-1 transition-colors uppercase tracking-widest">
-                      View all <span className="material-symbols-outlined text-[14px]">arrow_forward</span>
+                    <div className="overflow-hidden flex-1">
+                      <p className="text-xs font-bold text-white truncate">Liked Songs</p>
+                      <p className="text-[10px] text-slate-400 font-medium truncate">{likedSongs.length} tracks</p>
+                    </div>
+                    <button className="size-7 rounded-full bg-white text-black flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all shadow-md transform translate-x-2 group-hover:translate-x-0 flex-shrink-0">
+                      <span className="material-symbols-outlined text-base fill-[1]">play_arrow</span>
                     </button>
                   </div>
-                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
-                    <GlowWrapper className="rounded-[2rem]">
-                      <div className="glass-card p-4 group cursor-pointer border-accent/20 bg-accent/5" onClick={() => setActiveTab('favorites')}>
-                        <div className="relative mb-4 aspect-square rounded-[1.5rem] overflow-hidden shadow-2xl">
-                          <div className="absolute inset-0 bg-gradient-to-br from-accent to-pink-500 flex items-center justify-center">
-                            <span className="material-symbols-outlined text-white text-6xl fill-[1] opacity-80 group-hover:scale-110 transition-transform duration-500">favorite</span>
+
+                  {/* 5 Instant / History Quick Tiles */}
+                  {quickTiles.map((tile, i) => (
+                    <div
+                      key={`quick-tile-${tile.id}-${i}`}
+                      onClick={() => playSong(tile, displaySongs)}
+                      className="group relative flex items-center gap-3 p-2.5 pr-3 rounded-2xl bg-white/[0.03] border border-white/5 hover:border-white/20 backdrop-blur-md cursor-pointer transition-all hover:bg-white/[0.06] overflow-hidden"
+                    >
+                      <div className="size-11 rounded-xl overflow-hidden flex-shrink-0 shadow-md relative bg-white/5">
+                        <img src={tile.albumArt} alt={tile.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
+                        {currentSong?.id === tile.id && isPlaying && (
+                          <div className="absolute inset-0 bg-black/60 flex items-center justify-center gap-0.5">
+                            <span className="w-0.5 bg-accent rounded-full animate-bounce h-2.5" />
+                            <span className="w-0.5 bg-accent rounded-full animate-bounce [animation-delay:150ms] h-4" />
+                            <span className="w-0.5 bg-accent rounded-full animate-bounce [animation-delay:300ms] h-2" />
                           </div>
-                          <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-                            <button className="size-16 bg-white text-black rounded-full flex items-center justify-center shadow-xl transform scale-90 group-hover:scale-100 transition-transform duration-300">
-                              <span className="material-symbols-outlined text-4xl fill-[1]">play_arrow</span>
-                            </button>
+                        )}
+                      </div>
+                      <div className="overflow-hidden flex-1">
+                        <p className="text-xs font-bold text-white truncate">{tile.title}</p>
+                        <p className="text-[10px] text-slate-400 truncate">{tile.artist}</p>
+                      </div>
+                      <button className="size-7 rounded-full bg-accent text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all shadow-md transform translate-x-2 group-hover:translate-x-0 flex-shrink-0">
+                        <span className="material-symbols-outlined text-base fill-[1]">play_arrow</span>
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </motion.section>
+
+              {/* 3. Editorial Spotlight Hero Showcase */}
+              <motion.section
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.7, delay: 0.15 }}
+                className="relative"
+              >
+                <GlowWrapper className="rounded-[2.5rem]" glowOpacity={0.35}>
+                  <div className={`relative overflow-hidden rounded-[2.5rem] border border-white/10 bg-gradient-to-br ${currentSpotlight.accentColor} p-6 md:p-10 backdrop-blur-2xl transition-all duration-700`}>
+                    {/* Ambient Glow Orbs */}
+                    <div className="absolute -right-20 -top-20 size-80 rounded-full bg-accent/20 blur-3xl pointer-events-none" />
+                    <div className="absolute -left-20 -bottom-20 size-80 rounded-full bg-purple-500/15 blur-3xl pointer-events-none" />
+
+                    <div className="relative z-10 flex flex-col lg:flex-row items-center justify-between gap-8 md:gap-12">
+                      {/* Left Content */}
+                      <div className="flex-1 space-y-5 text-center lg:text-left">
+                        <div className="flex flex-wrap items-center justify-center lg:justify-start gap-2.5">
+                          <span className="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest bg-white/10 text-white border border-white/15 backdrop-blur-md">
+                            {currentSpotlight.badge}
+                          </span>
+                          <span className="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest bg-accent/20 text-accent border border-accent/30">
+                            {currentSpotlight.vibeTag}
+                          </span>
+                        </div>
+
+                        <div>
+                          <h2 className="text-3xl md:text-5xl lg:text-6xl font-black text-white tracking-tighter leading-none mb-3">
+                            {currentSpotlight.song.title}
+                          </h2>
+                          <div className="flex items-center justify-center lg:justify-start gap-2">
+                            <span 
+                              onClick={() => setViewingArtist(currentSpotlight.song.artist, currentSpotlight.song.artistId)}
+                              className="text-lg md:text-xl font-bold text-slate-200 hover:text-accent hover:underline transition-colors cursor-pointer"
+                            >
+                              {currentSpotlight.song.artist}
+                            </span>
+                            <span className="text-slate-500">•</span>
+                            <span className="text-sm md:text-base text-slate-400 font-medium">
+                              {currentSpotlight.song.album}
+                            </span>
                           </div>
                         </div>
-                        <div className="px-2">
-                          <h4 className="font-bold text-white/90 mb-0.5 truncate text-sm">Your Favorites</h4>
-                          <p className="text-[10px] text-slate-600 font-medium truncate italic">Everything you love</p>
+
+                        <p className="text-xs md:text-sm text-slate-300 max-w-xl font-medium leading-relaxed italic">
+                          &ldquo;{currentSpotlight.quote}&rdquo;
+                        </p>
+
+                        {/* Action Buttons */}
+                        <div className="pt-2 flex flex-wrap items-center justify-center lg:justify-start gap-4">
+                          <button
+                            onClick={() => {
+                              if (currentSong?.id === currentSpotlight.song.id) {
+                                togglePlay();
+                              } else {
+                                playSong(currentSpotlight.song, displaySongs);
+                              }
+                            }}
+                            className="flex items-center gap-3 px-7 py-3.5 rounded-full bg-white text-black font-black text-sm tracking-tight hover:bg-slate-100 hover:scale-105 active:scale-95 transition-all shadow-xl shadow-white/10 cursor-pointer"
+                          >
+                            <span className="material-symbols-outlined text-2xl fill-[1]">
+                              {currentSong?.id === currentSpotlight.song.id && isPlaying ? "pause" : "play_arrow"}
+                            </span>
+                            {currentSong?.id === currentSpotlight.song.id && isPlaying ? "Pause Spotlight" : "Play Spotlight"}
+                          </button>
+
+                          <button
+                            onClick={(e) => {
+                              addToQueue(currentSpotlight.song);
+                              triggerQueueFlight(currentSpotlight.song, e.currentTarget.getBoundingClientRect());
+                            }}
+                            className="flex items-center gap-2 px-5 py-3.5 rounded-full bg-white/10 hover:bg-white/20 text-white font-bold text-xs transition-all border border-white/10 backdrop-blur-md hover:scale-105 active:scale-95 cursor-pointer"
+                          >
+                            <span className="material-symbols-outlined text-lg">queue_music</span>
+                            Add to Queue
+                          </button>
+
+                          <button
+                            onClick={() => setAddingSong(currentSpotlight.song)}
+                            className="size-11 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-all border border-white/10 backdrop-blur-md hover:scale-105 active:scale-95 cursor-pointer"
+                            title="Save to Playlist"
+                          >
+                            <span className="material-symbols-outlined text-lg">playlist_add</span>
+                          </button>
                         </div>
                       </div>
-                    </GlowWrapper>
 
-                    {(playlists || []).map((playlist) => (
-                      <GlowWrapper key={playlist.id} className="rounded-[2rem]">
-                        <div className="glass-card p-4 group cursor-pointer border-white/5 bg-white/5" onClick={() => { setActiveTab('playlist'); setSelectedPlaylistId(playlist.id); }}>
-                          <div className="relative mb-4 aspect-square rounded-[1.5rem] overflow-hidden shadow-2xl bg-white/5 flex items-center justify-center">
-                            {playlist.songs.length > 0 ? (
-                              <img alt={playlist.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" src={playlist.songs[0].albumArt}/>
-                            ) : (
-                              <span className="material-symbols-outlined text-5xl text-white/10">playlist_play</span>
-                            )}
-                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-                              <button className="size-16 bg-white text-black rounded-full flex items-center justify-center shadow-xl transform scale-90 group-hover:scale-100 transition-transform duration-300">
-                                <span className="material-symbols-outlined text-4xl fill-[1]">play_arrow</span>
-                              </button>
+                      {/* Right Artwork with 3D Depth & Carousel Controls */}
+                      <div className="relative flex flex-col items-center">
+                        <div className="relative size-60 md:size-72 lg:size-80 rounded-3xl overflow-hidden shadow-2xl border border-white/15 group">
+                          <img
+                            src={currentSpotlight.song.albumArt}
+                            alt={currentSpotlight.song.title}
+                            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                          />
+                          {/* Playing Equalizer Overlay */}
+                          {currentSong?.id === currentSpotlight.song.id && isPlaying && (
+                            <div className="absolute inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center gap-1.5">
+                              <span className="w-1.5 bg-accent rounded-full animate-bounce h-8" />
+                              <span className="w-1.5 bg-accent rounded-full animate-bounce [animation-delay:150ms] h-12" />
+                              <span className="w-1.5 bg-accent rounded-full animate-bounce [animation-delay:300ms] h-6" />
+                              <span className="w-1.5 bg-accent rounded-full animate-bounce [animation-delay:75ms] h-10" />
                             </div>
-                          </div>
-                          <div className="px-2">
-                            <h4 className="font-bold text-white/90 mb-0.5 truncate text-sm">{playlist.title}</h4>
-                            <p className="text-[10px] text-slate-600 font-medium truncate italic">{playlist.songs.length} Tracks • Mixed</p>
-                          </div>
+                          )}
                         </div>
-                      </GlowWrapper>
-                    ))}
-                  </div>
-                </motion.section>
-              )}
 
-              {/* Recents Section on Discover */}
-              {hasHistory && (
-                <motion.section
-                  key="recents-section"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.2 }}
-                >
-                  <div className="flex items-center justify-between mb-10">
-                    <div>
-                      <h2 className="text-xl font-bold tracking-tight text-white">Recently Played</h2>
-                      <p className="text-slate-500 text-xs mt-1">Jump back into your favorites</p>
+                        {/* Carousel Pagination Controls */}
+                        <div className="mt-5 flex items-center gap-3">
+                          <button
+                            onClick={() => setSpotlightIndex((prev) => (prev === 0 ? dynamicSpotlights.length - 1 : prev - 1))}
+                            className="size-8 rounded-full bg-white/10 hover:bg-white/25 text-white flex items-center justify-center transition-all cursor-pointer"
+                            title="Previous Spotlight"
+                          >
+                            <span className="material-symbols-outlined text-base">chevron_left</span>
+                          </button>
+                          <div className="flex items-center gap-1.5">
+                            {dynamicSpotlights.map((_, idx) => (
+                              <button
+                                key={`spotlight-dot-${idx}`}
+                                onClick={() => setSpotlightIndex(idx)}
+                                className={cn(
+                                  "h-1.5 rounded-full transition-all duration-300 cursor-pointer",
+                                  spotlightIndex === idx ? "w-6 bg-white" : "w-1.5 bg-white/30 hover:bg-white/50"
+                                )}
+                              />
+                            ))}
+                          </div>
+                          <button
+                            onClick={() => setSpotlightIndex((prev) => (prev === dynamicSpotlights.length - 1 ? 0 : prev + 1))}
+                            className="size-8 rounded-full bg-white/10 hover:bg-white/25 text-white flex items-center justify-center transition-all cursor-pointer"
+                            title="Next Spotlight"
+                          >
+                            <span className="material-symbols-outlined text-base">chevron_right</span>
+                          </button>
+                        </div>
+                      </div>
                     </div>
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                    {Array.from(new Set((history || []).map(s => s.id))).map(id => history.find(s => s.id === id)!).reverse().slice(0, 8).map((song, i) => (
-                      <GlowWrapper key={`recents-discover-${song.id}-${i}`} className="rounded-2xl">
-                        <div onClick={() => playSong(song, history)} className="glass-card flex items-center gap-4 p-3 group cursor-pointer">
-                          <div className="size-20 flex-shrink-0 rounded-xl overflow-hidden shadow-lg">
-                            <img alt={song.title} className="w-full h-full object-cover" src={song.albumArt}/>
+                </GlowWrapper>
+              </motion.section>
+
+              {/* 4. Mood & Genre Stations (Bouncy Spring Physics & Zero-Clipping Layout) */}
+              <motion.section
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.2 }}
+                className="space-y-4 pt-3 relative"
+              >
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h2 className="text-xl md:text-2xl font-black text-white tracking-tight leading-tight">Vibe & Genre Stations</h2>
+                    <p className="text-slate-400 text-xs mt-0.5">Filter rhythms to match your current headspace</p>
+                  </div>
+                  <span className="text-[11px] font-bold text-accent uppercase tracking-widest">{displaySongs.length} Tracks Available</span>
+                </div>
+
+                {/* Protective wrapper with generous padding to completely eliminate overflow clipping */}
+                <div className="relative -my-4 py-4 px-1 overflow-visible">
+                  <div className="flex items-center gap-3.5 overflow-x-auto no-scrollbar py-6 px-4 -mx-4">
+                    {MOOD_FILTERS.map((mood) => {
+                      const isSelected = selectedMood === mood.id;
+                      return (
+                        <motion.button
+                          key={mood.id}
+                          layout
+                          transition={{
+                            type: "spring",
+                            stiffness: 420,
+                            damping: 16,
+                            mass: 0.55,
+                          }}
+                          whileTap={{ scale: 0.93 }}
+                          whileHover={{ scale: isSelected ? 1.02 : 1.05, y: -1 }}
+                          onClick={() => setSelectedMood(mood.id)}
+                          className={cn(
+                            "relative flex items-center gap-2.5 rounded-full font-bold whitespace-nowrap select-none cursor-pointer border transition-colors duration-200 flex-shrink-0",
+                            isSelected
+                              ? "px-6 py-3.5 text-sm bg-gradient-to-r from-accent via-indigo-600 to-purple-600 text-white border-accent/80 shadow-[0_8px_32px_rgba(99,102,241,0.4)]"
+                              : "px-4.5 py-2.5 text-xs bg-white/[0.04] text-slate-400 border-white/5 hover:text-white hover:border-white/20 hover:bg-white/[0.08]"
+                          )}
+                        >
+                          <motion.span 
+                            layout="position"
+                            className={cn("material-symbols-outlined text-base transition-colors", isSelected ? "text-white" : "text-slate-400")}
+                          >
+                            {mood.icon}
+                          </motion.span>
+                          <motion.span layout="position">
+                            {mood.label}
+                          </motion.span>
+
+                          {isSelected && (
+                            <motion.span
+                              layoutId="active-mood-dot"
+                              className="size-1.5 rounded-full bg-white shadow-[0_0_8px_#ffffff] flex-shrink-0 ml-0.5"
+                              transition={{
+                                type: "spring",
+                                stiffness: 450,
+                                damping: 18,
+                              }}
+                            />
+                          )}
+                        </motion.button>
+                      );
+                    })}
+                  </div>
+                </div>
+              </motion.section>
+
+              {/* 5. Trending Tracks / Music Grid */}
+              <motion.section
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.25 }}
+                className="space-y-6"
+              >
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="flex items-center gap-2.5">
+                      <h2 className="text-2xl md:text-3xl font-black text-white tracking-tight">Trending Right Now</h2>
+                      {isLoadingTopSongs && (
+                        <div className="size-4 border-2 border-accent border-t-transparent rounded-full animate-spin" />
+                      )}
+                    </div>
+                    <p className="text-slate-400 text-xs mt-0.5">Top-listened tracks pulled live from our music search engine</p>
+                  </div>
+                  <button 
+                    onClick={() => playSong(displaySongs[0], displaySongs)}
+                    className="text-xs font-bold text-accent hover:underline flex items-center gap-1 uppercase tracking-wider cursor-pointer"
+                  >
+                    <span className="material-symbols-outlined text-sm">play_circle</span>
+                    Play All
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+                  {displaySongs.map((song, i) => {
+                    const isCurrent = currentSong?.id === song.id;
+                    return (
+                      <GlowWrapper key={`trending-song-${song.id}-${i}`} className="rounded-2xl">
+                        <div
+                          onClick={() => {
+                            if (isCurrent) {
+                              togglePlay();
+                            } else {
+                              playSong(song, displaySongs);
+                            }
+                          }}
+                          className={cn(
+                            "glass-card p-3.5 flex items-center gap-4 group cursor-pointer transition-all border",
+                            isCurrent ? "border-accent/40 bg-accent/[0.04]" : "border-white/5 hover:border-white/20"
+                          )}
+                        >
+                          {/* Album Art with Equalizer / Play button */}
+                          <div className="size-20 flex-shrink-0 rounded-xl overflow-hidden shadow-lg relative bg-white/5">
+                            <img src={song.albumArt} alt={song.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                            
+                            {isCurrent && isPlaying ? (
+                              <div className="absolute inset-0 bg-black/50 backdrop-blur-[1px] flex items-center justify-center gap-1 z-10 pointer-events-none">
+                                <span className="w-1 bg-accent rounded-full animate-bounce [animation-delay:0ms] h-4" />
+                                <span className="w-1 bg-accent rounded-full animate-bounce [animation-delay:150ms] h-6" />
+                                <span className="w-1 bg-accent rounded-full animate-bounce [animation-delay:300ms] h-3" />
+                                <span className="w-1 bg-accent rounded-full animate-bounce [animation-delay:75ms] h-5" />
+                              </div>
+                            ) : (
+                              <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                <div className="size-9 rounded-full bg-accent text-white flex items-center justify-center shadow-md">
+                                  <span className="material-symbols-outlined text-xl fill-[1]">play_arrow</span>
+                                </div>
+                              </div>
+                            )}
                           </div>
-                          <div className="flex-1 overflow-hidden">
-                            <h3 className="font-semibold text-white/90 truncate text-sm">{song.title}</h3>
-                            <p 
-                              onClick={(e) => { e.stopPropagation(); setViewingArtist(song.artist, song.artistId); }} 
-                              className="text-[10px] text-slate-500 font-bold hover:text-accent hover:underline cursor-pointer uppercase tracking-wider truncate"
+
+                          {/* Details */}
+                          <div className="flex-1 overflow-hidden min-w-0">
+                            <h3 className={cn("font-bold text-sm truncate", isCurrent ? "text-accent" : "text-white")}>
+                              {song.title}
+                            </h3>
+                            <p
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setViewingArtist(song.artist, song.artistId);
+                              }}
+                              className="text-xs text-slate-400 hover:text-white truncate font-medium mt-0.5 cursor-pointer"
                             >
                               {song.artist}
                             </p>
+                            <div className="flex items-center gap-2 mt-2">
+                              <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-white/5 text-slate-300 border border-white/5">
+                                {song.genre}
+                              </span>
+                              <span className="text-[10px] text-slate-500 font-mono">
+                                {song.durationText}
+                              </span>
+                            </div>
                           </div>
-                          <div className="flex items-center gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
-                            <button 
-                              id={`add-btn-${song.id}`}
-                              onClick={(e) => { e.stopPropagation(); setAddingSong(song); }} 
-                              className="size-8 bg-white/5 hover:bg-white/20 text-white rounded-full flex items-center justify-center transition-colors" 
+
+                          {/* Actions */}
+                          <div className="flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setAddingSong(song);
+                              }}
+                              className="size-7 rounded-full bg-white/5 hover:bg-white/20 text-white flex items-center justify-center transition-colors cursor-pointer"
                               title="Add to Playlist"
                             >
                               <span className="material-symbols-outlined text-sm">playlist_add</span>
                             </button>
-                            <button onClick={(e) => { e.stopPropagation(); addToQueue(song); triggerQueueFlight(song, e.currentTarget.getBoundingClientRect()); }} className="size-8 bg-white/5 hover:bg-white/20 text-white rounded-full flex items-center justify-center transition-colors" title="Add to Queue">
-                              <span className="material-symbols-outlined fill-[1] text-sm">queue_music</span>
-                            </button>
-                            <button className="size-8 bg-accent text-white rounded-full flex items-center justify-center shadow-lg pointer-events-none">
-                              <span className="material-symbols-outlined fill-[1] text-base">play_arrow</span>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                addToQueue(song);
+                                triggerQueueFlight(song, e.currentTarget.getBoundingClientRect());
+                              }}
+                              className="size-7 rounded-full bg-white/5 hover:bg-white/20 text-white flex items-center justify-center transition-colors cursor-pointer"
+                              title="Add to Queue"
+                            >
+                              <span className="material-symbols-outlined text-sm">queue_music</span>
                             </button>
                           </div>
+                        </div>
+                      </GlowWrapper>
+                    );
+                  })}
+                </div>
+              </motion.section>
+
+              {/* 6. Curated Mixes & Vibe Stations */}
+              <motion.section
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.3 }}
+                className="space-y-6"
+              >
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h2 className="text-2xl md:text-3xl font-black text-white tracking-tight">Curated Mixes</h2>
+                    <p className="text-slate-400 text-xs mt-0.5">Hand-crafted journeys designed for continuous play</p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                  {MOCK_MIXES.map((mix) => (
+                    <GlowWrapper key={mix.id} className="rounded-3xl">
+                      <div
+                        onClick={() => {
+                          const mixSlice = displaySongs.length >= 4 
+                            ? displaySongs.slice((MOCK_MIXES.indexOf(mix) * 4) % displaySongs.length, ((MOCK_MIXES.indexOf(mix) + 1) * 4) % displaySongs.length || displaySongs.length)
+                            : mix.songs;
+                          const tracksToPlay = mixSlice.length > 0 ? mixSlice : mix.songs;
+                          if (tracksToPlay.length > 0) {
+                            playSong(tracksToPlay[0], tracksToPlay);
+                          }
+                        }}
+                        className="glass-card p-5 group cursor-pointer border-white/5 hover:border-white/20 flex flex-col h-full transition-all"
+                      >
+                        {/* Artwork Container */}
+                        <div className="relative aspect-square rounded-2xl overflow-hidden mb-4 shadow-xl">
+                          <img src={mix.coverArt} alt={mix.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+                          
+                          {/* Gradient Overlay */}
+                          <div className={`absolute inset-0 bg-gradient-to-t ${mix.gradient} opacity-60 group-hover:opacity-40 transition-opacity`} />
+
+                          {/* Badge */}
+                          <div className="absolute top-3 left-3 px-2.5 py-1 rounded-full bg-black/60 backdrop-blur-md border border-white/10 text-[10px] font-black uppercase tracking-widest text-white">
+                            {mix.badge}
+                          </div>
+
+                          {/* Hover Play Button */}
+                          <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                            <button className="size-14 rounded-full bg-white text-black flex items-center justify-center shadow-2xl transform scale-90 group-hover:scale-100 transition-transform cursor-pointer">
+                              <span className="material-symbols-outlined text-3xl fill-[1]">play_arrow</span>
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Mix Details */}
+                        <div className="space-y-1.5 flex-1 flex flex-col">
+                          <div className="flex items-center justify-between">
+                            <h3 className="font-bold text-white text-base truncate group-hover:text-accent transition-colors">
+                              {mix.title}
+                            </h3>
+                            <span className="text-[10px] font-bold text-slate-400">
+                              {mix.songs.length} Tracks
+                            </span>
+                          </div>
+                          <p className="text-xs text-slate-400 line-clamp-2 leading-relaxed">
+                            {mix.description}
+                          </p>
+                          <div className="mt-auto pt-3 flex items-center gap-1.5 text-[11px] text-slate-500 font-medium">
+                            <span className="size-1.5 rounded-full bg-accent" />
+                            {mix.listenerCount}
+                          </div>
+                        </div>
+                      </div>
+                    </GlowWrapper>
+                  ))}
+                </div>
+              </motion.section>
+
+              {/* 7. Personal Collections & Playlists (if user has any) */}
+              {hasPersonal && (
+                <motion.section
+                  initial={{ opacity: 0, y: 15 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.6 }}
+                  className="space-y-6"
+                >
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h2 className="text-2xl md:text-3xl font-black text-white tracking-tight">Your Collections</h2>
+                      <p className="text-slate-400 text-xs mt-0.5">Playlists and favorites customized by you</p>
+                    </div>
+                    <button 
+                      onClick={() => setActiveTab('favorites')}
+                      className="text-xs font-bold text-slate-400 hover:text-white uppercase tracking-wider flex items-center gap-1 cursor-pointer"
+                    >
+                      View all <span className="material-symbols-outlined text-sm">arrow_forward</span>
+                    </button>
+                  </div>
+
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-5">
+                    <GlowWrapper className="rounded-2xl">
+                      <div
+                        onClick={() => setActiveTab('favorites')}
+                        className="glass-card p-4 group cursor-pointer border-accent/20 bg-accent/5 transition-all"
+                      >
+                        <div className="relative mb-3.5 aspect-square rounded-xl overflow-hidden shadow-xl bg-gradient-to-br from-accent to-pink-500 flex items-center justify-center">
+                          <span className="material-symbols-outlined text-white text-5xl fill-[1] opacity-90 group-hover:scale-110 transition-transform">
+                            favorite
+                          </span>
+                          <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                            <div className="size-12 rounded-full bg-white text-black flex items-center justify-center shadow-lg">
+                              <span className="material-symbols-outlined text-3xl fill-[1]">play_arrow</span>
+                            </div>
+                          </div>
+                        </div>
+                        <h4 className="font-bold text-white text-sm truncate">Your Favorites</h4>
+                        <p className="text-[11px] text-slate-400 truncate">{likedSongs.length} tracks saved</p>
+                      </div>
+                    </GlowWrapper>
+
+                    {playlists.map((playlist) => (
+                      <GlowWrapper key={playlist.id} className="rounded-2xl">
+                        <div
+                          onClick={() => {
+                            setActiveTab('playlist');
+                            setSelectedPlaylistId(playlist.id);
+                          }}
+                          className="glass-card p-4 group cursor-pointer border-white/5 hover:border-white/20 transition-all"
+                        >
+                          <div className="relative mb-3.5 aspect-square rounded-xl overflow-hidden shadow-xl bg-white/5 flex items-center justify-center">
+                            {playlist.songs.length > 0 ? (
+                              <img src={playlist.songs[0].albumArt} alt={playlist.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
+                            ) : (
+                              <span className="material-symbols-outlined text-4xl text-white/20">queue_music</span>
+                            )}
+                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                              <div className="size-12 rounded-full bg-white text-black flex items-center justify-center shadow-lg">
+                                <span className="material-symbols-outlined text-3xl fill-[1]">play_arrow</span>
+                              </div>
+                            </div>
+                          </div>
+                          <h4 className="font-bold text-white text-sm truncate">{playlist.title}</h4>
+                          <p className="text-[11px] text-slate-400 truncate">{playlist.songs.length} Tracks</p>
                         </div>
                       </GlowWrapper>
                     ))}
                   </div>
                 </motion.section>
               )}
-            </>
+
+              {/* 8. Modern Power-User Studio Hub (Bento Bar replacing old blank onboarding) */}
+              <motion.section
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.35 }}
+                className="p-6 md:p-8 rounded-3xl border border-white/5 bg-white/[0.015] backdrop-blur-xl relative overflow-hidden space-y-6"
+              >
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                  <div>
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="material-symbols-outlined text-accent text-lg">tune</span>
+                      <span className="text-[10px] font-black uppercase tracking-[0.3em] text-accent">Power-User Studio</span>
+                    </div>
+                    <h3 className="text-xl md:text-2xl font-black text-white">Elevate Your Audio Experience</h3>
+                    <p className="text-slate-400 text-xs mt-0.5">Customize, import, and manage your sound space.</p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <div
+                    onClick={() => fileInputRef.current?.click()}
+                    className="p-4 rounded-2xl bg-white/[0.02] border border-white/5 hover:border-accent/40 hover:bg-white/[0.04] transition-all cursor-pointer group flex items-center gap-4"
+                  >
+                    <div className="size-12 rounded-xl bg-accent/10 text-accent flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
+                      <span className="material-symbols-outlined text-2xl">upload_file</span>
+                    </div>
+                    <div className="overflow-hidden">
+                      <h4 className="text-xs font-bold text-white group-hover:text-accent transition-colors">Import Local Files</h4>
+                      <p className="text-[10px] text-slate-400 truncate mt-0.5">MP3, FLAC, WAV with tags</p>
+                    </div>
+                  </div>
+
+                  <div
+                    onClick={() => {
+                      const name = prompt("Enter playlist name:");
+                      if (name) createPlaylist(name);
+                    }}
+                    className="p-4 rounded-2xl bg-white/[0.02] border border-white/5 hover:border-pink-500/40 hover:bg-white/[0.04] transition-all cursor-pointer group flex items-center gap-4"
+                  >
+                    <div className="size-12 rounded-xl bg-pink-500/10 text-pink-400 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
+                      <span className="material-symbols-outlined text-2xl">playlist_add</span>
+                    </div>
+                    <div className="overflow-hidden">
+                      <h4 className="text-xs font-bold text-white group-hover:text-pink-400 transition-colors">Create Playlist</h4>
+                      <p className="text-[10px] text-slate-400 truncate mt-0.5">Custom artwork & curation</p>
+                    </div>
+                  </div>
+
+                  <div
+                    onClick={() => toggleExpanded()}
+                    className="p-4 rounded-2xl bg-white/[0.02] border border-white/5 hover:border-cyan-500/40 hover:bg-white/[0.04] transition-all cursor-pointer group flex items-center gap-4"
+                  >
+                    <div className="size-12 rounded-xl bg-cyan-500/10 text-cyan-400 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
+                      <span className="material-symbols-outlined text-2xl">graphic_eq</span>
+                    </div>
+                    <div className="overflow-hidden">
+                      <h4 className="text-xs font-bold text-white group-hover:text-cyan-400 transition-colors">Live Visualizer</h4>
+                      <p className="text-[10px] text-slate-400 truncate mt-0.5">Real-time reactive canvas</p>
+                    </div>
+                  </div>
+
+                  <div
+                    onClick={() => setActiveTab('settings')}
+                    className="p-4 rounded-2xl bg-white/[0.02] border border-white/5 hover:border-purple-500/40 hover:bg-white/[0.04] transition-all cursor-pointer group flex items-center gap-4"
+                  >
+                    <div className="size-12 rounded-xl bg-purple-500/10 text-purple-400 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
+                      <span className="material-symbols-outlined text-2xl">palette</span>
+                    </div>
+                    <div className="overflow-hidden">
+                      <h4 className="text-xs font-bold text-white group-hover:text-purple-400 transition-colors">Theme & Accent</h4>
+                      <p className="text-[10px] text-slate-400 truncate mt-0.5">Dynamic artwork lighting</p>
+                    </div>
+                  </div>
+                </div>
+              </motion.section>
+            </div>
           )}
 
           {activeTab === 'browse' && (

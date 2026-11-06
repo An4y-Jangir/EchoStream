@@ -56,22 +56,22 @@ export function CanvasParticles() {
     window.addEventListener("resize", handleResize);
     handleResize();
 
-    // Helper to parse CSS color variables (e.g. "rgb(99, 102, 241)")
-    const getThemeColors = () => {
-      if (typeof window === "undefined") return { r: 99, g: 102, b: 241 };
+    // Cached theme colors to avoid expensive getComputedStyle inside the 60/120fps render loop
+    let cachedThemeColors = { r: 99, g: 102, b: 241 };
+    const updateThemeColors = () => {
+      if (typeof window === "undefined") return;
       const rootStyle = getComputedStyle(document.documentElement);
       const accent = rootStyle.getPropertyValue("--theme-accent").trim() || "rgb(99, 102, 241)";
-      
       const numbers = accent.match(/\d+/g);
       if (numbers && numbers.length >= 3) {
-        return {
+        cachedThemeColors = {
           r: parseInt(numbers[0], 10),
           g: parseInt(numbers[1], 10),
           b: parseInt(numbers[2], 10)
         };
       }
-      return { r: 99, g: 102, b: 241 };
     };
+    updateThemeColors();
 
     // Instantiate particles
     const particles: Particle[] = [];
@@ -135,8 +135,8 @@ export function CanvasParticles() {
       const beatPhase = beatTimeRef.current % 1.0;
       const beatPulse = Math.pow(1 - beatPhase, 4); // Exp decay: peak on beat
 
-      // Fetch active dynamic theme color
-      const { r, g, b } = getThemeColors();
+      // Fetch active dynamic theme color from cache (zero style-recalc overhead)
+      const { r, g, b } = cachedThemeColors;
 
       // Update and draw particles
       particles.forEach((p) => {
@@ -187,40 +187,38 @@ export function CanvasParticles() {
         if (playing) {
           ctx.beginPath();
           ctx.arc(p.x, p.y, p.radius * (2.2 + beatPulse * 1.6), 0, Math.PI * 2);
-          // Halo expands and brightens in response to the beat
           ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${p.alpha * 0.28 * beatPulse})`;
           ctx.fill();
         }
       });
 
-      // Draw faint connections between particles (Constellation mesh)
-      const maxDistance = 90;
+      // Optimized Constellation mesh: single batched path & squared distance (zero CPU stalls)
+      const maxDistance = 75;
+      const maxDistSq = maxDistance * maxDistance;
+      ctx.beginPath();
+      let hasLines = false;
       for (let i = 0; i < particles.length; i++) {
+        const pi = particles[i];
         for (let j = i + 1; j < particles.length; j++) {
-          const pi = particles[i];
           const pj = particles[j];
-
           const dx = pi.x - pj.x;
           const dy = pi.y - pj.y;
-          const dist = Math.sqrt(dx * dx + dy * dy);
+          const distSq = dx * dx + dy * dy;
 
-          if (dist < maxDistance) {
-            // Lines are closer/stronger based on depth grouping similarities
+          if (distSq < maxDistSq) {
             const depthFactor = 1 - Math.abs(pi.depth - pj.depth);
             if (depthFactor > 0.7) {
-              const alphaScale = (1 - dist / maxDistance) * 0.05 * depthFactor;
-              // Pulsate connection lines subtly on beat
-              const lineAlpha = alphaScale * (1 + beatPulse * 0.6);
-              
-              ctx.beginPath();
               ctx.moveTo(pi.x, pi.y);
               ctx.lineTo(pj.x, pj.y);
-              ctx.strokeStyle = `rgba(${r}, ${g}, ${b}, ${lineAlpha})`;
-              ctx.lineWidth = 0.5;
-              ctx.stroke();
+              hasLines = true;
             }
           }
         }
+      }
+      if (hasLines) {
+        ctx.strokeStyle = `rgba(${r}, ${g}, ${b}, ${0.04 * (1 + beatPulse * 0.5)})`;
+        ctx.lineWidth = 0.5;
+        ctx.stroke();
       }
 
       animationFrameId.current = requestAnimationFrame(render);

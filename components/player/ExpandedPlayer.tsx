@@ -156,16 +156,35 @@ export function ExpandedPlayer() {
           transition={{ type: "spring", stiffness: 300, damping: 30 }}
           className="fixed inset-0 z-50 flex flex-col overflow-y-auto origin-bottom text-white no-scrollbar"
         >
-          {/* Dynamic Background Blur */}
-          <div 
-            className="fixed inset-0 z-0 scale-125 transition-all duration-1000"
-            style={{ 
-              backgroundImage: `url(${currentSong.albumArt})`,
-              backgroundPosition: 'center',
-              backgroundSize: 'cover',
-              filter: 'blur(80px) brightness(0.5)'
-            }}
-          />
+          {/* Apple Music Liquid Ambient Background (Hardware Accelerated) */}
+          <div className="fixed inset-0 z-0 bg-[#07070a] overflow-hidden pointer-events-none">
+            {/* Vibrant base bloom of artwork */}
+            <div 
+              className="absolute inset-0 bg-cover bg-center transition-all duration-1000 opacity-40 scale-110 blur-[50px] saturate-200 mix-blend-screen transform-gpu"
+              style={{ backgroundImage: `url(${currentSong.albumArt})` }}
+            />
+            {/* Ambient Fluid Mesh Orbs (Analytical radial gradients, zero blur overhead) */}
+            <div 
+              className="absolute -top-[15%] -left-[10%] w-[85vw] h-[85vh] rounded-full opacity-80 animate-ambient-1 transform-gpu"
+              style={{ 
+                background: 'radial-gradient(circle closest-side at 40% 40%, var(--theme-glow-1, rgba(99, 102, 241, 0.75)) 0%, var(--theme-glow-1, rgba(99, 102, 241, 0.4)) 45%, var(--theme-glow-1, rgba(99, 102, 241, 0.12)) 75%, transparent 100%)',
+              }}
+            />
+            <div 
+              className="absolute -bottom-[15%] -right-[10%] w-[80vw] h-[80vh] rounded-full opacity-75 animate-ambient-2 transform-gpu"
+              style={{ 
+                background: 'radial-gradient(circle closest-side at 60% 60%, var(--theme-glow-2, rgba(236, 72, 153, 0.65)) 0%, var(--theme-glow-2, rgba(236, 72, 153, 0.35)) 45%, var(--theme-glow-2, rgba(236, 72, 153, 0.1)) 75%, transparent 100%)',
+              }}
+            />
+            <div 
+              className="absolute top-[25%] left-[20%] w-[70vw] h-[70vh] rounded-full opacity-70 animate-ambient-3 transform-gpu"
+              style={{ 
+                background: 'radial-gradient(circle closest-side at 50% 50%, var(--theme-glow-3, rgba(59, 130, 246, 0.55)) 0%, var(--theme-glow-3, rgba(59, 130, 246, 0.3)) 45%, var(--theme-glow-3, rgba(59, 130, 246, 0.08)) 75%, transparent 100%)',
+              }}
+            />
+            {/* Subtle Vignette for crisp lyrics & typography */}
+            <div className="absolute inset-0 bg-gradient-to-b from-black/25 via-transparent to-black/60" />
+          </div>
 
           {/* Header */}
           <div className="relative z-10 flex items-center justify-between px-6 md:px-10 pt-8 pb-4">

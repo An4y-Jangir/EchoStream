@@ -6,7 +6,7 @@ export const MOCK_SONGS: Song[] = [
     title: "Midnight City",
     artist: "M83",
     album: "Hurry Up, We're Dreaming",
-    albumArt: "https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?q=80&w=500&auto=format&fit=crop",
+    albumArt: "https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?q=80&w=600&auto=format&fit=crop",
     audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
     genre: "Electronic",
     tempo: 105,
@@ -26,7 +26,7 @@ export const MOCK_SONGS: Song[] = [
     title: "Blinding Lights",
     artist: "The Weeknd",
     album: "After Hours",
-    albumArt: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=500&auto=format&fit=crop",
+    albumArt: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=600&auto=format&fit=crop",
     audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3",
     genre: "Synthwave",
     tempo: 171,
@@ -47,7 +47,7 @@ export const MOCK_SONGS: Song[] = [
     title: "Starboy",
     artist: "The Weeknd ft. Daft Punk",
     album: "Starboy",
-    albumArt: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?q=80&w=500&auto=format&fit=crop",
+    albumArt: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?q=80&w=600&auto=format&fit=crop",
     audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3",
     genre: "R&B",
     tempo: 186,
@@ -65,9 +65,9 @@ export const MOCK_SONGS: Song[] = [
     title: "Lose Yourself to Dance",
     artist: "Daft Punk",
     album: "Random Access Memories",
-    albumArt: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?q=80&w=500&auto=format&fit=crop",
+    albumArt: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?q=80&w=600&auto=format&fit=crop",
     audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3",
-    genre: "Electronic",
+    genre: "Disco",
     tempo: 100,
     durationText: "5:53",
     lyrics: [
@@ -77,32 +77,130 @@ export const MOCK_SONGS: Song[] = [
       { time: 40, text: "Lose yourself to dance" },
       { time: 45, text: "Lose yourself to dance" },
     ],
+  },
+  {
+    id: "5",
+    title: "Resonance",
+    artist: "HOME",
+    album: "Odyssey",
+    albumArt: "https://images.unsplash.com/photo-1508700115892-45ecd05ae2ad?q=80&w=600&auto=format&fit=crop",
+    audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3",
+    genre: "Chillwave",
+    tempo: 110,
+    durationText: "3:32",
+    lyrics: [
+      { time: 0, text: "(Analog Synth Warmup)" },
+      { time: 20, text: "Nostalgic frequencies..." },
+      { time: 45, text: "(Dreamy chord progression)" },
+      { time: 90, text: "(Echoing bassline groove)" },
+    ],
+  },
+  {
+    id: "6",
+    title: "Nightcall",
+    artist: "Kavinsky",
+    album: "OutRun",
+    albumArt: "https://images.unsplash.com/photo-1509198397868-475647b2a1e5?q=80&w=600&auto=format&fit=crop",
+    audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-9.mp3",
+    genre: "Synthwave",
+    tempo: 104,
+    durationText: "4:19",
+    lyrics: [
+      { time: 0, text: "(Vocoder intro)" },
+      { time: 18, text: "I'm giving you a night call to tell you how I feel" },
+      { time: 32, text: "I want to drive you through the night, down the hills" },
+      { time: 46, text: "There's something inside you, it's hard to explain" },
+    ],
+  },
+  {
+    id: "7",
+    title: "Get Lucky",
+    artist: "Daft Punk ft. Pharrell",
+    album: "Random Access Memories",
+    albumArt: "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?q=80&w=600&auto=format&fit=crop",
+    audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-10.mp3",
+    genre: "Funk",
+    tempo: 116,
+    durationText: "4:08",
+    lyrics: [
+      { time: 0, text: "(Guitar Lick Intro)" },
+      { time: 12, text: "Like the legend of the phoenix" },
+      { time: 17, text: "All ends with beginnings" },
+      { time: 21, text: "What keeps the planet spinning, ah" },
+      { time: 25, text: "The force from the beginning" },
+      { time: 30, text: "We've come too far to give up who we are" },
+    ],
+  },
+  {
+    id: "8",
+    title: "After Dark",
+    artist: "Mr.Kitty",
+    album: "Time",
+    albumArt: "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?q=80&w=600&auto=format&fit=crop",
+    audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-16.mp3",
+    genre: "Darkwave",
+    tempo: 115,
+    durationText: "4:17",
+    lyrics: [
+      { time: 0, text: "(Pulsing Synth Wave)" },
+      { time: 16, text: "I see you, you see me" },
+      { time: 22, text: "How pleasant, this feeling" },
+      { time: 30, text: "The moment you hold me, I know you" },
+      { time: 40, text: "As the hours pass by, you will stay with me" },
+    ],
   }
 ];
 
-export const MOCK_MIXES = [
+export interface MockMix {
+  id: string;
+  title: string;
+  description: string;
+  coverArt: string;
+  badge: string;
+  listenerCount: string;
+  gradient: string;
+  songs: Song[];
+}
+
+export const MOCK_MIXES: MockMix[] = [
   {
     id: "mix1",
     title: "Synthwave Essentials",
-    description: "Deep, driving synthwave tracks to keep you moving.",
-    coverArt: "https://images.unsplash.com/photo-1557672172-298e090bd0f1?q=80&w=500&auto=format&fit=crop",
+    description: "Deep, driving synthwave & neon retro-futurism to keep you moving.",
+    coverArt: "https://images.unsplash.com/photo-1557672172-298e090bd0f1?q=80&w=600&auto=format&fit=crop",
+    badge: "Trending",
+    listenerCount: "14.2k listening",
+    gradient: "from-pink-500/20 via-purple-600/10 to-indigo-950/40",
+    songs: [MOCK_SONGS[0], MOCK_SONGS[1], MOCK_SONGS[5], MOCK_SONGS[7]],
   },
   {
     id: "mix2",
     title: "Late Night Drive",
-    description: "Atmospheric electronic and R&B for the midnight hours.",
-    coverArt: "https://images.unsplash.com/photo-1493225457124-a1a2a5f5f4a7?q=80&w=500&auto=format&fit=crop",
+    description: "Atmospheric electronic and cinematic R&B for the midnight hours.",
+    coverArt: "https://images.unsplash.com/photo-1493225457124-a1a2a5f5f4a7?q=80&w=600&auto=format&fit=crop",
+    badge: "Night Vibe",
+    listenerCount: "28.5k listening",
+    gradient: "from-blue-600/20 via-indigo-600/10 to-slate-950/40",
+    songs: [MOCK_SONGS[1], MOCK_SONGS[2], MOCK_SONGS[4], MOCK_SONGS[7]],
   },
   {
     id: "mix3",
-    title: "Electronic Discovery",
-    description: "The best new electronic tracks handpicked for you.",
-    coverArt: "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?q=80&w=500&auto=format&fit=crop",
+    title: "Lo-Fi & Deep Focus",
+    description: "Mellow textures, warm tape saturation and relaxing beats to get lost in.",
+    coverArt: "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?q=80&w=600&auto=format&fit=crop",
+    badge: "Study",
+    listenerCount: "19.8k listening",
+    gradient: "from-amber-500/20 via-orange-600/10 to-stone-950/40",
+    songs: [MOCK_SONGS[4], MOCK_SONGS[0], MOCK_SONGS[3]],
   },
   {
     id: "mix4",
-    title: "Workout Energy",
-    description: "High BPM tracks to get your heart pumping.",
-    coverArt: "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=500&auto=format&fit=crop",
+    title: "Peak Energy & Groove",
+    description: "High-tempo funk, electro, and bass-heavy anthems to power your day.",
+    coverArt: "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=600&auto=format&fit=crop",
+    badge: "Workout",
+    listenerCount: "32.1k listening",
+    gradient: "from-emerald-500/20 via-cyan-600/10 to-teal-950/40",
+    songs: [MOCK_SONGS[3], MOCK_SONGS[6], MOCK_SONGS[2], MOCK_SONGS[1]],
   }
 ];

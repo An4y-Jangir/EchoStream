@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useRef, useState, MouseEvent } from "react";
+import React, { useRef } from "react";
 
 interface GlowWrapperProps {
   children: React.ReactNode;
@@ -13,24 +13,26 @@ export const GlowWrapper: React.FC<GlowWrapperProps> = ({
   children, 
   className = "", 
   glowSize = 400,
-  glowOpacity = 0.2 // Increased for visibility
+  glowOpacity = 0.2
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
-  const [position, setPosition] = useState({ x: 0, y: 0 });
-  const [opacity, setOpacity] = useState(0);
+  const glowRef = useRef<HTMLDivElement>(null);
 
-  const handleMouseMove = (e: MouseEvent<HTMLDivElement>) => {
-    if (!containerRef.current) return;
-
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!containerRef.current || !glowRef.current) return;
     const rect = containerRef.current.getBoundingClientRect();
-    setPosition({
-      x: e.clientX - rect.left,
-      y: e.clientY - rect.top,
-    });
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    glowRef.current.style.background = `radial-gradient(${glowSize}px circle at ${x}px ${y}px, rgba(255, 255, 255, ${glowOpacity}), transparent 80%)`;
   };
 
-  const handleMouseEnter = () => setOpacity(1);
-  const handleMouseLeave = () => setOpacity(0);
+  const handleMouseEnter = () => {
+    if (glowRef.current) glowRef.current.style.opacity = "1";
+  };
+
+  const handleMouseLeave = () => {
+    if (glowRef.current) glowRef.current.style.opacity = "0";
+  };
 
   return (
     <div
@@ -41,11 +43,8 @@ export const GlowWrapper: React.FC<GlowWrapperProps> = ({
       className={`relative overflow-hidden transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-[0_8px_24px_rgba(99,102,241,0.2)] ${className}`}
     >
       <div 
-        className="pointer-events-none absolute inset-0 z-50 transition-opacity duration-300"
-        style={{
-          background: `radial-gradient(${glowSize}px circle at ${position.x}px ${position.y}px, rgba(255, 255, 255, ${glowOpacity}), transparent 80%)`,
-          opacity: opacity,
-        }}
+        ref={glowRef}
+        className="pointer-events-none absolute inset-0 z-50 opacity-0 transition-opacity duration-300"
       />
       {children}
     </div>

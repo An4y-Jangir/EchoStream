@@ -17,6 +17,7 @@ import { TrashDeleteAnimation } from "@/components/animations/TrashDeleteAnimati
 import { CanvasParticles } from "@/components/ui/CanvasParticles";
 // import { SmoothInput } from "@/components/ui/SmoothInput";
 import { AnimatedInput } from "@/components/ui/AnimatedInput";
+import { StoryCardModal } from "@/components/ui/StoryCardModal";
 
 const jsmediatags = typeof window !== "undefined" ? require("jsmediatags/dist/jsmediatags.min.js") : null;
 
@@ -133,6 +134,7 @@ export default function Home() {
     userQueue,
     contextQueue,
     triggerQueueLanding,
+    openStoryModal,
   } = usePlayer();
   const fileInputRef = useRef<HTMLInputElement>(null);
   
@@ -1328,6 +1330,15 @@ export default function Home() {
                           >
                             <span className="material-symbols-outlined text-lg">playlist_add</span>
                           </button>
+
+                          <button
+                            onClick={() => openStoryModal(currentSpotlight.song)}
+                            className="flex items-center gap-1.5 px-4 py-3.5 rounded-full bg-gradient-to-r from-purple-500/20 to-pink-500/20 hover:from-purple-500/30 hover:to-pink-500/30 text-white font-bold text-xs transition-all border border-pink-500/30 backdrop-blur-md hover:scale-105 active:scale-95 cursor-pointer shadow-lg shadow-pink-500/10"
+                            title="Generate 9:16 Story Card (made by Anay)"
+                          >
+                            <span className="material-symbols-outlined text-lg text-pink-400">auto_awesome</span>
+                            <span>Story Card</span>
+                          </button>
                         </div>
                       </div>
 
@@ -1735,7 +1746,7 @@ export default function Home() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
                   <div
                     onClick={() => fileInputRef.current?.click()}
                     className="p-4 rounded-2xl bg-white/[0.02] border border-white/5 hover:border-accent/40 hover:bg-white/[0.04] transition-all cursor-pointer group flex items-center gap-4"
@@ -1775,6 +1786,19 @@ export default function Home() {
                     <div className="overflow-hidden">
                       <h4 className="text-xs font-bold text-white group-hover:text-cyan-400 transition-colors">Live Visualizer</h4>
                       <p className="text-[10px] text-slate-400 truncate mt-0.5">Real-time reactive canvas</p>
+                    </div>
+                  </div>
+
+                  <div
+                    onClick={() => openStoryModal(currentSong || SPOTLIGHT_TRACKS[0].song)}
+                    className="p-4 rounded-2xl bg-white/[0.02] border border-white/5 hover:border-rose-500/40 hover:bg-white/[0.04] transition-all cursor-pointer group flex items-center gap-4"
+                  >
+                    <div className="size-12 rounded-xl bg-rose-500/10 text-rose-400 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
+                      <span className="material-symbols-outlined text-2xl">auto_awesome</span>
+                    </div>
+                    <div className="overflow-hidden">
+                      <h4 className="text-xs font-bold text-white group-hover:text-rose-400 transition-colors">Story Generator</h4>
+                      <p className="text-[10px] text-slate-400 truncate mt-0.5">9:16 Insta & TikTok cards</p>
                     </div>
                   </div>
 
@@ -2779,6 +2803,7 @@ export default function Home() {
 
       <BottomPlayer />
       <ExpandedPlayer />
+      <StoryCardModal />
       <input 
         type="file" 
         accept="audio/*" 

@@ -66,7 +66,8 @@ export function BottomPlayer() {
     currentAlbumLoading,
     localSongs,
     searchResults,
-    playlists
+    playlists,
+    openStoryModal
   } = usePlayer();
 
   const handleSeek = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -513,6 +514,13 @@ export function BottomPlayer() {
                 title="Album panel"
               >
                 <span className="material-symbols-outlined text-2xl">album</span>
+              </button>
+              <button
+                onClick={(e) => { e.stopPropagation(); openStoryModal(currentSong); }}
+                className="text-slate-400 hover:text-accent transition-colors"
+                title="Create Social Story Card"
+              >
+                <span className="material-symbols-outlined text-2xl">auto_awesome</span>
               </button>
               <VolumeSlider volume={volume} setVolume={setVolume} className="w-36 ml-1" />
               <button onClick={toggleExpanded} className="text-slate-400 hover:text-white transition-colors">

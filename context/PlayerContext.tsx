@@ -78,6 +78,10 @@ interface PlayerContextType {
   viewedArtistDetails: any | null;
   viewedArtistLoading: boolean;
   setViewingArtist: (name: string | null, id?: string | null) => void;
+  isStoryModalOpen: boolean;
+  storySong: Song | null;
+  openStoryModal: (song?: Song) => void;
+  closeStoryModal: () => void;
 }
 
 const PlayerContext = createContext<PlayerContextType | undefined>(undefined);
@@ -100,6 +104,19 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
   const [userQueue, setUserQueue] = useState<Song[]>([]);
   const [contextQueue, setContextQueue] = useState<Song[]>([]);
   const [history, setHistory] = useState<Song[]>([]);
+
+  // Social Story Card Generator state
+  const [isStoryModalOpen, setIsStoryModalOpen] = useState(false);
+  const [storySong, setStorySong] = useState<Song | null>(null);
+
+  const openStoryModal = useCallback((song?: Song) => {
+    setStorySong(song || currentSongRef.current);
+    setIsStoryModalOpen(true);
+  }, []);
+
+  const closeStoryModal = useCallback(() => {
+    setIsStoryModalOpen(false);
+  }, []);
 
   // Synchronous tracking refs — never read stale state from closures
   const currentSongRef = useRef<Song | null>(null);
@@ -1211,6 +1228,10 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
         viewedArtistDetails,
         viewedArtistLoading,
         setViewingArtist,
+        isStoryModalOpen,
+        storySong,
+        openStoryModal,
+        closeStoryModal,
       }}
     >
       <div className="hidden">

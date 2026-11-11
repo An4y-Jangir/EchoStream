@@ -52,7 +52,8 @@ export function ExpandedPlayer() {
     currentAlbumLoading,
     localSongs,
     searchResults,
-    playlists
+    playlists,
+    openStoryModal
   } = usePlayer();
 
   const handleSeek = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -84,18 +85,9 @@ export function ExpandedPlayer() {
     return `${m}:${s.toString().padStart(2, '0')}`;
   };
 
-  const handleShare = async () => {
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: currentSong?.title || "Listen to this song",
-          text: `Listening to ${currentSong?.title} on EchoStream!`,
-          url: window.location.href,
-        });
-      } catch (err) {}
-    } else {
-      navigator.clipboard.writeText(window.location.href);
-      alert("Link copied to clipboard!");
+  const handleShare = () => {
+    if (currentSong) {
+      openStoryModal(currentSong);
     }
   };
 

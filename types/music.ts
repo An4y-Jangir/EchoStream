@@ -1,6 +1,7 @@
 export interface LyricWord {
   text: string;
   time: number; // absolute time in seconds
+  duration?: number; // duration in seconds
 }
 
 export interface LyricLine {

@@ -70,6 +70,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
   const [flightEnabled, setFlightEnabled] = useState(true);
   const [cursorEnabled, setCursorEnabled] = useState(true);
   const [lyricsSize, setLyricsSize] = useState<"small" | "medium" | "large">("large");
+  const [lyricsStyle, setLyricsStyle] = useState<"classic" | "constellation">("classic");
 
   const importFileRef = useRef<HTMLInputElement>(null);
   const avatarUploadRef = useRef<HTMLInputElement>(null);
@@ -115,6 +116,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
       setFlightEnabled(localStorage.getItem("echo-flight-animations") !== "false");
       setCursorEnabled(localStorage.getItem("echo-custom-cursor") !== "false");
       setLyricsSize((localStorage.getItem("echo-lyrics-size") as any) || "large");
+      setLyricsStyle((localStorage.getItem("echo-lyrics-style") as any) || "classic");
 
       setReverbPreset((localStorage.getItem("echo-reverb-preset") as any) || "none");
       const storedEqPreset = localStorage.getItem("echo-eq-preset") as any;
@@ -183,6 +185,12 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
     setLyricsSize(val);
     localStorage.setItem("echo-lyrics-size", val);
     window.dispatchEvent(new Event("lyrics-size-change"));
+  };
+
+  const handleLyricsStyle = (val: "classic" | "constellation") => {
+    setLyricsStyle(val);
+    localStorage.setItem("echo-lyrics-style", val);
+    window.dispatchEvent(new Event("lyrics-style-change"));
   };
 
   // Audio and DSP Settings
@@ -820,6 +828,36 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
                     )}
                   />
                 </button>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-slate-400 uppercase tracking-wider block">Lyrics Visualizer Mode</label>
+                <div className="grid grid-cols-2 gap-2 bg-white/[0.02] border border-white/5 p-1 rounded-xl">
+                  <button
+                    onClick={() => handleLyricsStyle("classic")}
+                    className={cn(
+                      "py-2 text-[10px] font-bold uppercase rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer",
+                      lyricsStyle === "classic"
+                        ? "bg-accent text-white shadow"
+                        : "text-slate-400 hover:text-white hover:bg-white/[0.02]"
+                    )}
+                  >
+                    <span className="material-symbols-outlined text-sm">format_align_left</span>
+                    Classic Stream
+                  </button>
+                  <button
+                    onClick={() => handleLyricsStyle("constellation")}
+                    className={cn(
+                      "py-2 text-[10px] font-bold uppercase rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer",
+                      lyricsStyle === "constellation"
+                        ? "bg-gradient-to-r from-purple-500 to-indigo-600 text-white shadow-[0_0_15px_rgba(168,85,247,0.4)]"
+                        : "text-slate-400 hover:text-white hover:bg-white/[0.02]"
+                    )}
+                  >
+                    <span className="material-symbols-outlined text-sm text-purple-300">auto_awesome</span>
+                    Constellation
+                  </button>
+                </div>
               </div>
 
               <div className="space-y-2">

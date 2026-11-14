@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState, useRef, useEffect, useCallback } from "react";
 import { Song, Playlist } from "@/types/music";
-import { parseLrc } from "@/lib/lrcParser";
+import { parseLrc, parseWordLyrics } from "@/lib/lrcParser";
 import YouTube from 'react-youtube';
 import { MOCK_SONGS } from "@/lib/mockData";
 
@@ -341,15 +341,58 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
     return () => clearInterval(interval);
   }, [isPlaying, ytPlayer]);
   const fetchLyrics = async (song: Song): Promise<any[]> => {
-    if (song.lyrics && song.lyrics.length > 0) return song.lyrics;
+    const hasRichWordLyrics =
+      song.lyrics &&
+      song.lyrics.length > 0 &&
+      song.lyrics.some((l) => l.words && l.words.some((w) => typeof w.duration === "number"));
+    if (hasRichWordLyrics) return song.lyrics;
 
     const cached = prefetchedLyricsCache.current.get(song.id);
     if (cached) return cached;
 
+    // Clean title and artist to maximize search hit rate on lyrics providers
+    const cleanTitle = song.title
+      .replace(/\(official\s*(music\s*)?video\)/gi, "")
+      .replace(/\(audio\)/gi, "")
+      .replace(/\(visualizer\)/gi, "")
+      .replace(/\(lyrics?\)/gi, "")
+      .replace(/\(remaster(ed)?\)/gi, "")
+      .replace(/\[official\s*(music\s*)?video\]/gi, "")
+      .replace(/\[audio\]/gi, "")
+      .replace(/\[lyrics?\]/gi, "")
+      .trim();
+
+    const cleanArtist =
+      song.artist === "Local Device" || song.artist === "Local Folder"
+        ? ""
+        : song.artist.replace(/\s*-\s*Topic$/gi, "").trim();
+
+    // 1. Primary: Word-level synced lyrics (Apple Music / Musixmatch TTML format)
+    if (cleanTitle && cleanArtist) {
+      try {
+        const wordRes = await fetch(
+          `https://lyricsplus.binimum.org/v2/lyrics/get?title=${encodeURIComponent(cleanTitle)}&artist=${encodeURIComponent(cleanArtist)}`
+        );
+        if (wordRes.ok) {
+          const wordData = await wordRes.json();
+          if (wordData.lyrics && Array.isArray(wordData.lyrics) && wordData.lyrics.length > 0) {
+            const wordLyrics = parseWordLyrics(wordData.lyrics);
+            if (wordLyrics.length > 0) {
+              prefetchedLyricsCache.current.set(song.id, wordLyrics);
+              return wordLyrics;
+            }
+          }
+        }
+      } catch (wordErr) {
+        console.warn("Primary word-level lyrics fetch bypassed, trying LRCLIB:", wordErr);
+      }
+    }
+
+    // 2. Secondary Fallback: LRCLIB with enhanced vocal cadence distribution
     const query = new URLSearchParams({
-      track_name: song.title,
-      artist_name: song.artist === "Local Device" || song.artist === "Local Folder" ? "" : song.artist,
-      album_name: song.album === "Local Folder" ? "" : song.album
+      track_name: cleanTitle || song.title,
+      artist_name: cleanArtist,
+      album_name: song.album === "Local Folder" ? "" : song.album,
     }).toString();
 
     try {
@@ -375,7 +418,12 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
   };
 
   const prefetchLyrics = (song: Song) => {
-    if (!song || (song.lyrics && song.lyrics.length > 0)) return;
+    const hasRich =
+      song &&
+      song.lyrics &&
+      song.lyrics.length > 0 &&
+      song.lyrics.some((l) => l.words && l.words.some((w) => typeof w.duration === "number"));
+    if (!song || hasRich) return;
     if (currentlyFetchingLyrics.current.has(song.id)) return;
     currentlyFetchingLyrics.current.add(song.id);
     fetchLyrics(song)
@@ -441,7 +489,11 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
         audioRef.current = nextAudio;
 
         // Fetch lyrics for nextSong in background
-        if (!nextSong.lyrics || nextSong.lyrics.length === 0) {
+        const hasNextRich =
+          nextSong.lyrics &&
+          nextSong.lyrics.length > 0 &&
+          nextSong.lyrics.some((l) => l.words && l.words.some((w) => typeof w.duration === "number"));
+        if (!hasNextRich) {
           fetchLyrics(nextSong).then(lyrics => {
             if (currentSongRef.current?.id === nextSong.id) {
               const updatedSong = { ...nextSong, lyrics };
@@ -799,7 +851,11 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
     }
 
     // Fetch lyrics asynchronously in the background so audio playback starts instantly
-    if (!song.lyrics || song.lyrics.length === 0) {
+    const hasCurrentRich =
+      song.lyrics &&
+      song.lyrics.length > 0 &&
+      song.lyrics.some((l) => l.words && l.words.some((w) => typeof w.duration === "number"));
+    if (!hasCurrentRich) {
       fetchLyrics(song).then(lyrics => {
         if (currentSongRef.current?.id === song.id) {
           const updatedSong = { ...song, lyrics };

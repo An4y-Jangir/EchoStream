@@ -69,6 +69,7 @@ export function ExpandedPlayer() {
   };
 
   const [tears, setTears] = useState<Array<{ id: string; rect: DOMRect; song: Song }>>([]);
+  const [isZenMode, setIsZenMode] = useState(false);
 
   const snipSong = (song: Song, ref: HTMLElement | null) => {
     if (!ref) { removeFromUserQueue(song.id); return; }
@@ -208,7 +209,7 @@ export function ExpandedPlayer() {
             {/* Left: Album Cover */}
             <div className={cn(
               "w-full lg:w-[45%] flex items-center justify-center lg:justify-end shrink-0 transition-all duration-500",
-              isLyricsVisible ? "hidden lg:flex" : "flex"
+              isLyricsVisible ? (isZenMode ? "hidden" : "hidden lg:flex") : "flex"
             )}>
               <motion.img 
                 src={currentSong.albumArt} 
@@ -225,7 +226,8 @@ export function ExpandedPlayer() {
 
             {/* Right: Lyrics Only */}
             <div className={cn(
-              "relative w-full lg:w-[55%] flex flex-col justify-center transition-all duration-500 max-w-[800px] overflow-hidden rounded-[2rem]",
+              "relative w-full flex flex-col justify-center transition-all duration-500 overflow-hidden rounded-[2rem]",
+              isZenMode && isLyricsVisible ? "lg:w-full max-w-[1100px]" : "lg:w-[55%] max-w-[800px]",
               isLyricsVisible ? "h-[50vh] lg:h-[80vh] flex" : "hidden lg:flex h-0 lg:h-[80vh] overflow-hidden"
             )}>
               {/* Dimmed Album Cover Background on Mobile when lyrics are active */}
@@ -239,7 +241,13 @@ export function ExpandedPlayer() {
                 </div>
               )}
               <div className="relative z-10 w-full h-full flex flex-col justify-center">
-                <LiveLyrics key={currentSong.id} lyrics={currentSong.lyrics} currentTime={currentTime} />
+                <LiveLyrics
+                  key={currentSong.id}
+                  lyrics={currentSong.lyrics}
+                  currentTime={currentTime}
+                  isZenMode={isZenMode}
+                  onToggleZen={() => setIsZenMode(prev => !prev)}
+                />
               </div>
             </div>
           </div>
